@@ -1,6 +1,6 @@
-# Документация плагина gmxDrawing
+# Р”РѕРєСѓРјРµРЅС‚Р°С†РёСЏ РїР»Р°РіРёРЅР° gmxDrawing
 
-gmxDrawing - плагин для рисования линий, полигонов, прямоугольников и маркеров.
+gmxDrawing - РїР»Р°РіРёРЅ РґР»СЏ СЂРёСЃРѕРІР°РЅРёСЏ Р»РёРЅРёР№, РїРѕР»РёРіРѕРЅРѕРІ, РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєРѕРІ Рё РјР°СЂРєРµСЂРѕРІ.
 
 ### Events
 
@@ -8,24 +8,24 @@ gmxDrawing - плагин для рисования линий, полигонов, прямоугольников и маркеров.
 
 | Property | Type | Description
 | --- | --- | ---
-| mode | String | Текущий режим (`add` - режим добавления обьекта, `edit` - режим редактирования обьекта)
-| object | L.GmxDrawing.Feature | Редактируемый объект.
+| mode | String | РўРµРєСѓС‰РёР№ СЂРµР¶РёРј (`add` - СЂРµР¶РёРј РґРѕР±Р°РІР»РµРЅРёСЏ РѕР±СЊРµРєС‚Р°, `edit` - СЂРµР¶РёРј СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ РѕР±СЊРµРєС‚Р°)
+| object | L.GmxDrawing.Feature | Р РµРґР°РєС‚РёСЂСѓРµРјС‹Р№ РѕР±СЉРµРєС‚.
 
 L.GmxDrawing
 
 | Type | Property | Description
 | --- | --- | ---
-| createstart | {mode: String} ('add', 'edit') | Начало режима создания редактируемого обьекта.
-| createend | {mode: String} ('add', 'edit') | Окончание режима создания редактируемого обьекта.
-| add | L.GmxDrawing.Feature | Добавлен редактируемый объект.
-| removed | {mode: String, object: L.GmxDrawing.Feature} | Удален редактируемый объект.
-| editstart | {mode: String, object: L.GmxDrawing.Feature} | Перед началом изменения.
-| edit | {mode: String, object: L.GmxDrawing.Feature} | Изменен редактируемый объект.
-| editend | {mode: String, object: L.GmxDrawing.Feature} | После окончания изменения.
-| add | L.GmxDrawing.Feature | Переход в режим создания редактируемого обьекта.
-| dragstart | {mode: String, object: L.GmxDrawing.Feature} | Начало перемещения обьекта.
-| drag | {mode: String, object: L.GmxDrawing.Feature} | Перемещение обьекта.
-| dragend | {mode: String, object: L.GmxDrawing.Feature} | Окончание перемещения обьекта.
-| created | {mode: String, object: L.GmxDrawing.Feature} | Создан редактируемый объект.
+| createstart | {mode: String} ('add', 'edit') | РќР°С‡Р°Р»Рѕ СЂРµР¶РёРјР° СЃРѕР·РґР°РЅРёСЏ СЂРµРґР°РєС‚РёСЂСѓРµРјРѕРіРѕ РѕР±СЊРµРєС‚Р°.
+| createend | {mode: String} ('add', 'edit') | РћРєРѕРЅС‡Р°РЅРёРµ СЂРµР¶РёРјР° СЃРѕР·РґР°РЅРёСЏ СЂРµРґР°РєС‚РёСЂСѓРµРјРѕРіРѕ РѕР±СЊРµРєС‚Р°.
+| add | L.GmxDrawing.Feature | Р”РѕР±Р°РІР»РµРЅ СЂРµРґР°РєС‚РёСЂСѓРµРјС‹Р№ РѕР±СЉРµРєС‚.
+| removed | {mode: String, object: L.GmxDrawing.Feature} | РЈРґР°Р»РµРЅ СЂРµРґР°РєС‚РёСЂСѓРµРјС‹Р№ РѕР±СЉРµРєС‚.
+| editstart | {mode: String, object: L.GmxDrawing.Feature} | РџРµСЂРµРґ РЅР°С‡Р°Р»РѕРј РёР·РјРµРЅРµРЅРёСЏ.
+| edit | {mode: String, object: L.GmxDrawing.Feature} | РР·РјРµРЅРµРЅ СЂРµРґР°РєС‚РёСЂСѓРµРјС‹Р№ РѕР±СЉРµРєС‚.
+| editend | {mode: String, object: L.GmxDrawing.Feature} | РџРѕСЃР»Рµ РѕРєРѕРЅС‡Р°РЅРёСЏ РёР·РјРµРЅРµРЅРёСЏ.
+| add | L.GmxDrawing.Feature | РџРµСЂРµС…РѕРґ РІ СЂРµР¶РёРј СЃРѕР·РґР°РЅРёСЏ СЂРµРґР°РєС‚РёСЂСѓРµРјРѕРіРѕ РѕР±СЊРµРєС‚Р°.
+| dragstart | {mode: String, object: L.GmxDrawing.Feature} | РќР°С‡Р°Р»Рѕ РїРµСЂРµРјРµС‰РµРЅРёСЏ РѕР±СЊРµРєС‚Р°.
+| drag | {mode: String, object: L.GmxDrawing.Feature} | РџРµСЂРµРјРµС‰РµРЅРёРµ РѕР±СЊРµРєС‚Р°.
+| dragend | {mode: String, object: L.GmxDrawing.Feature} | РћРєРѕРЅС‡Р°РЅРёРµ РїРµСЂРµРјРµС‰РµРЅРёСЏ РѕР±СЊРµРєС‚Р°.
+| created | {mode: String, object: L.GmxDrawing.Feature} | РЎРѕР·РґР°РЅ СЂРµРґР°РєС‚РёСЂСѓРµРјС‹Р№ РѕР±СЉРµРєС‚.
 
 
