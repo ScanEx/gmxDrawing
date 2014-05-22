@@ -1,6 +1,6 @@
 L.GmxDrawing = L.Class.extend({
     options: {
-        createKey: '',
+        type: '',
         items: []
     },
     includes: L.Mixin.Events,
@@ -26,51 +26,53 @@ L.GmxDrawing = L.Class.extend({
     _clearCreate: function (object) {
         if (this._createKey) {
             this._map.off(this._createKey.eventName, this._createKey.fn, this);
-            this.fire('createend', {mode: this._createKey.mode, object: object});
+            this.fire('createend', {type: this._createKey.type, object: object});
         }
         this._createKey = null;
     },
 
-    create: function (mode, drawOptions) {
+    create: function (type, drawOptions) {
         this._clearCreate(null);
 
-        if (mode) {
-            if (mode === 'Rectangle') this._map.dragging.disable();
+        if (type) {
+            if (type === 'Rectangle') this._map.dragging.disable();
             this._createKey = {
-                mode: mode,
+                type: type,
                 drawOptions: drawOptions,
-                eventName: mode === 'Rectangle' ? 'mousedown' : 'click',
+                eventName: type === 'Rectangle' ? 'mousedown' : 'click',
                 fn: function (ev) {
                     var object = null,
                         my = this;
-                    if (mode === 'Point') {
+                    if (type === 'Point') {
                         object = L.marker(ev.latlng, {draggable: true})
                             .addTo(this._map)
                             .on('click', L.DomEvent.stopPropagation)
                             .on('dblclick', function() {
                                 this._map.removeLayer(this);
-                                this.options.type = mode;
+                                this.options.type = type;
                                 my._removeItem(this, true);
                             });
                         this.options.items.push(object);
-                    } else if (mode === 'Rectangle') {
+                    } else if (type === 'Rectangle') {
                         object = this.add(
                             L.rectangle(L.latLngBounds(L.latLng(ev.latlng.lat + 0.01, ev.latlng.lng - 0.01), ev.latlng))
-                        , {state: 'edit', drawOptions: drawOptions} );
+                        , {mode: 'edit', drawOptions: drawOptions} );
                         object._pointDown(ev);
-                    } else if (mode === 'Polygon') {
-                        object = this.add(L.polygon([ev.latlng]), {state: 'add', drawOptions: drawOptions}).setAddState();
-                    } else if (mode === 'Polyline') {
-                        object = this.add(L.polyline([ev.latlng]), {state: 'add', drawOptions: drawOptions}).setAddState();
+                        this.fire('addmode', {type: type});
+                        
+                    } else if (type === 'Polygon') {
+                        object = this.add(L.polygon([ev.latlng]), {mode: 'add', drawOptions: drawOptions}).setAddState();
+                    } else if (type === 'Polyline') {
+                        object = this.add(L.polyline([ev.latlng]), {mode: 'add', drawOptions: drawOptions}).setAddState();
                     }
                     this._clearCreate(object);
-                    if (object) this.fire('add', {mode: mode, object: object});
+                    //if (object) this.fire('added', {mode: mode, object: object});
                 }
             }
             this._map.on(this._createKey.eventName, this._createKey.fn, this);
             this.fire('createstart', {mode: mode});
         }
-        this.options.createKey = mode;
+        this.options.type = type;
     },
 
     getItems: function () {
@@ -83,7 +85,7 @@ L.GmxDrawing = L.Class.extend({
             if (item === obj) {
                 if (remove) {
                     this.options.items.splice(i, 1);
-                    this.fire('removed', {mode: item.options.type, object: item});
+                    this.fire('remove', {type: item.options.type, object: item});
                 }
                 return item;
             }
@@ -106,7 +108,7 @@ L.Map.addInitHook(function () {
 
 L.GmxDrawing.Feature = L.Handler.extend({
     options: {
-        state: '' // add, edit
+        mode: '' // add, edit
     },
     includes: L.Mixin.Events,
 
@@ -118,7 +120,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
         this._map = parent._map;
 
         var latlngs = obj._latlngs,
-            state = options.state || (latlngs.length ? 'edit' : 'add'),
+            mode = options.mode || (latlngs.length ? 'edit' : 'add'),
             linesStyle = {opacity:1, weight:2};
         if (this.options.type === 'Polygon' || this.options.type === 'Rectangle') {
             //linesStyle.clickable = false;
@@ -130,7 +132,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
         this._group.addLayer(this.lines);
         this.fill = new L.GmxDrawing._Fill(latlngs);
         this._group.addLayer(this.fill);
-        if (this.options.type !== 'Polyline' && state === 'edit') {
+        if (this.options.type !== 'Polyline' && mode === 'edit') {
             this.lines.addLatLng(latlngs[0]);
             this.fill.addLatLng(latlngs[0]);
         }
@@ -140,7 +142,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
         this._group.addLayer(this.points);
 
         this._map.addLayer(this._group);
-        if (state === 'edit') this.setEditState();
+        if (mode === 'edit') this.setEditState();
     },
 
     remove: function () {
@@ -171,7 +173,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
         }
         this.fill.setLatLngs(points);
         this.lines.setLatLngs(points);
-        if (this.options.type !== 'Polyline' && this.state === 'edit' && points.length > 2) {
+        if (this.options.type !== 'Polyline' && this.mode === 'edit' && points.length > 2) {
             this.lines.addLatLng(points[0]);
             this.fill.addLatLng(points[0]);
         }
@@ -183,7 +185,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
         this._setPoint(point, this.points._latlngs.length, 'node');
     },
 
-    // edit state
+    // edit mode
     _pointDown: function (ev) {
         if (ev.originalEvent.ctrlKey) {
             this._onDragStart(ev);
@@ -204,7 +206,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
         this._map
             .on('mousemove', this._pointMove, this)
             .on('mouseup', this._pointUp, this);
-        this._fireEvent('editstart');
+        //this._fireEvent('editstart');
         this._enableDrag();
     },
 
@@ -213,7 +215,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
             .off('mousemove', this._pointMove, this)
             .off('mouseup', this._pointUp, this);
         this.down = null;
-        this._fireEvent('editend');
+        //this._fireEvent('editend');
     },
     _lastPointClickTime: 0,  // Hack for emulate dblclick on Point
 
@@ -237,11 +239,9 @@ L.GmxDrawing.Feature = L.Handler.extend({
     },
 
     _pointClick: function (ev) {
+        if (ev.originalEvent.ctrlKey) return;
         var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev);
-//console.log('_pointClick', this.state, this.skipClick, downAttr);
-        if (downAttr.type === 'node'
-                && !this.skipClick
-            ) {
+        if (downAttr.type === 'node' && !this.skipClick) {
             var num = downAttr.num,
                 clickTime = new Date().getTime(),
                 prevClickTime = this._lastPointClickTime;
@@ -254,7 +254,6 @@ L.GmxDrawing.Feature = L.Handler.extend({
                 this._removePoint(num);
                 this.setEditState();
             } else if (this.options.type === 'Polyline' && downAttr.end) {
-                //this.points._latlngs.splice(downAttr.nm, 1);
                 if (!this.addLinePointTimer) {
                     var my = this,
                         latlng = ev.latlng;
@@ -265,7 +264,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
                         if (num === 0) my.points._latlngs.reverse();
                         my.points.addLatLng(latlng);
                         my.setAddState();
-                        my._fireEvent('add');
+                        //my._fireEvent('added');
                     }, 300);
                 }
             }
@@ -301,7 +300,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
         
         this.fill.setLatLngs(points);
         this.lines.setLatLngs(points);
-        if (this.options.type !== 'Polyline' && this.state === 'edit' && points.length > 2) {
+        if (this.options.type !== 'Polyline' && this.mode === 'edit' && points.length > 2) {
             this.lines.addLatLng(points[0]);
             this.fill.addLatLng(points[0]);
         }
@@ -310,7 +309,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
     },
 
     _fireEvent: function (name) {
-        var event = {mode: this.options.type, object: this};
+        var event = {type: this.options.type, object: this};
         this.fire(name, event);
         this._parent.fire(name, event);
     },
@@ -339,6 +338,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
                 .on('dblclick click', stop, this)
                 .on('dblclick click', prevent, this)
                 .on('mousedown', this._pointDown, this);
+            this._fireEvent('editmode');
         } else {
             this._pointUp();
             this._map
@@ -366,6 +366,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
                 .on('mousedown', this._mousedown, this)
                 .on('mouseup', this._mouseup, this)
                 .on('mousemove', this._moseMove, this);
+            this._fireEvent('addmode');
         } else {
             this._map
                 .off('dblclick', stop)
@@ -380,27 +381,27 @@ L.GmxDrawing.Feature = L.Handler.extend({
         this._editHandlers(false);
         this._createHandlers(false);
         this._editHandlers(true);
-        this.state = 'edit';
+        this.mode = 'edit';
     },
 
     setAddState: function () {
         this._editHandlers(false);
         this._createHandlers(false);
         this._createHandlers(true);
-        this.state = 'add';
+        this.mode = 'add';
     },
 
     removeAddState: function () {
         this._createHandlers(false);
-        this.state = '';
+        this.mode = '';
     },
 
     removeEditState: function () {
         this._editHandlers(false);
-        this.state = '';
+        this.mode = '';
     },
 
-    // add state
+    // add mode
     _moseMove: function (ev) {
         var points = this.points._latlngs;
         if (points.length === 1) this._setPoint(ev.latlng, 1);
@@ -413,7 +414,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
     },
 
     _mouseup: function (ev) {
-        if (new Date().getTime() < this._lastTime && this.state === 'add') {
+        if (new Date().getTime() < this._lastTime && this.mode === 'add') {
             var down = L.GmxDrawing.utils.getDownType.call(this, ev),
                 points = this.points._latlngs;
             if (down.type === 'node' && down.end) {
@@ -430,7 +431,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
                     } else {
                         this.remove();
                     }
-                    this._fireEvent('created');
+                    //this._fireEvent('created');
                     return;
                 }
             }
@@ -490,7 +491,7 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
             pointSize = this.options.pointSize,
             weight = this.options.weight,
             //skipLastPoint = 0,
-            skipLastPoint = this._parent.state === 'add' ? 1 : 0,
+            skipLastPoint = this._parent.mode === 'add' ? 1 : 0,
             radius = ('circle' in this.options ? this.options.circle : 0);
 
         for (var j = 0, len2 = points.length - skipLastPoint, str = '', p; j < len2; j++) {
