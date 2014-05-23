@@ -8,10 +8,10 @@
 
 Метод|Синтаксис|Возвращаемое значение|Описание
 ------|------|:---------:|-----------
-add|`add(<Polyline|Polygon|Rectangle> object, <options> options? )`|<L.GmxDrawing.Feature>| Добавить редактируемый объект.
+add|`add(<Polyline\|Polygon\|Rectangle> object, <options> options? )`|`<L.GmxDrawing.Feature>`| Добавить редактируемый объект.
 create|`create(<string> type, <options> options? )`|| Переход в режим создания редактируемого объекта заданного типа type.
-getItems|`getItems()`|<L.GmxDrawing.Feature[]> array| Получить массив редактируемых объектов.
-remove|`remove(<L.GmxDrawing.Feature>)`|<L.GmxDrawing.Feature>| Удалить редактируемый объект.
+getItems|`getItems()`|`<L.GmxDrawing.Feature[]> array`| Получить массив редактируемых объектов.
+remove|`remove(<L.GmxDrawing.Feature>)`|`<L.GmxDrawing.Feature>`| Удалить редактируемый объект.
 
 ### Options
 
@@ -35,7 +35,7 @@ circle | <Boolean> | false | Отображать вершины окружно�
 
 Factory|Описание
 ------|-----------
-L.GmxDrawing.Feature( <Polyline|Polygon|Rectangle> object, <options> options? ) |Создает редактируемый объект.
+L.GmxDrawing.Feature( `<Polyline\|Polygon\|Rectangle> object`, <options> options? ) |Создает редактируемый объект.
 
 ### Методы
 Метод|Синтаксис|Возвращаемое значение|Описание
