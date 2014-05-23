@@ -57,21 +57,21 @@
             [
              [ [50.0, 20.0], [61.0, 20.0], [61.0, 33.0], [30.0, 33.0], [50.0, 20.0] ]
             ]
-         ), {lines:{fill: true, fillColor: '#ff0000'}});
+         ));
         //var removedPolygon = map.gmxDrawing.remove(drawPolygon);
 
         var drawPolyline = map.gmxDrawing.add(L.polyline(
             [
              [50.0, 30.0], [64.0, 35.0], [71.5, 53.0], [44.0, 43.0]
             ]
-         ), {points:{shape: 'circle'}, lines:{color: '#ff0000'}} );
+         ), {pointStyle:{shape: 'circle'}, lineStyle:{color: '#ff0000'}} );
 
         // create rectangle
         var drawRectangle = map.gmxDrawing.add(L.rectangle(
             [
              [20.0, 40.0], [54.0, 65.0]
             ]
-         ), {points:{shape: 'circle', size: 12}, lines:{color: '#00ff00'}} );
+         ), {pointStyle:{shape: 'circle', size: 12}, lineStyle:{color: '#00ff00'}} );
 
 
         map.addControl(new L.Control.gmxDrawing({

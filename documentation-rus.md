@@ -17,8 +17,8 @@ remove|`remove(<L.GmxDrawing.Feature>)`|`<L.GmxDrawing.Feature>`| Удалить
 
 Опция|Тип|По умолчанию|Описание
 ------|------|:---------:|-----------
-lines | <L.Path options> | {opacity:1, weight:2} | Стиль отрисовки линий объекта.
-points | <Point options> | {size:10, opacity:1, weight:2} | Стиль отрисовки вершин объекта (для `Polygon` и `Rectangle` устанавливается fill = true)
+lineStyle | <L.Path options> | {opacity:1, weight:2} | Стиль отрисовки линий объекта.
+pointStyle | <Point options> | {size:10, opacity:1, weight:2} | Стиль отрисовки вершин объекта (для `Polygon` и `Rectangle` устанавливается fill = true)
 
 ### Point options
 
