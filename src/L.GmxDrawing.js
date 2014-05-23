@@ -80,7 +80,7 @@ L.GmxDrawing = L.Class.extend({
         this.options.type = type;
     },
 
-    getItems: function () {
+    getFeatures: function () {
         return this.items;
     },
 
