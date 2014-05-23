@@ -514,9 +514,8 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
         var round = L.Path.VML,
             size = this.options.size/2,
             weight = this.options.weight,
-            //skipLastPoint = 0,
             skipLastPoint = this._parent.mode === 'add' ? 1 : 0,
-            radius = ('circle' in this.options ? true : false);
+            radius = (this.options.shape === 'circle' ? true : false);
 
         for (var j = 0, len2 = points.length - skipLastPoint, str = '', p; j < len2; j++) {
             p = points[j];

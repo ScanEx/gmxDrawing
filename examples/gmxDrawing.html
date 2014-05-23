@@ -64,14 +64,14 @@
             [
              [50.0, 30.0], [64.0, 35.0], [71.5, 53.0], [44.0, 43.0]
             ]
-         ), {points:{circle: 6}, lines:{color: '#ff0000'}} );
+         ), {points:{shape: 'circle'}, lines:{color: '#ff0000'}} );
 
         // create rectangle
         var drawRectangle = map.gmxDrawing.add(L.rectangle(
             [
              [20.0, 40.0], [54.0, 65.0]
             ]
-         ), {points:{circle: 7}, lines:{color: '#00ff00'}} );
+         ), {points:{shape: 'circle', size: 12}, lines:{color: '#00ff00'}} );
 
 
         map.addControl(new L.Control.gmxDrawing({
