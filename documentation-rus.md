@@ -8,11 +8,7 @@
 
 Метод|Синтаксис|Возвращаемое значение|Описание
 ------|------|:---------:|-----------
-<<<<<<< HEAD
 add|`add(`<Polyline&`#124;`Polygon&`#124;`Rectangle> object`> object, <options> options? )`|`<L.GmxDrawing.Feature>`| Добавить редактируемый объект.
-=======
-add|add(<Polyline&#124;Polygon&#124;Rectangle> object, <options> options? )|`<L.GmxDrawing.Feature>`| Добавить редактируемый объект.
->>>>>>> 2b973fdd98e475d419bdbe3d193ca7ce0f8e436f
 create|`create(<string> type, <options> options? )`|| Переход в режим создания редактируемого объекта заданного типа type.
 getFeatures|`getFeature()`|`<L.GmxDrawing.Feature[]> array`| Получить массив редактируемых объектов.
 remove|`remove(<L.GmxDrawing.Feature>)`|`<L.GmxDrawing.Feature>`| Удалить редактируемый объект.
@@ -39,11 +35,7 @@ shape | <square#124;circle String> | `square` | Отображать верши�
 
 Factory|Описание
 ------|-----------
-<<<<<<< HEAD
 L.GmxDrawing.Feature( `<Polyline&`#124;`Polygon&`#124;`Rectangle> object`, <options> options? ) |Создает редактируемый объект.
-=======
-L.GmxDrawing.Feature( <Polyline&#124;Polygon&#124;Rectangle> object, <options> options? ) |Создает редактируемый объект.
->>>>>>> 2b973fdd98e475d419bdbe3d193ca7ce0f8e436f
 
 ### Методы
 Метод|Синтаксис|Возвращаемое значение|Описание
