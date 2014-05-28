@@ -198,7 +198,15 @@ L.GmxDrawing.Feature = L.Handler.extend({
     getGeoJSON: function () {
         var type = this.options.type === 'Rectangle' ? 'Polygon' : this.options.type,
             coords = this.points._latlngs;
-        if (type === 'Polygon') coords.push(coords[0]);
+        if (type === 'Polygon') {
+            var last = coords.length - 1;
+            if (coords[0].lat !== last.lat || coords[0].lng !== last.lng) {
+                var arr = [];
+                coords.forEach(function (item) { arr.push(item); });
+                arr.push(coords[0]);
+                coords = arr;
+            }
+        }
         return L.GeoJSON.getFeature(this, {
             type: type,
             coordinates: L.GeoJSON.latLngsToCoords(coords)
