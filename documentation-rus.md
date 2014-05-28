@@ -49,6 +49,8 @@ setLatLngs|`setLatLngs(<LatLng[][]> latlngs)`| |Установить масси�
 getLatLngs|`getLatLngs()`|`<LatLng[][]> latlngs`|Получить массив координат точек объекта.
 setLinesStyle|`setLinesStyle(<L.Path options>)`||Установить cтиль отрисовки линий объекта.
 setPointsStyle|`setPointsStyle(<Point options>)`||Установить cтиль отрисовки вершин объекта.
+getType|`getType()`||Получить тип объекта.
+getGeoJSON|`getGeoJSON()`||Получить GeoJSON по объекту.
 
 ### Events
 

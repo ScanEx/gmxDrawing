@@ -48,7 +48,7 @@ L.GmxDrawing = L.Class.extend({
                     var object = null,
                         my = this;
                     if (type === 'Point') {
-                        object = L.marker(ev.latlng, {draggable: true})
+                        object = new L.GmxDrawing.Point(ev.latlng, {draggable: true})
                             .addTo(this._map)
                             .on('click', L.DomEvent.stopPropagation)
                             .on('dblclick', function() {
@@ -193,6 +193,21 @@ L.GmxDrawing.Feature = L.Handler.extend({
             points[nm] = latlng;
         }
         this.setLatLngs(points);
+    },
+
+    getGeoJSON: function () {
+        var type = this.options.type === 'Rectangle' ? 'Polygon' : this.options.type,
+            coords = this.points._latlngs;
+        if (type === 'Polygon') coords.push(coords[0]);
+        return L.GeoJSON.getFeature(this, {
+            type: type,
+            coordinates: L.GeoJSON.latLngsToCoords(coords)
+        });
+        
+    },
+
+    getType: function () {
+        return this.options.type;
     },
 
     getLatLngs: function () {
@@ -496,6 +511,24 @@ L.GmxDrawing._Fill = L.Polyline.extend({
         this._clipPoints();
 
         L.Path.prototype._updatePath.call(this);
+    }
+});
+
+L.GmxDrawing.Point = L.Marker.extend({
+    getLatLngs: function () {
+        return [this._latlng];
+    },
+
+    getType: function () {
+        return 'Point';
+    },
+    
+    getGeoJSON: function () {
+        return L.GeoJSON.getFeature(this, {
+            type: 'Point',
+            coordinates: L.GeoJSON.latLngsToCoords([this._latlng])
+        });
+        
     }
 });
 
