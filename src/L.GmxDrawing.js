@@ -1,7 +1,3 @@
-var _touchEventNames = { touchstart: 'touchstart', touchmove: 'touchmove', touchend: 'touchend' };
-if (L.Browser.msPointer) _touchEventNames = { touchstart: 'MSPointerDown', touchmove: 'MSPointerMove', touchend: 'MSPointerUp' };
-else if (L.Browser.pointer) _touchEventNames = { touchstart: 'pointerdown', touchmove: 'pointermove', touchend: 'pointerup' };
-
 L.GmxDrawing = L.Class.extend({
     options: {
         type: ''
@@ -30,16 +26,39 @@ L.GmxDrawing = L.Class.extend({
         return item;
     },
 
-    _clearCreate: function (object) {
+    _disableDrag: function (ev) {
+        this._map.dragging.disable();
+        L.DomUtil.disableTextSelection();
+        L.DomUtil.disableImageDrag();
+		this._map.doubleClickZoom.removeHooks();
+    },
+
+    _enableDrag: function (ev) {
+        this._map.dragging.enable();
+        L.DomUtil.enableTextSelection();
+        L.DomUtil.enableImageDrag();
+		this._map.doubleClickZoom.addHooks();
+    },
+
+    _clearCreate: function () {
         if (this._createKey) {
-            this._map.off(this._createKey.eventName, this._createKey.fn, this);
-            //this.fire('createend', {type: this._createKey.type, object: object});
+            if (this._createKey.type === 'Rectangle' && L.Browser.mobile) {
+                L.DomEvent.off(this._map._container, 'touchstart', this._createKey.fn, this);
+            } else {
+                this._map.off(this._createKey.eventName, this._createKey.fn, this);
+            }
+            this._enableDrag();
         }
         this._createKey = null;
     },
-
+/*
+    skipTouch: function (flag) {
+console.log('skipTouch', this._createKey, this.items);
+        if (this._createKey && this._createKey.type === 'Rectangle' && this.items.length) this.items.pop().remove();
+    },
+*/
     create: function (type, drawOptions) {
-//console.log('create');
+        //console.log('create');
         this._clearCreate(null);
         if (type) {
             if (type === 'Rectangle') this._map.dragging.disable();
@@ -48,12 +67,12 @@ L.GmxDrawing = L.Class.extend({
             this._createKey = {
                 type: type,
                 drawOptions: drawOptions,
-                eventName: type === 'Rectangle' ? 'mousedown' : 'click',
+                eventName: type === 'Rectangle' ? (L.Browser.mobile ? 'touchstart' : 'mousedown') : 'click',
                 fn: function (ev) {
-                    var obj = null;
-//console.log('create_1_ ', ev, type, obj);
+                    var obj = null,
+                        latlng = ev.latlng;
                     if (type === 'Point') {
-                        obj = L.marker(ev.latlng, {draggable: true})
+                        obj = L.marker(latlng, {draggable: true})
                             .addTo(this._map)
                             .on('click', L.DomEvent.stopPropagation)
                             .on('dblclick', function() {
@@ -64,25 +83,31 @@ L.GmxDrawing = L.Class.extend({
                         my.items.push(obj);
                         my.fire('drawstop', {mode: type, object: obj});
                     } else if (type === 'Rectangle') {
+                        //console.log('Rectangle ', ev, latlng);
+                        if (L.Browser.mobile) {
+                            var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
+                            latlng = downAttr.latlng;
+                        }
                         obj = my.add(
-                            L.rectangle(L.latLngBounds(L.latLng(ev.latlng.lat + 0.01, ev.latlng.lng - 0.01), ev.latlng))
+                            L.rectangle(L.latLngBounds(L.latLng(latlng.lat + 0.01, latlng.lng - 0.01), latlng))
                         , {mode: 'edit', drawOptions: drawOptions} );
-                        obj._pointDown(ev);
+                        if (L.Browser.mobile) obj._startTouchMove(ev, true);
+                        else obj._pointDown(ev);
+
                         obj._drawstop = true;
-                        
                     } else if (type === 'Polygon') {
-//console.log('create_2_ ', ev, type, obj);
-                        obj = my.add(L.polygon([ev.latlng]), {mode: 'add', drawOptions: drawOptions}).setAddMode();
-//console.log('create_3_ ', ev, type, obj);
+                        obj = my.add(L.polygon([latlng]), {mode: 'add', drawOptions: drawOptions}).setAddMode();
                     } else if (type === 'Polyline') {
-                        obj = my.add(L.polyline([ev.latlng]), {mode: 'add', drawOptions: drawOptions}).setAddMode();
+                        obj = my.add(L.polyline([latlng]), {mode: 'add', drawOptions: drawOptions}).setAddMode();
                     }
-//console.log('create__ ', ev, type, obj);
-                    my._clearCreate(obj);
-                    //if (object) this.fire('added', {mode: mode, object: object});
+                    my._clearCreate();
                 }
             }
-            this._map.on(this._createKey.eventName, this._createKey.fn, this);
+            if (type === 'Rectangle' && L.Browser.mobile) {
+                L.DomEvent.on(my._map._container, 'touchstart', this._createKey.fn, this);
+            } else {
+                this._map.on(this._createKey.eventName, this._createKey.fn, this);
+            }
             this.fire('drawstart', {mode: type});
         }
         this.options.type = type;
@@ -128,7 +153,6 @@ L.GmxDrawing.Feature = L.Handler.extend({
     includes: L.Mixin.Events,
 
     initialize: function (parent, obj, options) {
-//console.log('initialize');
         if (!options) options = {};
         L.setOptions(this, options);
 
@@ -136,11 +160,11 @@ L.GmxDrawing.Feature = L.Handler.extend({
         this._map = parent._map;
 
         var latlngs = obj._latlngs,
+            holes = obj._holes || null,
             mode = options.mode || (latlngs.length ? 'edit' : 'add'),
             linesStyle = {opacity:1, weight:2};
         if (this.options.type === 'Polygon' || this.options.type === 'Rectangle') {
-            //linesStyle.clickable = false;
-            linesStyle.fill = true;//, linesStyle.fillColor;
+            linesStyle.fill = true;
         }
         for (var key in options.lines) linesStyle[key] = options.lines[key];
         this._group = new L.LayerGroup();
@@ -152,7 +176,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
             this.lines.addLatLng(latlngs[0]);
             this.fill.addLatLng(latlngs[0]);
         }
-        
+
         this.points = new L.GmxDrawing.PointMarkers(latlngs, options.points || {});
         this.points._parent = this;
         this._group.addLayer(this.points);
@@ -163,8 +187,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
             this._editHandlers(true);
             this.mode = 'edit';
         }
-		this.points._path.setAttribute('fill-rule', 'inherit');
-//console.log('initialize', this);
+        this.points._path.setAttribute('fill-rule', 'inherit');
     },
 
     remove: function () {
@@ -186,7 +209,6 @@ L.GmxDrawing.Feature = L.Handler.extend({
 
     _setPoint: function (latlng, nm, type) {
         var points = this.points._latlngs;
-//console.log('_setPoint', points, latlng, nm, type);
         if (this.options.type === 'Rectangle') {
             if (type === 'edge') {
                 nm--;
@@ -223,7 +245,6 @@ L.GmxDrawing.Feature = L.Handler.extend({
             type: type,
             coordinates: L.GeoJSON.latLngsToCoords(coords)
         });
-        
     },
 
     getType: function () {
@@ -235,7 +256,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
     },
 
     setLatLngs: function (points) {
-//console.log('setLatLngs', points);
+        //console.log('setLatLngs', points);
         this.fill.setLatLngs(points);
         this.lines.setLatLngs(points);
         if (this.options.type !== 'Polyline' && this.mode === 'edit' && points.length > 2) {
@@ -247,13 +268,12 @@ L.GmxDrawing.Feature = L.Handler.extend({
     },
 
     addLatLng: function (point) {
-//console.log('addLatLng', point, this.points);
         this._setPoint(point, this.points._latlngs.length, 'node');
     },
 
     // edit mode
     _pointDown: function (ev) {
-//console.log('_pointDown', this.down, ev);
+        //console.log('_pointDown', this.down, ev);
         if (ev.originalEvent && ev.originalEvent.ctrlKey) {
             this._onDragStart(ev);
             return;
@@ -273,12 +293,20 @@ L.GmxDrawing.Feature = L.Handler.extend({
         this._map
             .on('mousemove', this._pointMove, this)
             .on('mouseup', this._pointUp, this);
-			
-        this._enableDrag();
+
+        this._parent._enableDrag();
+    },
+
+    _pointMove: function (ev) {
+        //console.log('_pointMove', this.down, ev.latlng);
+        if (this.down) {
+            this._setPoint(ev.latlng, this.down.num, this.down.type);
+            this.skipClick = true;
+        }
     },
 
     _pointUp: function (ev) {
-//console.log('_pointUp', this.down, ev);
+        //console.log('_pointUp', this.down, ev);
         this._map
             .off('mousemove', this._pointMove, this)
             .off('mouseup', this._pointUp, this);
@@ -293,7 +321,6 @@ L.GmxDrawing.Feature = L.Handler.extend({
 
     _removePoint: function (num) {
         var points = this.points._latlngs;
-//console.log('_removePoint', points);
         if (points.length > num) {
             points.splice(num, 1);
             if (points.length < 2 || this.options.type === 'Rectangle') {
@@ -304,24 +331,16 @@ L.GmxDrawing.Feature = L.Handler.extend({
         }
     },
 
-    _pointMove: function (ev) {
-//console.log('_pointMove', this.down, ev.latlng);
-        if (this.down) {
-            this._setPoint(ev.latlng, this.down.num, this.down.type);
-            this.skipClick = true;
-        }
-    },
-
     _pointClick: function (ev) {
-        if (ev.originalEvent.ctrlKey) return;
+        if (ev.originalEvent && ev.originalEvent.ctrlKey) return;
         var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map);
         var clickTime = new Date().getTime(),
             prevClickTime = this._lastPointClickTime;
         this._lastPointClickTime = clickTime + 300;
-//console.log('_pointClick 0', downAttr, L.Browser.mobile, this.skipClick);
+        //console.log('_pointClick 0', downAttr, L.Browser.mobile, this.skipClick);
         if (downAttr.type === 'node' && !this.skipClick) {
             var num = downAttr.num;
-//console.log('_pointClick', (clickTime < prevClickTime));
+            //console.log('_pointClick', (clickTime < prevClickTime));
             if (clickTime < prevClickTime) {  // this is dblclick on Point
                 if (this.addLinePointTimer) {
                     clearTimeout(this.addLinePointTimer);
@@ -364,7 +383,6 @@ L.GmxDrawing.Feature = L.Handler.extend({
     },
 
     _onDrag: function (ev) {
-//console.log('_onDrag', this.points, ev);
         var lat = this._dragstartPoint.lat - ev.latlng.lat,
             lng = this._dragstartPoint.lng - ev.latlng.lng,
             points = this.points._latlngs;
@@ -385,110 +403,85 @@ L.GmxDrawing.Feature = L.Handler.extend({
         this._parent.fire(name, event);
     },
 
-    _disableDrag: function (ev) {
-        this._map.dragging.disable();
-    },
-
-    _enableDrag: function (ev) {
-        this._map.dragging.enable();
-        L.DomUtil.disableTextSelection();
-        L.DomUtil.disableImageDrag();
+    _startTouchMove: function (ev, drawstop) {
+        var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map);
+        //console.log('_touchstart', ev, downAttr);
+        if (downAttr.type === 'node') {
+            this._disableDrag();
+            this.down = downAttr;
+            var num = downAttr.num;
+            var my = this;
+            var _touchmove = function (ev) {
+                downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
+                    if(ev.touches.length == 1){ // Only deal with one finger
+                        my._pointMove(downAttr);
+                  }
+            };
+            var _touchend = function (ev) {
+                L.DomEvent
+                    .off(my._map._container, 'touchmove', _touchmove, my)
+                    .off(my._map._container, 'touchend', _touchend, my);
+                my._parent._enableDrag();
+                my.skipClick = false;
+				if (drawstop) my._parent.fire('drawstop', {mode: my.options.type, object: my});
+            }
+            L.DomEvent
+                .on(my._map._container, 'touchmove', _touchmove, my)
+                .on(my._map._container, 'touchend', _touchend, my);
+        }
     },
 
     _editHandlers: function (flag) {
         var stop = L.DomEvent.stopPropagation;
         var prevent = L.DomEvent.preventDefault;
-//console.log('_editHandlers', flag, L.Browser.mobile);
-		//var touchstart = null;
-		if (this.touchstart) this.points._container.removeEventListener(_touchEventNames.touchstart, this.touchstart, false);
-		if (this.touchstartFill) this.fill._container.removeEventListener(_touchEventNames.touchstart, this.touchstartFill, false);
+        //console.log('_editHandlers', flag, L.Browser.mobile);
+		if (this.touchstart) L.DomEvent.off(this.points._container, 'touchstart', this.touchstart, this);
+		if (this.touchstartFill) L.DomEvent.off(this.fill._container, 'touchstart', this.touchstartFill, this);
 		this.touchstart = null;
 		this.touchstartFill = null;
         if (flag) {
-			this._map
-				.on('dblclick click', stop);
 			this.points
 				.on('dblclick click', stop, this)
-				//.on('dblclick click', prevent, this)
-				.on('click', this._pointClick, this);
+                .on('click', this._pointClick, this);
 			if (L.Browser.mobile) {
 				if (this._EditOpacity) {
 					this.setPointsStyle({fillOpacity: this._EditOpacity});
 				}
 				var my = this;
 				this.touchstart = function (ev) {
-					//L.DomEvent.stopPropagation(ev);
-					//L.DomEvent.preventDefault(ev);
-					var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
-//console.log('_touchstart', ev, downAttr);
-					if (downAttr.type === 'node') {
-						my._disableDrag();
-						my.down = downAttr;
-						var num = downAttr.num;
-						var _touchmove = function (ev) {
-							downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
-								if(ev.touches.length == 1){ // Only deal with one finger
-									my._pointMove(downAttr);
-							  }
-						};
-						var _touchend = function (ev) {
-							my._map._container.removeEventListener(_touchEventNames.touchmove, _touchmove, false);
-							my._map._container.removeEventListener(_touchEventNames.touchend, _touchend, false);
-							my._enableDrag();
-							my.skipClick = false;
-//console.log('_touchend', ev);
-						}
-
-						my._map._container.addEventListener(_touchEventNames.touchmove, _touchmove, false);
-						my._map._container.addEventListener(_touchEventNames.touchend, _touchend, false);
-					}
-					
+                    my._startTouchMove(ev);
 				};
-				this.points._container.addEventListener(_touchEventNames.touchstart, this.touchstart, false);
+				L.DomEvent.on(this.points._container, 'touchstart', this.touchstart, this);
 				this.touchstartFill = function (ev) {
 					var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
 					if (downAttr.type === 'edge' && my.options.type !== 'Rectangle') {
 					    var points = my.points._latlngs;
-
-//console.log('touchstartFill', downAttr, points);
 						points.splice(downAttr.num, 0, points[downAttr.num]);
 						my._setPoint(downAttr.latlng, downAttr.num, downAttr.type);
 					}
 				};
-				this.fill._container.addEventListener(_touchEventNames.touchstart, this.touchstartFill, false);
+				L.DomEvent.on(this.fill._container, 'touchstart', this.touchstartFill, this);
 			} else {
 				this.points
 					.on('mousemove', stop)
 					.on('mousedown', this._pointDown, this);
 				this.fill
 					.on('dblclick click', stop, this)
-					//.on('dblclick click', prevent, this)
 					.on('mousedown', this._pointDown, this);
 				this._fireEvent('editmode');
 			}
         } else {
             this._pointUp();
-			this._map
-				.off('dblclick click', stop);
 			this.points
 				.off('dblclick click', stop, this)
-				//.off('dblclick click', prevent, this)
 				.off('click', this._pointClick, this);
 			if (L.Browser.mobile) {
 			} else {
-				// this._map
-					// .off('dblclick click', stop);
 				this.points
-					// .off('dblclick click', stop, this)
 					.off('mousemove', stop)
-					// .off('click', this._pointClick, this)
 					.off('mousedown', this._pointDown, this);
-			//this.points._container.removeEventListener(_touchstart, this._pointDown, false);
-				// this.points._container
-					// .off('touchstart', this._pointDown, this);
 				this.fill
 					.off('dblclick click', stop, this)
-					//.off('dblclick click', prevent, this)
 					.off('mousedown', this._pointDown, this);
 			}
         }
@@ -496,8 +489,9 @@ L.GmxDrawing.Feature = L.Handler.extend({
 
     _createHandlers: function (flag) {
         var stop = L.DomEvent.stopPropagation;
-//console.log('_createHandlers', flag, L.Browser.mobile);
+        //console.log('_createHandlers', flag, L.Browser.mobile);
         if (flag) {
+            this._parent._enableDrag();
 			if (L.Browser.mobile) {
 				this._EditOpacity = this.points.options.fillOpacity;
 				this.setPointsStyle({fillOpacity: 0.5});
@@ -534,7 +528,6 @@ L.GmxDrawing.Feature = L.Handler.extend({
 					.off('mousemove', this._moseMove, this);
 			}
         }
-//console.log('_createHandlers__', flag, L.Browser.mobile);
     },
 
     setEditMode: function () {
@@ -566,21 +559,18 @@ L.GmxDrawing.Feature = L.Handler.extend({
     // add mode
     _moseMove: function (ev) {
         var points = this.points._latlngs;
-//console.log('_moseMove', points);
         if (points.length === 1) this._setPoint(ev.latlng, 1);
 
         this._setPoint(ev.latlng, points.length - 1);
     },
 
     _mousedown: function (ev) {
-//console.log('_mousedown', ev, this.mode, this._lastTime);
         this._lastTime = new Date().getTime() + 300;  // Hack for determinating map dragging
     },
 
     _mouseClick: function (ev) {
 		var down = L.GmxDrawing.utils.getDownType.call(this, ev, this._map),
 			points = this.points._latlngs;
-//console.log('_mouseClick', down, points, ev);
 
 		if (down.type === 'node' && down.end) {
 			if (down.num === 0 || ((down.prev || L.Browser.mobile) && down.num === points.length - 1)) {
@@ -607,7 +597,6 @@ L.GmxDrawing.Feature = L.Handler.extend({
     },
 
     _mouseup: function (ev) {
-//console.log('_mouseup', ev, this.mode, this._lastTime);
         if (new Date().getTime() < this._lastTime && this.mode === 'add') {
 			this._mouseClick(ev);
         }
@@ -747,38 +736,26 @@ L.GmxDrawing.utils = {
 
     getDownType: function(ev, map) {
         //console.log('getDownType', this, arguments);
-        var out = {type: ''},
-            points = this.points._parts[0],
+        var layerPoint = ev.layerPoint,
+            ctrlKey = false,
+            latlng = ev.latlng;
+        if (ev.originalEvent) {
+            if (ev.originalEvent.ctrlKey) ctrlKey = true;
+        }
+        if (ev.touches && ev.touches.length === 1) {
+            var first = ev.touches[0],
+                containerPoint = map.mouseEventToContainerPoint(first);
+            layerPoint = map.containerPointToLayerPoint(containerPoint);
+            latlng = map.layerPointToLatLng(layerPoint);
+        }
+        var out = {type: '', latlng: latlng, ctrlKey: ctrlKey},
+            points = this.points ? this.points._parts[0] : [],
             len = points.length;
         if (len === 0) return out;
-		
-        //var layerPoint = (L.Browser.mobile ? this.mouseEventToLayerPoint(ev.touches[0]) : ev.layerPoint),
-        var layerPoint = ev.layerPoint,
-			latlng = ev.latlng,
-            size = (this.points.options.size || 10) / 2;
-//console.log('getDownType', layerPoint, size, ev.layerPoint);
 
+        var size = (this.points.options.size || 10) / 2;
         size += (this.points.options.weight || 2);
 
-		if (ev.touches && ev.touches.length === 1) {
-			var first = ev.touches[0];
-			var containerPoint = map.mouseEventToContainerPoint(first);
-			layerPoint = map.containerPointToLayerPoint(containerPoint);
-			latlng = map.layerPointToLatLng(layerPoint);
-			//layerPoint = new L.Point(first.clientX, first.clientY);
-		//var t1 = L.DomEvent.getMousePosition(ev, this.points._container);
-				//pos = L.DomUtil.getPosition(this.points._container);
-				//layerPoint = L.DomUtil.getPosition(this.points._container).subtract(startPoint);
-
-			//L.DomEvent.preventDefault(e);
-		
-//var tt = map.latLngToLayerPoint(ev.latlng);
-//var containerPoint = L.DomEvent.getMousePosition(ev, this.points._container);
-
-//var tt = map.containerPointToLayerPoint(containerPoint);
-//console.log('getDownType__', ev, points, this, containerPoint, tt, layerPoint);
-		}
-		
         var cursorBounds = new L.Bounds(
             L.point(layerPoint.x - size, layerPoint.y - size),
             L.point(layerPoint.x + size, layerPoint.y + size)
@@ -786,8 +763,8 @@ L.GmxDrawing.utils = {
             prev = points[len - 1];
         out = {
             type: 'node',
+            latlng: latlng, ctrlKey: ctrlKey,
             num: 0,
-            latlng: latlng,
             end: true
         };
         if (cursorBounds.contains(points[0])) {
@@ -807,13 +784,12 @@ L.GmxDrawing.utils = {
             var point = points[i];
             if (cursorBounds.contains(point)) {
 //console.log('getDownType 2222 ', cursorBounds, point, i);
-				return {
-            
-				type: 'node', num: i, end: (i === 0 ? true : false), latlng: latlng
-				};
-		    }
+                return {
+                    type: 'node', num: i, end: (i === 0 ? true : false), ctrlKey: ctrlKey, latlng: latlng
+                };
+            }
             var dist = L.LineUtil.pointToSegmentDistance(layerPoint, prev, point);
-            if (dist < size) out = {type: 'edge', num: (i === 0 ? len : i), latlng: latlng};
+            if (dist < size) out = {type: 'edge', num: (i === 0 ? len : i), ctrlKey: ctrlKey, latlng: latlng};
             prev = point;
         }
 //console.log('getDownType cccccccccc ', size, out, cursorBounds, points);
