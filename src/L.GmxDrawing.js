@@ -166,7 +166,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
         if (this.options.type === 'Polygon' || this.options.type === 'Rectangle') {
             linesStyle.fill = true;
         }
-        for (var key in options.lines) linesStyle[key] = options.lines[key];
+        for (var key in options.lineStyle) linesStyle[key] = options.lineStyle[key];
         this._group = new L.LayerGroup();
         this.lines = new L.Polyline(latlngs, linesStyle);
         this._group.addLayer(this.lines);
@@ -177,7 +177,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
             this.fill.addLatLng(latlngs[0]);
         }
 
-        this.points = new L.GmxDrawing.PointMarkers(latlngs, options.points || {});
+        this.points = new L.GmxDrawing.PointMarkers(latlngs, options.pointStyle || {});
         this.points._parent = this;
         this._group.addLayer(this.points);
 
