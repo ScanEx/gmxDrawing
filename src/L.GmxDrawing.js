@@ -51,12 +51,7 @@ L.GmxDrawing = L.Class.extend({
         }
         this._createKey = null;
     },
-/*
-    skipTouch: function (flag) {
-console.log('skipTouch', this._createKey, this.items);
-        if (this._createKey && this._createKey.type === 'Rectangle' && this.items.length) this.items.pop().remove();
-    },
-*/
+
     create: function (type, drawOptions) {
         //console.log('create');
         this._clearCreate(null);
@@ -74,7 +69,7 @@ console.log('skipTouch', this._createKey, this.items);
                     if (type === 'Point') {
                         obj = L.marker(latlng, {draggable: true})
                             .addTo(this._map)
-                            .on('click', L.DomEvent.stopPropagation)
+                            .bindPopup()
                             .on('dblclick', function() {
                                 this._map.removeLayer(this);
                                 this.options.type = type;
@@ -82,6 +77,15 @@ console.log('skipTouch', this._createKey, this.items);
                             });
                         my.items.push(obj);
                         my.fire('drawstop', {mode: type, object: obj});
+                        obj.on('popupopen', function(ev) {
+                            var popup = ev.popup;
+                            if (!popup._input) {
+                                popup._input = L.DomUtil.create('textarea', 'leaflet-gmx-popup-textarea', popup._contentNode);
+                                popup._input.placeholder = "Input text";
+                                popup._contentNode.style.width = 'auto';
+                            }
+                        });
+
                     } else if (type === 'Rectangle') {
                         //console.log('Rectangle ', ev, latlng);
                         if (L.Browser.mobile) {
