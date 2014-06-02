@@ -407,7 +407,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
         var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map);
         //console.log('_touchstart', ev, downAttr);
         if (downAttr.type === 'node') {
-            this._disableDrag();
+            this._parent._disableDrag();
             this.down = downAttr;
             var num = downAttr.num;
             var my = this;
