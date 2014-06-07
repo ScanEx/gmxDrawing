@@ -217,7 +217,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
         var latlngs = obj._latlngs,
             holes = obj._holes || null,
             mode = options.mode || (latlngs.length ? 'edit' : 'add'),
-            linesStyle = {opacity:1, weight:2};
+            linesStyle = {opacity:1, weight:2, noClip: true};
         if (this.options.type === 'Polygon' || this.options.type === 'Rectangle') {
             linesStyle.fill = true;
         }
@@ -253,10 +253,10 @@ L.GmxDrawing.Feature = L.Handler.extend({
                     var area = L.PolyUtil.getArea(_latlngs),
                         str = L.Util.gmxLocale.getText('Area') + ': ' + L.PolyUtil.prettifyArea(area);
                     my._parent.showTooltip(ev.layerPoint, str);
-                } else if (type === 'length') {
+                } else if (type === 'length' || type === 'lengthPoint') {
                     var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map),
                         arr = _latlngs.slice(0, downAttr.num + 1);
-                    if (my.options.type === 'Polyline') {
+                    if (my.options.type === 'Polyline' && type === 'length') {
                         arr.pop();
                         arr =  arr.concat(ev.latlng);
                     } else if (my.options.type === 'Rectangle') {
@@ -270,7 +270,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
             };
             this.points
                 .on('mouseover mousemove', function (ev) {
-                   showTooltip(this.options.type === 'Polyline' ? 'length': 'area', ev);
+                   showTooltip(this.options.type === 'Polyline' ? 'lengthPoint': 'area', ev);
                 }, this)
                 .on('mouseout', function (ev) {
                     this._parent.hideTooltip();
