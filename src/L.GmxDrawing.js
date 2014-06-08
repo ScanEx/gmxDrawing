@@ -290,6 +290,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
         this.removeEditMode();
         this._map.removeLayer(this._group);
         this._parent._removeItem(this, true);
+        this._parent.hideTooltip();
     },
 
     setLinesStyle: function (options) {
