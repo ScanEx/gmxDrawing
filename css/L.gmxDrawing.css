@@ -1,0 +1,14 @@
+.leaflet-popup-content textarea {
+    outline: none;
+    -moz-appearance: none;
+    border: 0px;
+}        
+.leaflet-popup-content textarea:hover {
+    border: 1px solid #999;
+}        
+.gmxTooltipBG {
+    fill: white;
+    stroke: black;
+    stroke-width: 1;
+    opacity: 0.85;
+}

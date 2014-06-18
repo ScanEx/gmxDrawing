@@ -1,3 +1,10 @@
+!function () {
+
+var _gtxt = function (key) {
+    var res = L.gmxLocale ? L.gmxLocale.getText(key) : null;
+    return res || key;
+};
+
 L.GmxDrawing = L.Class.extend({
     options: {
         type: ''
@@ -48,18 +55,20 @@ L.GmxDrawing = L.Class.extend({
     },
 
     add: function (obj, options) {
-        if (!options) options = {};
-
-        var opt = this.options,
-            item = null;
-        if (obj instanceof L.Rectangle)     options.type = 'Rectangle';
-        else if (obj instanceof L.Polygon)  options.type = 'Polygon';
-        else if (obj instanceof L.Polyline) options.type = 'Polyline';
-
-        item = new L.GmxDrawing.Feature(this, obj, options);
-        if (item) {
+        var item = null;
+        if (obj instanceof L.GmxDrawing.Feature) {
+            item = obj;
+            this._map.addLayer(item._group);
+            item._editHandlers(true);
             this.items.push(item);
             this.fire('add', {mode: item.mode, object: item});
+        } else {
+            if (!options) options = {};
+            if (obj instanceof L.Rectangle)     options.type = 'Rectangle';
+            else if (obj instanceof L.Polygon)  options.type = 'Polygon';
+            else if (obj instanceof L.Polyline) options.type = 'Polyline';
+
+            item = new L.GmxDrawing.Feature(this, obj, options);
         }
         return item;
     },
@@ -91,7 +100,6 @@ L.GmxDrawing = L.Class.extend({
     },
 
     create: function (type, drawOptions) {
-        //console.log('create');
         this._clearCreate(null);
         if (type) {
             if (type === 'Rectangle') this._map.dragging.disable();
@@ -191,7 +199,7 @@ L.GmxDrawing = L.Class.extend({
     remove: function (obj) {
         var item = this._removeItem(obj);
         if (item) {
-            item.remove(obj);
+            item._remove();
         }
         return item;
     } 
@@ -207,90 +215,16 @@ L.GmxDrawing.Feature = L.Handler.extend({
     },
     includes: L.Mixin.Events,
 
-    initialize: function (parent, obj, options) {
-        if (!options) options = {};
-        L.setOptions(this, options);
-
-        this._parent = parent;
-        this._map = parent._map;
-
-        var latlngs = obj._latlngs,
-            holes = obj._holes || null,
-            mode = options.mode || (latlngs.length ? 'edit' : 'add'),
-            linesStyle = {opacity:1, weight:2, noClip: true};
-        if (this.options.type === 'Polygon' || this.options.type === 'Rectangle') {
-            linesStyle.fill = true;
-        }
-        for (var key in options.lineStyle) linesStyle[key] = options.lineStyle[key];
-        this._group = new L.LayerGroup();
-        this.lines = new L.Polyline(latlngs, linesStyle);
-        this._group.addLayer(this.lines);
-        this.fill = new L.GmxDrawing._Fill(latlngs);
-        this._group.addLayer(this.fill);
-        if (this.options.type !== 'Polyline' && mode === 'edit') {
-            this.lines.addLatLng(latlngs[0]);
-            this.fill.addLatLng(latlngs[0]);
-        }
-
-        this.points = new L.GmxDrawing.PointMarkers(latlngs, options.pointStyle || {});
-        this.points._parent = this;
-        this._group.addLayer(this.points);
-
-        this._map.addLayer(this._group);
-        if (mode === 'edit') {
-            this._createHandlers(false);
-            this._editHandlers(true);
-            this.mode = 'edit';
-        }
-        this.points._path.setAttribute('fill-rule', 'inherit');
-        
-        if (L.LineUtil.prettifyDistance) {
-            var my = this;
-            var showTooltip = function (type, ev) {
-                var _latlngs = my.points._latlngs;
-                if (type === 'area') {
-                    if (!L.PolyUtil.getArea) return;
-                    var area = L.PolyUtil.getArea(_latlngs),
-                        str = L.Util.gmxLocale.getText('Area') + ': ' + L.PolyUtil.prettifyArea(area);
-                    my._parent.showTooltip(ev.layerPoint, str);
-                } else if (type === 'length' || type === 'lengthPoint') {
-                    var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map),
-                        arr = _latlngs.slice(0, downAttr.num + 1);
-                    if (my.options.type === 'Polyline' && type === 'length') {
-                        arr.pop();
-                        arr =  arr.concat(ev.latlng);
-                    } else if (my.options.type === 'Rectangle') {
-                        arr = _latlngs.slice(downAttr.num - 1, downAttr.num + 1);
-                        if (arr.length === 1) arr.push(_latlngs[0]);
-                    }
-                    var length = L.LineUtil.getLength(arr),
-                        str = L.Util.gmxLocale.getText('Length') + ': ' + L.LineUtil.prettifyDistance(length);
-                    my._parent.showTooltip(ev.layerPoint, str);
-                }
-            };
-            this.points
-                .on('mouseover mousemove', function (ev) {
-                   showTooltip(this.options.type === 'Polyline' ? 'lengthPoint': 'area', ev);
-                }, this)
-                .on('mouseout', function (ev) {
-                    this._parent.hideTooltip();
-                }, this);
-            this.fill
-                .on('mouseover mousemove', function (ev) {
-                    showTooltip('length', ev);
-                }, this)
-                .on('mouseout', function (ev) {
-                    this._parent.hideTooltip();
-                }, this);
+    onAdd: function (map) {
+        if (map.gmxDrawing && this._group) {
+            this._map = map;
+            map.gmxDrawing.add(this);
+            this.setEditMode();
         }
     },
 
-    remove: function () {
-        this._pointUp();
-        this.removeEditMode();
-        this._map.removeLayer(this._group);
-        this._parent._removeItem(this, true);
-        this._parent.hideTooltip();
+    onRemove: function (map) {
+        if (map.gmxDrawing) map.gmxDrawing.remove(this);
     },
 
     setLinesStyle: function (options) {
@@ -301,28 +235,6 @@ L.GmxDrawing.Feature = L.Handler.extend({
     setPointsStyle: function (options) {
         this.points.setStyle(options);
         this.points.redraw();
-    },
-
-    _setPoint: function (latlng, nm, type) {
-        var points = this.points._latlngs;
-        if (this.options.type === 'Rectangle') {
-            if (type === 'edge') {
-                nm--;
-                if (nm === 0) points[0].lng = points[1].lng = latlng.lng;
-                else if (nm === 1) points[1].lat = points[2].lat = latlng.lat;
-                else if (nm === 2) points[2].lng = points[3].lng = latlng.lng;
-                else if (nm === 3) points[0].lat = points[3].lat = latlng.lat;
-            } else {
-                points[nm] = latlng;
-                if (nm === 0) points[3].lat = latlng.lat, points[1].lng = latlng.lng;
-                else if (nm === 1) points[2].lat = latlng.lat, points[0].lng = latlng.lng;
-                else if (nm === 2) points[1].lat = latlng.lat, points[3].lng = latlng.lng;
-                else if (nm === 3) points[0].lat = latlng.lat, points[2].lng = latlng.lng;
-            }
-        } else {
-            points[nm] = latlng;
-        }
-        this.setLatLngs(points);
     },
 
     getGeoJSON: function () {
@@ -365,6 +277,109 @@ L.GmxDrawing.Feature = L.Handler.extend({
 
     addLatLng: function (point) {
         this._setPoint(point, this.points._latlngs.length, 'node');
+    },
+
+    initialize: function (parent, obj, options) {
+        if (!options) options = {};
+        L.setOptions(this, options);
+
+        this._parent = parent;
+
+        var latlngs = obj._latlngs,
+            holes = obj._holes || null,
+            mode = options.mode || (latlngs.length ? 'edit' : 'add'),
+            linesStyle = {opacity:1, weight:2, noClip: true};
+        if (this.options.type === 'Polygon' || this.options.type === 'Rectangle') {
+            linesStyle.fill = true;
+        }
+        for (var key in options.lineStyle) linesStyle[key] = options.lineStyle[key];
+        this._group = new L.LayerGroup();
+        this.lines = new L.Polyline(latlngs, linesStyle);
+        this._group.addLayer(this.lines);
+        this.fill = new L.GmxDrawing._Fill(latlngs);
+        this._group.addLayer(this.fill);
+        if (this.options.type !== 'Polyline' && mode === 'edit') {
+            this.lines.addLatLng(latlngs[0]);
+            this.fill.addLatLng(latlngs[0]);
+        }
+
+        this.points = new L.GmxDrawing.PointMarkers(latlngs, options.pointStyle || {});
+        this.points._parent = this;
+        this._group.addLayer(this.points);
+
+        this.onAdd(parent._map);
+
+        this.points._path.setAttribute('fill-rule', 'inherit');
+        if (L.LineUtil.prettifyDistance) {
+            var my = this;
+            var showTooltip = function (type, ev) {
+                var _latlngs = my.points._latlngs;
+                if (type === 'area') {
+                    if (!L.PolyUtil.getArea) return;
+                    var area = L.PolyUtil.getArea(_latlngs),
+                        str = _gtxt('Area') + ': ' + L.PolyUtil.prettifyArea(area);
+                    my._parent.showTooltip(ev.layerPoint, str);
+                } else if (type === 'length' || type === 'lengthPoint') {
+                    var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map),
+                        arr = _latlngs.slice(0, downAttr.num + 1);
+                    if (my.options.type === 'Polyline' && type === 'length') {
+                        arr.pop();
+                        arr =  arr.concat(ev.latlng);
+                    } else if (my.options.type === 'Rectangle') {
+                        arr = _latlngs.slice(downAttr.num - 1, downAttr.num + 1);
+                        if (arr.length === 1) arr.push(_latlngs[0]);
+                    }
+                    var length = L.LineUtil.getLength(arr),
+                        str = _gtxt('Length') + ': ' + L.LineUtil.prettifyDistance(length);
+                    my._parent.showTooltip(ev.layerPoint, str);
+                }
+            };
+            this.points
+                .on('mouseover mousemove', function (ev) {
+                   showTooltip(this.options.type === 'Polyline' ? 'lengthPoint': 'area', ev);
+                }, this)
+                .on('mouseout', function (ev) {
+                    this._parent.hideTooltip();
+                }, this);
+            this.fill
+                .on('mouseover mousemove', function (ev) {
+                    showTooltip('length', ev);
+                }, this)
+                .on('mouseout', function (ev) {
+                    this._parent.hideTooltip();
+                }, this);
+        }
+    },
+
+    _remove: function () {
+        this._pointUp();
+        this.removeEditMode();
+        this._map.removeLayer(this._group);
+        this._parent._removeItem(this, true);
+        this._parent.hideTooltip();
+        this._map = null;
+    },
+
+    _setPoint: function (latlng, nm, type) {
+        var points = this.points._latlngs;
+        if (this.options.type === 'Rectangle') {
+            if (type === 'edge') {
+                nm--;
+                if (nm === 0) points[0].lng = points[1].lng = latlng.lng;
+                else if (nm === 1) points[1].lat = points[2].lat = latlng.lat;
+                else if (nm === 2) points[2].lng = points[3].lng = latlng.lng;
+                else if (nm === 3) points[0].lat = points[3].lat = latlng.lat;
+            } else {
+                points[nm] = latlng;
+                if (nm === 0) points[3].lat = latlng.lat, points[1].lng = latlng.lng;
+                else if (nm === 1) points[2].lat = latlng.lat, points[0].lng = latlng.lng;
+                else if (nm === 2) points[1].lat = latlng.lat, points[3].lng = latlng.lng;
+                else if (nm === 3) points[0].lat = latlng.lat, points[2].lng = latlng.lng;
+            }
+        } else {
+            points[nm] = latlng;
+        }
+        this.setLatLngs(points);
     },
 
     // edit mode
@@ -417,7 +432,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
         if (points.length > num) {
             points.splice(num, 1);
             if (points.length < 2 || this.options.type === 'Rectangle') {
-                this.remove();
+                this.onRemove(this._map);
             } else {
                 this._setPoint(points[0], 0);
             }
@@ -673,7 +688,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
 					this._setPoint(points[0], 0);
 					this._fireEvent('drawstop');
 				} else {
-					this.remove();
+					this.onRemove(this._map);
 				}
 				//this._fireEvent('created');
 				return;
@@ -878,3 +893,4 @@ L.GmxDrawing.utils = {
         return out;
     }
 };
+}();
