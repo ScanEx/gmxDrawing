@@ -216,7 +216,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
     includes: L.Mixin.Events,
 
     onAdd: function (map) {
-        if (map.gmxDrawing && this._group) {
+        if (map.gmxDrawing && this._group && !this._map) {
             this._map = map;
             map.gmxDrawing.add(this);
             this.setEditMode();
@@ -224,7 +224,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
     },
 
     onRemove: function (map) {
-        if (map.gmxDrawing) map.gmxDrawing.remove(this);
+        if (map.gmxDrawing) return map.gmxDrawing.remove(this);
     },
 
     setLinesStyle: function (options) {
