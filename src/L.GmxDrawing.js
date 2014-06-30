@@ -57,10 +57,6 @@ L.GmxDrawing = L.Class.extend({
         var item = null;
         if (obj instanceof L.GmxDrawing.Feature) {
             item = obj;
-            this._map.addLayer(item._group);
-            item._editHandlers(true);
-            this.items.push(item);
-            this.fire('add', {mode: item.mode, object: item});
         } else {
             if (!options) options = {};
             if (obj instanceof L.Rectangle)     options.type = 'Rectangle';
@@ -69,6 +65,9 @@ L.GmxDrawing = L.Class.extend({
 
             item = new L.GmxDrawing.Feature(this, obj, options);
         }
+        if (!item._map) this._map.addLayer(item);
+        item.points._path.setAttribute('fill-rule', 'inherit');
+        item.setEditMode();
         return item;
     },
 
@@ -179,6 +178,11 @@ L.GmxDrawing = L.Class.extend({
         return this.items;
     },
 
+    _addItem: function (item) {
+        this.items.push(item);
+        this.fire('add', {mode: item.mode, object: item});
+    },
+
     _removeItem: function (obj, remove) {
         for (var i = 0, len = this.items.length; i < len; i++) {
             var item = this.items[i];
@@ -196,9 +200,9 @@ L.GmxDrawing = L.Class.extend({
     },
 
     remove: function (obj) {
-        var item = this._removeItem(obj);
+        var item = this._removeItem(obj, true);
         if (item) {
-            item._remove();
+            item.remove();
         }
         return item;
     } 
@@ -208,22 +212,27 @@ L.Map.addInitHook(function () {
     this.gmxDrawing = new L.GmxDrawing(this);
 });
 
-L.GmxDrawing.Feature = L.Handler.extend({
+L.GmxDrawing.Feature = L.LayerGroup.extend({
     options: {
         mode: '' // add, edit
     },
     includes: L.Mixin.Events,
 
     onAdd: function (map) {
-        if (map.gmxDrawing && this._group && !this._map) {
-            this._map = map;
-            map.gmxDrawing.add(this);
-            this.setEditMode();
-        }
+        L.LayerGroup.prototype.onAdd.call(this, map);
+        this._parent._addItem(this);
     },
 
     onRemove: function (map) {
-        if (map.gmxDrawing) return map.gmxDrawing.remove(this);
+        L.LayerGroup.prototype.onRemove.call(this, map);
+        this._parent._removeItem(this, true);
+        this._pointUp();
+        this.removeEditMode();
+        if ('hideTooltip' in this) this.hideTooltip();
+    },
+
+    remove: function () {
+        this._map.removeLayer(this);
     },
 
     setLinesStyle: function (options) {
@@ -279,6 +288,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
         if (!options) options = {};
         L.setOptions(this, options);
 
+		this._layers = {};
         this._parent = parent;
 
         var latlngs = obj._latlngs,
@@ -289,11 +299,10 @@ L.GmxDrawing.Feature = L.Handler.extend({
             linesStyle.fill = true;
         }
         for (var key in options.lineStyle) linesStyle[key] = options.lineStyle[key];
-        this._group = new L.LayerGroup();
         this.lines = new L.Polyline(latlngs, linesStyle);
-        this._group.addLayer(this.lines);
+        this.addLayer(this.lines);
         this.fill = new L.GmxDrawing._Fill(latlngs);
-        this._group.addLayer(this.fill);
+        this.addLayer(this.fill);
         if (this.options.type !== 'Polyline' && mode === 'edit') {
             this.lines.addLatLng(latlngs[0]);
             this.fill.addLatLng(latlngs[0]);
@@ -301,11 +310,8 @@ L.GmxDrawing.Feature = L.Handler.extend({
 
         this.points = new L.GmxDrawing.PointMarkers(latlngs, options.pointStyle || {});
         this.points._parent = this;
-        this._group.addLayer(this.points);
+        this.addLayer(this.points);
 
-        this.onAdd(parent._map);
-
-        this.points._path.setAttribute('fill-rule', 'inherit');
         if (L.LineUtil.prettifyDistance) {
             var my = this,
                 showTooltipTimer = 0,
@@ -364,15 +370,6 @@ L.GmxDrawing.Feature = L.Handler.extend({
                     this._fireEvent('onMouseOut');
                 }, this);
         }
-    },
-
-    _remove: function () {
-        this._pointUp();
-        this.removeEditMode();
-        this._map.removeLayer(this._group);
-        this._parent._removeItem(this, true);
-        if ('hideTooltip' in this) this.hideTooltip();
-        this._map = null;
     },
 
     _setPoint: function (latlng, nm, type) {
@@ -702,7 +699,7 @@ L.GmxDrawing.Feature = L.Handler.extend({
 					}
 					this._setPoint(points[0], 0);
 				} else {
-					this.onRemove(this._map);
+					this.remove();
 				}
 				this._fireEvent('drawstop');
 				return;
