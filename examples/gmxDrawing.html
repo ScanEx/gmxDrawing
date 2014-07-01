@@ -38,12 +38,15 @@
 
         map.gmxDrawing
             .on('drawstart', function (ev) {
-                //console.log('gmxDrawing drawstart', arguments);
             })
             .on('drawstop', function (ev) { })
-            .on('add', function (ev) { })
+            .on('add', function (ev) {
+                console.log('gmxDrawing add', arguments);
+            })
             .on('edit', function (ev) { })
-            .on('remove', function (ev) { })
+            .on('remove', function (ev) {
+                console.log('gmxDrawing remove', arguments);
+            })
             .on('dragstart', function (ev) { })
             .on('drag', function (ev) { })
             .on('dragend', function (ev) { });
@@ -51,7 +54,6 @@
         var drawPolygon = map.gmxDrawing.add(L.polygon(
             [
              [ [50.0, 20.0], [61.0, 20.0], [61.0, 33.0], [30.0, 33.0], [50.0, 20.0] ]
-              ,[ [30.0, 10.0], [41.0, 10.0], [41.0, 23.0], [10.0, 23.0], [30.0, 10.0] ]
            ]
          ));
 
@@ -68,6 +70,9 @@
             ]
          ), {pointStyle:{shape: 'circle', size: 12}, lineStyle:{color: '#00ff00'}} );
 
+        var latlng = new L.LatLng(65.0, 40.0),
+            marker = L.marker(latlng, {draggable: true, title: 'Text example'}),
+            drawPoint = map.gmxDrawing.add(marker, {});
 
         map.addControl(new L.Control.gmxDrawing({
             id: 'drawing',

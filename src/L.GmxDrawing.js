@@ -63,12 +63,50 @@ L.GmxDrawing = L.Class.extend({
             else if (obj instanceof L.Polygon)  options.type = 'Polygon';
             else if (obj instanceof L.Polyline) options.type = 'Polyline';
 
-            item = new L.GmxDrawing.Feature(this, obj, options);
+            if (obj instanceof L.Marker) {
+                item = obj;
+                this._setMarker(obj);
+                this.items.push(obj);
+                this.fire('drawstop', {mode: 'Point', object: obj});
+            } else {
+                item = new L.GmxDrawing.Feature(this, obj, options);
+                item.setEditMode();
+            }
         }
         if (!item._map) this._map.addLayer(item);
-        item.points._path.setAttribute('fill-rule', 'inherit');
-        item.setEditMode();
+        if (item.points) item.points._path.setAttribute('fill-rule', 'inherit');
         return item;
+    },
+
+    _setMarker: function (marker) {
+        marker
+            .bindPopup(null, {maxWidth: 1000})
+            .on('dblclick', function() {
+                this._map.removeLayer(this);
+                this.options.type = type;
+                my._removeItem(this, true);
+            })
+            .on('popupopen', function(ev) {
+                var popup = ev.popup;
+                if (!popup._input) {
+                    popup._input = L.DomUtil.create('textarea', 'leaflet-gmx-popup-textarea', popup._contentNode);
+                    popup._input.placeholder = this.options.title || "Input text";
+                    popup._contentNode.style.width = 'auto';
+                }
+                L.DomEvent.on(popup._input, 'keyup', function(ev) {
+                    var rows = this.value.split("\n"),
+                        cols = this.cols || 0;
+                     
+                    rows.forEach(function(str) {
+                        if (str.length > cols) cols = str.length;
+                    });
+                    //if (rows > 2) 
+                    this.rows = rows.length;
+                    if (cols) this.cols = cols;
+                    popup.update();
+                }, popup._input);
+                popup.update();
+            });
     },
 
     _disableDrag: function (ev) {
@@ -112,37 +150,10 @@ L.GmxDrawing = L.Class.extend({
                         latlng = ev.latlng;
                     if (type === 'Point') {
                         obj = L.marker(latlng, {draggable: true})
-                            .addTo(this._map)
-                            .bindPopup(null, {maxWidth: 1000})
-                            .on('dblclick', function() {
-                                this._map.removeLayer(this);
-                                this.options.type = type;
-                                my._removeItem(this, true);
-                            });
+                        this._setMarker(obj);
+                        if (!item._map) this._map.addLayer(obj);
                         my.items.push(obj);
                         my.fire('drawstop', {mode: type, object: obj});
-                        obj.on('popupopen', function(ev) {
-                            var popup = ev.popup;
-                            if (!popup._input) {
-                                popup._input = L.DomUtil.create('textarea', 'leaflet-gmx-popup-textarea', popup._contentNode);
-                                popup._input.placeholder = "Input text";
-                                popup._contentNode.style.width = 'auto';
-                            }
-                            L.DomEvent.on(popup._input, 'keyup', function(ev) {
-                                var rows = this.value.split("\n"),
-                                    cols = this.cols || 0;
-                                 
-                                rows.forEach(function(str) {
-                                    if (str.length > cols) cols = str.length;
-                                });
-                                //if (rows > 2) 
-                                this.rows = rows.length;
-                                if (cols) this.cols = cols;
-                                popup.update();
-                            }, popup._input);
-                            popup.update();
-                        });
-
                     } else if (type === 'Rectangle') {
                         //console.log('Rectangle ', ev, latlng);
                         if (L.Browser.mobile) {
