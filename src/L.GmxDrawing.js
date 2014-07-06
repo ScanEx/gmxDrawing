@@ -4,6 +4,7 @@ var _gtxt = function (key) {
     var res = L.gmxLocale ? L.gmxLocale.getText(key) : null;
     return res || key;
 };
+var downObject = null;
 
 L.GmxDrawing = L.Class.extend({
     options: {
@@ -280,7 +281,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         }
         this.points.setLatLngs(points);
         this._fireEvent('edit');
-        this._showTooltip(this.options.type === 'Polyline' ? 'lengthPoint': 'area');
+        //this._showTooltip(this.options.type === 'Polyline' ? 'lengthPoint': 'area');
     },
 
     addLatLng: function (point) {
@@ -320,17 +321,10 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         this.addLayer(this.points);
 
         if (L.LineUtil.prettifyDistance) {
-            var my = this,
-                showTooltipTimer = 0,
-                lastEvent = null;
-            var showTooltip = function (type, ev) {
-                var _latlngs = my.points._latlngs;
-                if (!ev) ev = lastEvent;
-                else lastEvent = ev;
-
-                if (showTooltipTimer) clearTimeout(showTooltipTimer);
-                showTooltipTimer = setTimeout(function () {
-                    showTooltipTimer = null;
+            var my = this;
+            this._showTooltip = function (type, ev) {
+                if (!downObject || downObject === this) {
+                    var _latlngs = my.points._latlngs;
                     if (type === 'area') {
                         if (!L.PolyUtil.getArea) return;
                         var area = L.PolyUtil.getArea(_latlngs),
@@ -351,31 +345,25 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                         my._parent.showTooltip(ev.layerPoint, str);
                     }
                     my._fireEvent('onMouseOver');
-                }, 0);
+                }
             };
-            this._showTooltip = showTooltip;
             this.hideTooltip = function() {
-                if (showTooltipTimer) clearTimeout(showTooltipTimer);
-                showTooltipTimer = null;
-                this._parent.hideTooltip();
+                if (!downObject || downObject === this) {
+                    this._parent.hideTooltip();
+                    this._fireEvent('onMouseOut');
+                }
             };
 
             this.points
                 .on('mouseover mousemove', function (ev) {
-                   showTooltip(this.options.type === 'Polyline' ? 'lengthPoint': 'area', ev);
+                    this._showTooltip(this.options.type === 'Polyline' ? 'lengthPoint': 'area', ev);
                 }, this)
-                .on('mouseout', function (ev) {
-                    this.hideTooltip();
-                    this._fireEvent('onMouseOut');
-                }, this);
+                .on('mouseout', this.hideTooltip, this);
             this.fill
                 .on('mouseover mousemove', function (ev) {
-                    showTooltip('length', ev);
+                    this._showTooltip('length', ev);
                 }, this)
-                .on('mouseout', function (ev) {
-                    this.hideTooltip();
-                    this._fireEvent('onMouseOut');
-                }, this);
+                .on('mouseout', this.hideTooltip, this);
         }
     },
 
@@ -419,6 +407,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             this._setPoint(latlng, num, type);
         }
         this.down = downAttr;
+        downObject = this;
         this._map
             .on('mousemove', this._pointMove, this)
             .on('mouseup', this._pointUp, this);
@@ -430,10 +419,12 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         if (this.down) {
             this._setPoint(ev.latlng, this.down.num, this.down.type);
             this.skipClick = true;
+            this._showTooltip(this.options.type === 'Polyline' ? 'lengthPoint': 'area', ev);
         }
     },
 
     _pointUp: function (ev) {
+        downObject = null;
         if (this._map) this._map
             .off('mousemove', this._pointMove, this)
             .off('mouseup', this._pointUp, this);
