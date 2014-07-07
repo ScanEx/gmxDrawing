@@ -413,6 +413,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             .on('mouseup', this._pointUp, this);
 
         this._parent._enableDrag();
+        if (!this.options.lineStyle && this.options.type !== 'Polyline') this.lines.setStyle({fill: true});
     },
 
     _pointMove: function (ev) {
@@ -434,6 +435,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         }
         this._drawstop = false;
         this.down = null;
+        if (!this.options.lineStyle) this.lines.setStyle({fill: false});
     },
     _lastPointClickTime: 0,  // Hack for emulate dblclick on Point
 
