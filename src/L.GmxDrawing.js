@@ -5,6 +5,7 @@ var _gtxt = function (key) {
     return res || key;
 };
 var downObject = null;
+var rectDelta = 0.0000001;
 
 L.GmxDrawing = L.Class.extend({
     options: {
@@ -158,7 +159,7 @@ L.GmxDrawing = L.Class.extend({
                             latlng = downAttr.latlng;
                         }
                         obj = my.add(
-                            L.rectangle(L.latLngBounds(L.latLng(latlng.lat + 0.01, latlng.lng - 0.01), latlng))
+                            L.rectangle(L.latLngBounds(L.latLng(latlng.lat + rectDelta, latlng.lng - rectDelta), latlng))
                         , {mode: 'edit', drawOptions: drawOptions} );
                         if (L.Browser.mobile) obj._startTouchMove(ev, true);
                         else obj._pointDown(ev);
