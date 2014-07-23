@@ -140,7 +140,10 @@ L.GmxDrawing = L.Class.extend({
     create: function (type, drawOptions) {
         this._clearCreate(null);
         if (type) {
-            if (type === 'Rectangle') this._map.dragging.disable();
+            if (type === 'Rectangle') {
+                this._map._initPathRoot();
+                this._map.dragging.disable();
+            }
             if (!drawOptions) drawOptions = {};
             var my = this;
             this._createKey = {
