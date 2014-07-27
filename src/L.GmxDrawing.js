@@ -72,11 +72,11 @@ L.GmxDrawing = L.Class.extend({
                 this.fire('drawstop', {mode: 'Point', object: obj});
             } else {
                 item = new L.GmxDrawing.Feature(this, obj, options);
-                item.setEditMode();
             }
         }
         if (!item._map) this._map.addLayer(item);
         if (item.points) item.points._path.setAttribute('fill-rule', 'inherit');
+        if ('setEditMode' in item) item.setEditMode();
         return item;
     },
 
@@ -424,7 +424,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         if (this.down) {
             this._setPoint(ev.latlng, this.down.num, this.down.type);
             this.skipClick = true;
-            this._showTooltip(this.options.type === 'Polyline' ? 'lengthPoint': 'area', ev);
+            if ('_showTooltip' in this) this._showTooltip(this.options.type === 'Polyline' ? 'lengthPoint': 'area', ev);
         }
     },
 
