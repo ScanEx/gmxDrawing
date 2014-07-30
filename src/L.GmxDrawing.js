@@ -81,12 +81,12 @@ L.GmxDrawing = L.Class.extend({
     },
 
     _setMarker: function (marker) {
+        var my = this;
         marker
             .bindPopup(null, {maxWidth: 1000})
-            .on('dblclick', function() {
+            .on('dblclick', function(ev) {
                 this._map.removeLayer(this);
-                this.options.type = type;
-                my._removeItem(this, true);
+                my.remove(this);
             })
             .on('popupopen', function(ev) {
                 var popup = ev.popup;
@@ -213,8 +213,8 @@ L.GmxDrawing = L.Class.extend({
 
     remove: function (obj) {
         var item = this._removeItem(obj, true);
-        if (item) {
-            item.remove();
+        if (item && '_remove' in item) {
+            item._remove();
         }
         return item;
     } 
@@ -237,13 +237,17 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     onRemove: function (map) {
         L.LayerGroup.prototype.onRemove.call(this, map);
-        this._parent._removeItem(this, true);
+        this.remove();
         this._pointUp();
         this.removeEditMode();
         if ('hideTooltip' in this) this.hideTooltip();
     },
 
     remove: function () {
+        this._parent._removeItem(this, true);
+    },
+
+    _remove: function () {
         this._map.removeLayer(this);
     },
 
@@ -703,7 +707,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 					}
 					this._setPoint(points[0], 0);
 				} else {
-					this.remove();
+					this._remove();
 				}
 				this._fireEvent('drawstop');
 				return;
