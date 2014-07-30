@@ -244,7 +244,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     remove: function () {
-        this._parent._removeItem(this, true);
+        this._parent.remove(this);
     },
 
     _remove: function () {
