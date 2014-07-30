@@ -248,7 +248,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     _remove: function () {
-        this._map.removeLayer(this);
+        if (this._map) this._map.removeLayer(this);
     },
 
     setLinesStyle: function (options) {
