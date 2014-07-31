@@ -329,7 +329,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         this.addLayer(this.points);
 
         if (L.LineUtil.prettifyDistance) {
-            var my = this;
+            var my = this,
+                geoType = my.options.type;
             this._showTooltip = function (type, ev) {
                 if (!downObject || downObject === this) {
                     var _latlngs = my.points._latlngs;
@@ -340,11 +341,10 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                         my._parent.showTooltip(ev.layerPoint, str);
                     } else if (type === 'length' || type === 'lengthPoint') {
                         var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map),
+                            arr = [];
+                        if (downAttr.type === 'node') {
                             arr = _latlngs.slice(0, downAttr.num + 1);
-                        if (my.options.type === 'Polyline' && type === 'length') {
-                            arr.pop();
-                            arr =  arr.concat(ev.latlng);
-                        } else if (my.options.type === 'Rectangle') {
+                        } else {
                             arr = _latlngs.slice(downAttr.num - 1, downAttr.num + 1);
                             if (arr.length === 1) arr.push(_latlngs[0]);
                         }
