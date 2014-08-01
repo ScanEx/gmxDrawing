@@ -804,7 +804,7 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
                        (p.x - 0.1) + "," + (p.y - size) + " ";
             } else {
                 var px = p.x, px1 = px - size, px2 = px + size,
-                    py = p.y + weight, py1 = py - size, py2 = py + size;
+                    py = p.y, py1 = py - size, py2 = py + size;
                 str += 'M' + px1 + ' ' + py1 + 'L' + px2 + ' ' + py1 + 'L' + px2 + ' ' + py2 + 'L' + px1 + ' ' + py2 + 'L' + px1 + ' ' + py1;
             }
         }
