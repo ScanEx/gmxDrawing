@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Leaflet Image Transform Interactive Example</title>
+	<meta charset="utf-8" />
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        html, body, #map {
+            height: 100%;
+            margin: 0px;
+        }
+
+        #infoPanel {
+            position: absolute;
+			left: 0px;
+			right: 0px;
+			top: 21px;
+            text-align: center;
+			z-index: 1;
+        }
+
+        #info {
+			background-color: #ffffff;
+			border-radius: 5px;
+            box-shadow: 0 1px 7px rgba(0,0,0,0.65);
+            padding: 10px;
+        }
+    </style>
+
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+
+    <script src="http://scanex.github.io/Leaflet.imageTransform/src/L.ImageTransform.js"></script>
+
+    <link rel="stylesheet" href="../css/L.gmxDrawing.css" />
+	<script src="../src/L.GmxDrawing.js"></script>
+
+    
+</head>
+<body>
+	<div id="map"></div>
+     <div id="infoPanel">
+        <span id="info">
+                Drag red polygon to transform image or blue polygon to clip
+        </span>
+        
+    </div>
+
+	<script>
+		var osmUrl = 'http://{s}.tile.osm.org/{z}/{x}/{y}.png',
+			osm = new L.TileLayer(osmUrl, {maxZoom: 18}),
+			map = new L.Map('map', {layers: [osm], center: new L.LatLng(56, 137.23), zoom: 9});
+
+        var anchors = [[56.344192, 136.59558], [56.344192, 137.8782], [55.613245, 137.8782], [55.613245, 136.59558]];
+        var clipCoords = [[56.301281, 136.90579],[56.150009, 137.83902],[55.639533, 137.53169],[55.788635, 136.60979],[56.301281, 136.90579]];
+
+        var image = L.imageTransform('http://scanex.github.io/Leaflet.imageTransform/examples/img/image.jpg'
+            , anchors, { opacity: 0.5, clip: clipCoords }
+            ).addTo(map);
+
+        var anchorsPolygon = map.gmxDrawing.add(
+            L.polygon([anchors]),
+            {pointStyle:{shape: 'circle', color: '#ff0000'}, lineStyle:{color: '#ff0000', fill: false}, disableAddPoints: true}
+        );
+        anchorsPolygon
+            .on('edit', function (ev) {
+                var latLngs = anchorsPolygon.getLatLngs();
+                image.setAnchors(latLngs);
+                clipPolygon.setLatLngs(image.getClip());
+            }, this);
+
+        var clipPolygon = map.gmxDrawing.add(
+            L.polygon([clipCoords]),
+            {pointStyle:{size: 10, fillOpacity: 0.5, color: '#0000ff'}}
+        ).on('edit', function (ev) {
+                var latLngs = clipPolygon.getLatLngs();
+                image.setClip(latLngs);
+            });
+	</script>
+    
+    <a href="https://github.com/ScanEx/Leaflet.imageTransform" target="_blank">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png">
+    </a>
+</body>
+</html>

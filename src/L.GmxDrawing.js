@@ -408,13 +408,15 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             num = downAttr.num,
             type = downAttr.type,
             points = this.points._latlngs,
+            opt = this.options,
             latlng = ev.latlng;
 
-        if (type === 'edge' && this.options.type !== 'Rectangle') {
+        this.down = downAttr;
+        if (type === 'edge' && opt.type !== 'Rectangle') {
+            if (opt.disableAddPoints) return;
             points.splice(num, 0, points[num]);
             this._setPoint(latlng, num, type);
         }
-        this.down = downAttr;
         downObject = this;
         this._map
             .on('mousemove', this._pointMove, this)
