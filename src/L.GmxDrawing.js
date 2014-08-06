@@ -423,11 +423,11 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             .on('mouseup', this._pointUp, this);
 
         this._parent._enableDrag();
-        if (!this.options.lineStyle && this.options.type !== 'Polyline') this.lines.setStyle({fill: true});
     },
 
     _pointMove: function (ev) {
         if (this.down) {
+            if (!this.options.lineStyle && this.options.type !== 'Polyline') this.lines.setStyle({fill: true});
             this._setPoint(ev.latlng, this.down.num, this.down.type);
             this.skipClick = true;
             if ('_showTooltip' in this) this._showTooltip(this.options.type === 'Polyline' ? 'lengthPoint': 'area', ev);
@@ -453,7 +453,10 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         var points = this.points._latlngs;
         if (points.length > num) {
             points.splice(num, 1);
-            if (points.length < 2 || this.options.type === 'Rectangle') {
+            if (this.options.type === 'Rectangle'
+                || points.length < 2
+                || (points.length < 3 && this.options.type === 'Polygon')
+                ) {
                 this.onRemove(this._map);
             } else {
                 this._setPoint(points[0], 0);
@@ -636,6 +639,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 					.on('mousemove', this._moseMove, this);
             }
 			this._fireEvent('addmode');
+            if (!this.options.lineStyle && this.options.type !== 'Polyline') this.lines.setStyle({fill: true});
         } else {
 			if (L.Browser.mobile) {
 				if (this._map) this._map
@@ -652,6 +656,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 					.off('mouseup', this._mouseup, this)
 					.off('mousemove', this._moseMove, this);
 			}
+            if (!this.options.lineStyle && this.options.type !== 'Polyline') this.lines.setStyle({fill: false});
         }
     },
 
@@ -701,11 +706,13 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 			if (down.num === 0 || ((down.prev || L.Browser.mobile) && down.num === points.length - 1)) {
 				this.setEditMode();
 				if (!L.Browser.mobile) points.pop();
-				if (points.length > 1) {
+                var len = points.length,
+                    opt = this.options;
+				if (len > 2 || (len > 1 && opt.type === 'Polyline')) {
 					this.skipClick = true;
 					
-					if (down.num === 0 && this.options.type === 'Polyline') {
-						this.options.type = 'Polygon';
+					if (down.num === 0 && opt.type === 'Polyline') {
+						opt.type = 'Polygon';
 					}
 					this._setPoint(points[0], 0);
 				} else {
