@@ -289,7 +289,6 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         }
         this.points.setLatLngs(points);
         this._fireEvent('edit');
-        //this._showTooltip(this.options.type === 'Polyline' ? 'lengthPoint': 'area');
     },
 
     addLatLng: function (point) {
@@ -335,16 +334,22 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 if (!downObject || downObject === this) {
                     var _latlngs = my.points._latlngs,
                         mapOpt = my._map.options || {},
+                        ctrlKey = ev.originalEvent.ctrlKey || false,
                         distanceUnit = mapOpt.distanceUnit || 'km',
-                        squareUnit = mapOpt.squareUnit || 'ha';
-                    if (type === 'area') {
+                        squareUnit = mapOpt.squareUnit || 'ha',
+                        str = '',
+                        arr = [];
+                    if (type === 'Area') {
                         if (!L.PolyUtil.getArea) return;
-                        var area = L.PolyUtil.getArea(_latlngs),
-                            str = _gtxt('Area') + ': ' + L.PolyUtil.prettifyArea(area, squareUnit);
+                        if (ev.originalEvent.ctrlKey) {
+                            arr = _latlngs.slice(0, _latlngs.length); arr.push(_latlngs[0]);
+                            str = _gtxt('Perimeter') + ': ' + L.LineUtil.prettifyDistance(L.LineUtil.getLength(arr), distanceUnit);
+                        } else {
+                            str = _gtxt(type) + ': ' + L.PolyUtil.prettifyArea(L.PolyUtil.getArea(_latlngs), squareUnit);
+                        }    
                         my._parent.showTooltip(ev.layerPoint, str);
-                    } else if (type === 'length' || type === 'lengthPoint') {
-                        var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map),
-                            arr = [];
+                    } else if (type === 'Length') {
+                        var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
                         if (downAttr.type === 'node') {
                             arr = _latlngs.slice(0, downAttr.num + 1);
                         } else {
@@ -352,7 +357,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                             if (arr.length === 1) arr.push(_latlngs[0]);
                         }
                         var length = L.LineUtil.getLength(arr),
-                            str = _gtxt('Length') + ': ' + L.LineUtil.prettifyDistance(length, distanceUnit);
+                            str = _gtxt(type) + ': ' + L.LineUtil.prettifyDistance(length, distanceUnit);
                         my._parent.showTooltip(ev.layerPoint, str);
                     }
                     my._fireEvent('onMouseOver');
@@ -367,12 +372,12 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
             this.points
                 .on('mouseover mousemove', function (ev) {
-                    this._showTooltip(this.options.type === 'Polyline' ? 'lengthPoint': 'area', ev);
+                    this._showTooltip(this.options.type === 'Polyline' ? 'Length': 'Area', ev);
                 }, this)
                 .on('mouseout', this.hideTooltip, this);
             this.fill
                 .on('mouseover mousemove', function (ev) {
-                    this._showTooltip('length', ev);
+                    this._showTooltip('Length', ev);
                 }, this)
                 .on('mouseout', this.hideTooltip, this);
         }
@@ -433,7 +438,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             if (!this.options.lineStyle && this.options.type !== 'Polyline') this.lines.setStyle({fill: true});
             this._setPoint(ev.latlng, this.down.num, this.down.type);
             this.skipClick = true;
-            if ('_showTooltip' in this) this._showTooltip(this.options.type === 'Polyline' ? 'lengthPoint': 'area', ev);
+            if ('_showTooltip' in this) this._showTooltip(this.options.type === 'Polyline' ? 'Length': 'Area', ev);
         }
     },
 
