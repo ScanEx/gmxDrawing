@@ -333,11 +333,14 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 geoType = my.options.type;
             this._showTooltip = function (type, ev) {
                 if (!downObject || downObject === this) {
-                    var _latlngs = my.points._latlngs;
+                    var _latlngs = my.points._latlngs,
+                        mapOpt = my._map.options || {},
+                        distanceUnit = mapOpt.distanceUnit || 'km',
+                        squareUnit = mapOpt.squareUnit || 'ha';
                     if (type === 'area') {
                         if (!L.PolyUtil.getArea) return;
                         var area = L.PolyUtil.getArea(_latlngs),
-                            str = _gtxt('Area') + ': ' + L.PolyUtil.prettifyArea(area);
+                            str = _gtxt('Area') + ': ' + L.PolyUtil.prettifyArea(area, squareUnit);
                         my._parent.showTooltip(ev.layerPoint, str);
                     } else if (type === 'length' || type === 'lengthPoint') {
                         var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map),
@@ -349,7 +352,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                             if (arr.length === 1) arr.push(_latlngs[0]);
                         }
                         var length = L.LineUtil.getLength(arr),
-                            str = _gtxt('Length') + ': ' + L.LineUtil.prettifyDistance(length);
+                            str = _gtxt('Length') + ': ' + L.LineUtil.prettifyDistance(length, distanceUnit);
                         my._parent.showTooltip(ev.layerPoint, str);
                     }
                     my._fireEvent('onMouseOver');
