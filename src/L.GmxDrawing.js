@@ -222,15 +222,6 @@ L.GmxDrawing = L.Class.extend({
 
 L.Map.addInitHook(function () {
     this.gmxDrawing = new L.GmxDrawing(this);
-    this.on('layeradd', function (ev) {
-        var layer = ev.layer,
-            len = this.gmxDrawing.items.length;
-        if (len > 0 && layer._path) {
-            var root = layer._map._pathRoot,
-                beforeObj = root.children[root.children.length - 3 * len - 1];
-			if (beforeObj) root.insertBefore(layer._container, beforeObj);
-        }
-    }, this);
 });
 
 L.GmxDrawing.Feature = L.LayerGroup.extend({
@@ -238,6 +229,14 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         mode: '' // add, edit
     },
     includes: L.Mixin.Events,
+
+    bringToFront: function () {
+        return this.invoke('bringToFront');
+    },
+
+    bringToBack: function () {
+        return this.invoke('bringToBack');
+    },
 
     onAdd: function (map) {
         L.LayerGroup.prototype.onAdd.call(this, map);
