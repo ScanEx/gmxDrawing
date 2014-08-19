@@ -241,7 +241,6 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     onAdd: function (map) {
         L.LayerGroup.prototype.onAdd.call(this, map);
         this._parent._addItem(this);
-        this.setEditMode();
     },
 
     onRemove: function (map) {
