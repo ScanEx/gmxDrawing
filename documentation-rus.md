@@ -12,6 +12,7 @@ add|`add(<Polyline, Polygon, Rectangle> object, <options> options? )`|`<L.GmxDra
 create|`create(<string> type, <options> options? )`|| Переход в режим создания редактируемого объекта заданного типа type.
 getFeatures|`getFeature()`|`<L.GmxDrawing.Feature[]> array`| Получить массив редактируемых объектов.
 remove|`remove(<L.GmxDrawing.Feature>)`|`<L.GmxDrawing.Feature>`| Удалить редактируемый объект.
+bringToFront|`bringToFront()`|| Переместить все редактируемые объекты вверх.
 
 ### Options
 
@@ -51,6 +52,8 @@ setLatLngs|`setLatLngs(<LatLng[][]> latlngs)`| |Установить масси�
 getLatLngs|`getLatLngs()`|`<LatLng[][]> latlngs`|Получить массив координат точек объекта.
 setLinesStyle|`setLinesStyle(<L.Path options>)`||Установить cтиль отрисовки линий объекта.
 setPointsStyle|`setPointsStyle(<Point options>)`||Установить cтиль отрисовки вершин объекта.
+bringToFront|`bringToFront()`|| Переместить редактируемый объект выше всех векторных объектов.
+bringToBack|`bringToBack()`|| Переместить редактируемый объект ниже всех векторных объектов.
 getType|`getType()`||Получить тип объекта.
 toGeoJSON|`toGeoJSON()`||Получить GeoJSON по объекту.
 

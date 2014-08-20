@@ -55,6 +55,13 @@ L.GmxDrawing = L.Class.extend({
         }
     },
 
+    bringToFront: function () {
+        for (var i = 0, len = this.items.length; i < len; i++) {
+            var item = this.items[i];
+            if ('bringToFront' in item) item.bringToFront();
+        }
+    },
+
     add: function (obj, options) {
         var item = null;
         if (obj instanceof L.GmxDrawing.Feature) {
