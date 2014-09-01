@@ -324,7 +324,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         var latlngs = obj._latlngs,
             holes = obj._holes || null,
             mode = options.mode || (latlngs.length ? 'edit' : 'add'),
-            linesStyle = {opacity:1, weight:2, noClip: true};
+            linesStyle = {opacity:1, weight:2, noClip: true, clickable: false, className: 'leaflet-drawing-lines'};
         if (this.options.type === 'Polygon' || this.options.type === 'Rectangle') {
             linesStyle.fill = true;
         }
@@ -759,6 +759,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
 L.GmxDrawing._Fill = L.Polyline.extend({
     options: {
+        className: 'leaflet-drawing-lines-fill',
         opacity: 0,
         fill: true,
         fillOpacity: 0,
@@ -810,6 +811,7 @@ L.GmxDrawing._Fill = L.Polyline.extend({
 
 L.GmxDrawing.PointMarkers = L.Polygon.extend({
     options: {
+        className: 'leaflet-drawing-points',
         noClip: true,
 		smoothFactor: 0,
         opacity: 1,
