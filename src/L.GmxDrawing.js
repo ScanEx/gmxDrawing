@@ -152,7 +152,8 @@ L.GmxDrawing = L.Class.extend({
                 this._map.dragging.disable();
             }
             if (!drawOptions) drawOptions = {};
-            var my = this;
+            var my = this,
+                opt = drawOptions;
             this._createKey = {
                 type: type,
                 drawOptions: drawOptions,
@@ -168,17 +169,20 @@ L.GmxDrawing = L.Class.extend({
                             var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
                             latlng = downAttr.latlng;
                         }
+                        opt.mode = 'edit';
                         obj = my.add(
                             L.rectangle(L.latLngBounds(L.latLng(latlng.lat + rectDelta, latlng.lng - rectDelta), latlng))
-                        , {mode: 'edit', drawOptions: drawOptions} );
+                        , opt );
                         if (L.Browser.mobile) obj._startTouchMove(ev, true);
                         else obj._pointDown(ev);
 
                         obj._drawstop = true;
                     } else if (type === 'Polygon') {
-                        obj = my.add(L.polygon([latlng]), {mode: 'add', drawOptions: drawOptions}).setAddMode();
+                        opt.mode = 'add';
+                        obj = my.add(L.polygon([latlng]), opt).setAddMode();
                     } else if (type === 'Polyline') {
-                        obj = my.add(L.polyline([latlng]), {mode: 'add', drawOptions: drawOptions}).setAddMode();
+                        opt.mode = 'add';
+                        obj = my.add(L.polyline([latlng]), opt).setAddMode();
                     }
                     my._clearCreate();
                 }
@@ -328,7 +332,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         if (this.options.type === 'Polygon' || this.options.type === 'Rectangle') {
             linesStyle.fill = true;
         }
-        for (var key in options.lineStyle) linesStyle[key] = options.lineStyle[key];
+        for (var key in options.lineStyle) {
+            if (key !== 'fill' || this.options.type !== 'Polyline') linesStyle[key] = options.lineStyle[key];
+        }
         this.lines = new L.Polyline(latlngs, linesStyle);
         this.addLayer(this.lines);
         this.fill = new L.GmxDrawing._Fill(latlngs);
@@ -450,7 +456,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     _pointMove: function (ev) {
         if (this.down) {
-            if (!this.options.lineStyle && this.options.type !== 'Polyline') this.lines.setStyle({fill: true});
+            if (this.options.type !== 'Polyline') this.lines.setStyle({fill: true});
             this._setPoint(ev.latlng, this.down.num, this.down.type);
             this.skipClick = true;
             if ('_showTooltip' in this) this._showTooltip(this.options.type === 'Polyline' ? 'Length': 'Area', ev);
@@ -468,7 +474,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         }
         this._drawstop = false;
         this.down = null;
-        if (!this.options.lineStyle) this.lines.setStyle({fill: false});
+        var lineStyle = this.options.lineStyle || {};
+        if (!lineStyle.fill && this.options.type !== 'Polyline') this.lines.setStyle({fill: false});
     },
     _lastPointClickTime: 0,  // Hack for emulate dblclick on Point
 
@@ -640,7 +647,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     _createHandlers: function (flag) {
-        var stop = L.DomEvent.stopPropagation;
+        var stop = L.DomEvent.stopPropagation,
+            lineStyle = this.options.lineStyle || {};
         if (flag) {
             this._parent._enableDrag();
 			if (L.Browser.mobile) {
@@ -662,7 +670,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 					.on('mousemove', this._moseMove, this);
             }
 			this._fireEvent('addmode');
-            if (!this.options.lineStyle && this.options.type !== 'Polyline') this.lines.setStyle({fill: true});
+            if (this.options.type !== 'Polyline') this.lines.setStyle({fill: true});
         } else {
 			if (L.Browser.mobile) {
 				if (this._map) this._map
@@ -679,7 +687,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 					.off('mouseup', this._mouseup, this)
 					.off('mousemove', this._moseMove, this);
 			}
-            if (!this.options.lineStyle && this.options.type !== 'Polyline') this.lines.setStyle({fill: false});
+            if (!lineStyle.fill && this.options.type !== 'Polyline') this.lines.setStyle({fill: false});
         }
     },
 

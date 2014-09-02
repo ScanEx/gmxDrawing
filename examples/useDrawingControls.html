@@ -55,7 +55,7 @@
 			maxZoom: 18,
 			attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
 		});
-		var map = new L.Map('map', {layers: [osm], center: new L.LatLng(50, 20), zoom: 3});
+		var map = new L.Map('map', {layers: [osm], squareUnit: 'km2', distanceUnit: 'km', center: new L.LatLng(50, 20), zoom: 3});
 
         map.gmxDrawing
             .on('drawstart', function (ev) { })
@@ -72,6 +72,9 @@
             stateChange: function (control, key, flag) {
                 //console.log('Control.gmxDrawing', control.options.activeKey, key, flag);
             }
+            ,
+            drawOptions: {pointStyle:{shape: 'circle', size: 8, fillOpacity: 0.8}, lineStyle:{fill: false, color: '#ff0000'}}
+
         }));
 	</script>
 </body>
