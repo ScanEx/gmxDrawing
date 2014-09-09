@@ -823,10 +823,11 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
         noClip: true,
 		smoothFactor: 0,
         opacity: 1,
+        shape: 'circle',
         fill: true,
         fillColor: '#ffffff',
         fillOpacity: 1,
-        size: L.Browser.mobile ? 40 : 10,
+        size: L.Browser.mobile ? 40 : 8,
         weight: 2
     },
 
