@@ -18,6 +18,7 @@ bringToFront|`bringToFront()`|| Переместить все редактиру
 
 Опция|Тип|По умолчанию|Описание
 ------|------|:---------:|-----------
+editable | <Bool> | true | Флаг разрещающий редактирование объекта(При значении `false` объект отображается не редактируемым).
 lineStyle | <L.Path options> | {opacity:1, weight:2} | Стиль отрисовки линий объекта.
 pointStyle | <Point options> | {size:10, opacity:1, weight:2} | Стиль отрисовки вершин объекта (для `Polygon` и `Rectangle` устанавливается fill = true)
 
@@ -43,10 +44,12 @@ L.GmxDrawing.Feature( `<Polyline, Polygon, Rectangle> object`, <options> options
 ------|------|:---------:|-----------
 onAdd|`onAdd(<Map> map)`|| Добавить редактируемый объект на карту.
 onRemove|`onRemove(<Map> map)`|| Удалить редактируемый объект с карты.
-setAddMode|`setAddMode()`|| Установить режим добавления.
-removeAddMode|`removeAddMode()`|| Отменить режим добавления.
-setEditMode|`setEditMode()`|| Установить режим редактирования.
-removeEditMode|`removeEditMode()`|| Отменить режим редактирования.
+enableEdit|`enableEdit()`|| Разрешить редактирование объекта.
+disableEdit|`disableEdit()`|| Запретить редактирование объекта.
+setAddMode|`setAddMode()`|| Установить режим добавления точек.
+removeAddMode|`removeAddMode()`|| Отменить режим добавления точек.
+setEditMode|`setEditMode()`|| Установить режим редактирования точек.
+removeEditMode|`removeEditMode()`|| Отменить режим редактирования точек.
 addLatLng|`addLatLng(<LatLng> latlng)`||Добавить вершину к редактируемогу объекту.
 setLatLngs|`setLatLngs(<LatLng[][]> latlngs)`| |Установить массив координат точек объекта.
 getLatLngs|`getLatLngs()`|`<LatLng[][]> latlngs`|Получить массив координат точек объекта.
