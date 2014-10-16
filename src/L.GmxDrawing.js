@@ -285,7 +285,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     toGeoJSON: function () {
         var type = this.options.type === 'Rectangle' ? 'Polygon' : this.options.type,
-            coords = L.GeoJSON.latLngsToCoords(this.points._latlngs);
+            coords = L.GeoJSON.latLngsToCoords(this.points.getLatLngs());
 
         return L.GeoJSON.getFeature(this, {
             type: type,
@@ -298,7 +298,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     getLatLngs: function () {
-        return this.points._latlngs;
+        return this.points.getLatLngs();
     },
 
     setLatLngs: function (points) {
