@@ -260,9 +260,11 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     onRemove: function (map) {
         L.LayerGroup.prototype.onRemove.call(this, map);
         this.remove();
-        this._pointUp();
-        this.removeEditMode();
-        if ('hideTooltip' in this) this.hideTooltip();
+        if (this.points) {
+            this._pointUp();
+            this.removeEditMode();
+            if ('hideTooltip' in this) this.hideTooltip();
+        }
     },
 
     remove: function () {
@@ -274,13 +276,17 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     setLinesStyle: function (options) {
-        this.lines.setStyle(options);
-        this.lines.redraw();
+        if (this.lines) {
+            this.lines.setStyle(options);
+            this.lines.redraw();
+        }
     },
 
     setPointsStyle: function (options) {
-        this.points.setStyle(options);
-        this.points.redraw();
+        if (this.points) {
+            this.points.setStyle(options);
+            this.points.redraw();
+        }
     },
 
     toGeoJSON: function () {
@@ -319,7 +325,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
     
     getBounds: function() {
-        return this.lines.getBounds();
+        return (this.lines || this._obj).getBounds();
     },
 
     initialize: function (parent, obj, options) {
@@ -506,6 +512,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     _pointUp: function (ev) {
+        if (!this.points) return;
         downObject = null;
         if (this._map) this._map
             .off('mousemove', this._pointMove, this)
