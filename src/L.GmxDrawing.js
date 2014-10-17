@@ -449,9 +449,15 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 _this.remove();
                 //_parent.remove(this);
             })
+            .on('dragstart', function(ev) {
+                _this._fireEvent('dragstart');
+            })
             .on('drag', function(ev) {
                 _this._fireEvent('drag');
                 _this._fireEvent('edit');
+            })
+            .on('dragend', function(ev) {
+                _this._fireEvent('dragend');
             })
             .on('popupopen', function(ev) {
                 var popup = ev.popup;
