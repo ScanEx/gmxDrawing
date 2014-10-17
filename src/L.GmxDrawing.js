@@ -74,51 +74,15 @@ L.GmxDrawing = L.Class.extend({
             else if (obj instanceof L.MultiPolygon)  options.type = 'MultiPolygon', options.editable = false;
             else if (obj instanceof L.Polyline) options.type = 'Polyline';
             else if (obj instanceof L.MultiPolyline) options.type = 'MultiPolyline', options.editable = false;
-
-            if (obj instanceof L.Marker) {
-                item = obj;
-                this._setMarker(obj);
-                this.items.push(obj);
-                this.fire('drawstop', {mode: 'Point', object: obj});
-            } else {
-                item = new L.GmxDrawing.Feature(this, obj, options);
+            else if (obj instanceof L.Marker) {
+                options.type = 'Point', options.editable = false;
             }
+            item = new L.GmxDrawing.Feature(this, obj, options);
         }
         if (!item._map) this._map.addLayer(item);
         if (item.points) item.points._path.setAttribute('fill-rule', 'inherit');
         if ('setEditMode' in item) item.setEditMode();
         return item;
-    },
-
-    _setMarker: function (marker) {
-        var my = this;
-        marker
-            .bindPopup(null, {maxWidth: 1000})
-            .on('dblclick', function(ev) {
-                this._map.removeLayer(this);
-                my.remove(this);
-            })
-            .on('popupopen', function(ev) {
-                var popup = ev.popup;
-                if (!popup._input) {
-                    popup._input = L.DomUtil.create('textarea', 'leaflet-gmx-popup-textarea', popup._contentNode);
-                    popup._input.placeholder = this.options.title || "Input text";
-                    popup._contentNode.style.width = 'auto';
-                }
-                L.DomEvent.on(popup._input, 'keyup', function(ev) {
-                    var rows = this.value.split("\n"),
-                        cols = this.cols || 0;
-                     
-                    rows.forEach(function(str) {
-                        if (str.length > cols) cols = str.length;
-                    });
-                    //if (rows > 2) 
-                    this.rows = rows.length;
-                    if (cols) this.cols = cols;
-                    popup.update();
-                }, popup._input);
-                popup.update();
-            });
     },
 
     _disableDrag: function (ev) {
@@ -215,7 +179,7 @@ L.GmxDrawing = L.Class.extend({
             if (item === obj) {
                 if (remove) {
                     this.items.splice(i, 1);
-                    var ev = {type: item.options.type, object: item};
+                    var ev = {type: item.options.type, mode: item.mode, object: item};
                     this.fire('remove', ev);
                     item.fire('remove', ev);
                 }
@@ -305,23 +269,37 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     getLatLngs: function () {
-        return (this.points || this._obj).getLatLngs();
+        var it = this.points || this._obj;
+        return 'getLatLngs' in it ? it.getLatLngs() : null;
+    },
+
+    getLatLng: function () {
+        var it = this.points || this._obj;
+        return 'getLatLng' in it ? it.getLatLng() : null;
     },
 
     setLatLngs: function (points) {
         //console.log('setLatLngs', points);
-        this.fill.setLatLngs(points);
-        this.lines.setLatLngs(points);
-        if (this.options.type !== 'Polyline' && this.mode === 'edit' && points.length > 2) {
-            this.lines.addLatLng(points[0]);
-            this.fill.addLatLng(points[0]);
+        if (this.points) {
+            this.fill.setLatLngs(points);
+            this.lines.setLatLngs(points);
+            if (this.options.type !== 'Polyline' && this.mode === 'edit' && points.length > 2) {
+                this.lines.addLatLng(points[0]);
+                this.fill.addLatLng(points[0]);
+            }
+            this.points.setLatLngs(points);
+        } else {
+            if ('setLatLngs' in this._obj) this._obj.setLatLngs(points);
         }
-        this.points.setLatLngs(points);
         this._fireEvent('edit');
     },
 
     addLatLng: function (point) {
-        this._setPoint(point, this.points._latlngs.length, 'node');
+        if (this.points) {
+            this._setPoint(point, this.points._latlngs.length, 'node');
+        } else if ('addLatLng' in this._obj) {
+            this._obj.addLatLng(point);
+        }
     },
     
     getBounds: function() {
@@ -340,7 +318,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     enableEdit: function() {
-        if (this.options.type.indexOf('Multi') === -1) {
+        var type = this.options.type;
+        if (type !== 'Point' && type.indexOf('Multi') === -1) {
             this.options.editable = true;
             this._initialize(this._parent, this._obj);
             this.setEditMode();
@@ -349,7 +328,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     disableEdit: function() {
-        if (this.options.type.indexOf('Multi') === -1) {
+        var type = this.options.type;
+        if (type !== 'Point' && type.indexOf('Multi') === -1) {
             this.removeEditMode();
             this.options.editable = false;
             this._obj.setLatLngs(this.getLatLngs());
@@ -364,6 +344,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         delete this.fill;
         delete this.points;
 
+        this.mode = '';
+
         var linesStyle = {opacity:1, weight:2, noClip: true, clickable: false, className: 'leaflet-drawing-lines'};
         if (this.options.type === 'Polygon' || this.options.type === 'Rectangle') {
             linesStyle.fill = true;
@@ -371,9 +353,10 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         for (var key in this.options.lineStyle) {
             if (key !== 'fill' || this.options.type !== 'Polyline') linesStyle[key] = this.options.lineStyle[key];
         }
-        L.setOptions(obj, linesStyle);
+        if (this.options.type !== 'Point') L.setOptions(obj, linesStyle);
 
         if (this.options.editable) {
+            this.mode = 'add';
         
             var latlngs = obj.getLatLngs(),
             //var latlngs = obj._latlngs,
@@ -448,11 +431,53 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                     .on('mouseout', this.hideTooltip, this);
             }
         } else {
-            this.addLayer(obj);
+            if (this.options.type === 'Point') {
+                this._setMarker(obj);
+            } else {
+                this.addLayer(obj);
+            }
         }
     },
 
+    _setMarker: function (marker) {
+        var _this = this,
+            _parent = this._parent;
+        marker
+            .bindPopup(null, {maxWidth: 1000})
+            .on('dblclick', function(ev) {
+                this._map.removeLayer(this);
+                _this.remove();
+                //_parent.remove(this);
+            })
+            .on('drag', function(ev) {
+                _this._fireEvent('drag');
+                _this._fireEvent('edit');
+            })
+            .on('popupopen', function(ev) {
+                var popup = ev.popup;
+                if (!popup._input) {
+                    popup._input = L.DomUtil.create('textarea', 'leaflet-gmx-popup-textarea', popup._contentNode);
+                    popup._input.placeholder = this.options.title || "Input text";
+                    popup._contentNode.style.width = 'auto';
+                }
+                L.DomEvent.on(popup._input, 'keyup', function(ev) {
+                    var rows = this.value.split("\n"),
+                        cols = this.cols || 0;
+                     
+                    rows.forEach(function(str) {
+                        if (str.length > cols) cols = str.length;
+                    });
+                    this.rows = rows.length;
+                    if (cols) this.cols = cols;
+                    popup.update();
+                }, popup._input);
+                popup.update();
+            });
+        _parent._map.addLayer(marker);
+    },
+
     _setPoint: function (latlng, nm, type) {
+        if (!this.points) return;
         var points = this.points._latlngs;
         if (this.options.type === 'Rectangle') {
             if (type === 'edge') {
@@ -608,7 +633,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     _fireEvent: function (name) {
-        var event = {mode: this.mode, object: this};
+        var event = {mode: this.mode || '', object: this};
         this.fire(name, event);
         this._parent.fire(name, event);
     },
@@ -641,6 +666,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     _editHandlers: function (flag) {
+        if (!this.points) return;
         var stop = L.DomEvent.stopPropagation;
         var prevent = L.DomEvent.preventDefault;
 		if (this.touchstart) L.DomEvent.off(this.points._container, 'touchstart', this.touchstart, this);
@@ -696,6 +722,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     _createHandlers: function (flag) {
+        if (!this.points) return;
         var stop = L.DomEvent.stopPropagation,
             lineStyle = this.options.lineStyle || {};
         if (flag) {
@@ -772,10 +799,12 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     // add mode
     _moseMove: function (ev) {
-        var points = this.points._latlngs;
-        if (points.length === 1) this._setPoint(ev.latlng, 1);
+        if (this.points) {
+            var points = this.points._latlngs;
+            if (points.length === 1) this._setPoint(ev.latlng, 1);
 
-        this._setPoint(ev.latlng, points.length - 1);
+            this._setPoint(ev.latlng, points.length - 1);
+        }
     },
 
     _mousedown: function (ev) {

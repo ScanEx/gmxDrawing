@@ -53,6 +53,7 @@ removeEditMode|`removeEditMode()`|| Отменить режим редактир
 addLatLng|`addLatLng(<LatLng> latlng)`||Добавить вершину к редактируемогу объекту.
 setLatLngs|`setLatLngs(<LatLng[][]> latlngs)`| |Установить массив координат точек объекта.
 getLatLngs|`getLatLngs()`|`<LatLng[][]> latlngs`|Получить массив координат точек объекта.
+getLatLng|`getLatLng()`|`<LatLng> latlng`|Получить координаты точки объекта.
 setLinesStyle|`setLinesStyle(<L.Path options>)`||Установить cтиль отрисовки линий объекта.
 setPointsStyle|`setPointsStyle(<Point options>)`||Установить cтиль отрисовки вершин объекта.
 bringToFront|`bringToFront()`|| Переместить редактируемый объект выше всех векторных объектов.
@@ -77,7 +78,8 @@ toGeoJSON|`toGeoJSON()`||Получить GeoJSON по объекту.
 
 | Property | Type | Description
 | --- | --- | ---
-| mode | String | Текущий режим (`add` - режим добавления обьекта, `edit` - режим редактирования обьекта)
+| type | String | Тип события
+| mode | String | Текущий режим (`add` - режим добавления обьекта, `edit` - режим редактирования обьекта, `` - режим не установлен)
 | object | L.GmxDrawing.Feature | Редактируемый объект.
 
 

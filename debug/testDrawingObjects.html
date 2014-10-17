@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>GmxDrawing Leaflet Quick Start Guide Example</title>
+	<meta charset="utf-8" />
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet-src.js"></script>
+
+    <link rel="stylesheet" href="../css/L.gmxDrawing.css" />
+	<script src="../src/L.GmxDrawing.js"></script>
+    <style>
+        html, body, #map {
+            height: 100%;
+            width: 100%;
+            margin: 0px;
+        }
+        
+        #infoPanel {
+            position: absolute;
+			left: 0px;
+			right: 0px;
+			top: 21px;
+            text-align: center;
+			z-index: 1;
+        }
+        
+        #info {
+			background-color: #ffffff;
+			border-radius: 5px;
+            box-shadow: 0 1px 7px rgba(0,0,0,0.65);
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+	<div id="map"></div>
+    <div id="infoPanel">
+        <span id="info">
+                Test for drawing objects: <b>`polygon`, `polyline`, `rectangle`, `marker`</b>
+        </span>
+    </div>
+
+	<script>
+		var osm = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+			maxZoom: 18,
+			attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
+		});
+		var map = new L.Map('map', {layers: [osm], center: new L.LatLng(50, 20), zoom: 3});
+
+        var showInfo = function () {
+            console.log('Event: ', arguments);
+        };
+        map.gmxDrawing
+            .on('drawstart', showInfo)
+            .on('drawstop', showInfo)
+            .on('add', showInfo)
+            .on('edit', showInfo)
+            .on('remove', showInfo)
+            .on('dragstart', showInfo)
+            .on('drag', showInfo)
+            .on('dragend', showInfo);
+
+        var drawObjects = [
+            map.gmxDrawing.add(L.polygon(
+                [
+                 [ [50.0, 0.0], [61.0, 24.0], [10.0, 24.0], [15.0, 0.0] ]
+                 ,[ [45.0, 15.0], [51.0, 15.0], [51.0, 18.0], [20.0, 18.0], [40.0, 10.0] ]
+               ]
+             ), {editable:true}
+            )
+            ,
+
+            map.gmxDrawing.add(L.polyline(
+                [
+                 [50.0, 30.0], [64.0, 35.0], [71.5, 53.0], [44.0, 43.0]
+                ]
+             ), {pointStyle:{shape: 'circle'}, lineStyle:{color: '#ff0000'}}
+            )
+            ,
+
+            map.gmxDrawing.add(L.rectangle(
+                [
+                 [20.0, 40.0], [54.0, 65.0]
+                ]
+             ), {pointStyle:{shape: 'circle', size: 12}, lineStyle:{fill: true, color: '#00ff00'}}
+            )
+            ,
+
+            map.gmxDrawing.add(L.polyline(
+                [
+                 [55.0, 30.0], [69.0, 35.0], [39.5, 53.0], [54.0, 43.0]
+                ]
+             ), {editable:false}
+            )
+            ,
+
+            map.gmxDrawing.add(
+                L.marker(new L.LatLng(65.0, 40.0), {draggable: true, title: 'Text example'}),
+            {})
+            ,
+         
+            map.gmxDrawing.add(L.multiPolygon(
+                [
+                    [
+                     [ [50.0, 30.0], [61.0, 30.0], [61.0, 43.0], [30.0, 43.0], [50.0, 30.0] ]
+                    ],
+                    [
+                     [ [55.0, 30.0], [65.0, 30.0], [65.0, 43.0], [35.0, 43.0], [55.0, 30.0] ]
+                    ]
+                ]
+                , {fill: false, color: '#00ff00'} )
+            )
+            ,
+
+            map.gmxDrawing.add(L.multiPolyline(
+                [
+                    [
+                     [55.0, 10.0], [69.0, 15.0], [39.5, 23.0], [54.0, 23.0]
+                    ],
+                    [
+                     [15.0, 20.0], [59.0, 25.0], [29.5, 33.0], [34.0, 33.0]
+                    ]
+                ]
+            ))
+        ];
+
+        var pointStyle = {shape: 'circle', size: 12},
+            lineStyle = {fill: true, color: '#00ff00'},
+            latlng = [55.0, 10.0];
+            latlngs = [[55.0, 10.0], [69.0, 15.0], [39.5, 23.0], [54.0, 23.0]];
+        for (var i = 0, len = drawObjects.length; i < len; i++) {
+            var drawObject = drawObjects[i],
+                res = null,
+                type = drawObject.options.type;
+
+            res = drawObject.getType();         console.log(type + ' getType:', res);
+            res = drawObject.disableEdit();     console.log(type + ' disableEdit:', res);
+            res = drawObject.enableEdit();      console.log(type + ' enableEdit:', res);
+            res = drawObject.toGeoJSON();       console.log(type + ' toGeoJSON:', res);
+            res = drawObject.bringToBack();     console.log(type + ' bringToBack:', res);
+            res = drawObject.bringToFront();    console.log(type + ' bringToFront:', res);
+            // res = drawObject.setEditMode();      console.log(type + ' setEditMode:', res);
+            // res = drawObject.setAddMode();      console.log(type + ' setAddMode:', res);
+            // res = drawObject.removeEditMode();  console.log(type + ' removeEditMode:', res);
+            res = drawObject.addLatLng(latlng); console.log(type + ' addLatLng:', res);
+            res = drawObject.setLatLngs(type.indexOf('Multi') === -1 ? latlngs : [latlngs]); console.log(type + ' setLatLngs:', res);
+            res = drawObject.getLatLngs();      console.log(type + ' getLatLngs:', res);
+            res = drawObject.getLatLng();       console.log(type + ' getLatLng:', res);
+            res = drawObject.setLinesStyle(lineStyle); console.log(type + ' setLinesStyle:', res);
+            res = drawObject.setPointsStyle(pointStyle); console.log(type + ' setPointsStyle:', res);
+        }
+	</script>
+</body>
+</html>
