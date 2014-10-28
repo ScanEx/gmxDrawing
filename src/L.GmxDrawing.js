@@ -58,7 +58,7 @@ L.GmxDrawing = L.Class.extend({
     bringToFront: function () {
         for (var i = 0, len = this.items.length; i < len; i++) {
             var item = this.items[i];
-            if ('bringToFront' in item) item.bringToFront();
+            if (item._map && 'bringToFront' in item) item.bringToFront();
         }
     },
 
@@ -169,7 +169,15 @@ L.GmxDrawing = L.Class.extend({
     },
 
     _addItem: function (item) {
-        this.items.push(item);
+        var addFlag = true;
+        for (var i = 0, len = this.items.length; i < len; i++) {
+            var it = this.items[i];
+            if (it === item) {
+                addFlag = false;
+                break;
+            }
+        }
+        if (addFlag) this.items.push(item);
         this.fire('add', {mode: item.mode, object: item});
     },
 
@@ -191,8 +199,8 @@ L.GmxDrawing = L.Class.extend({
 
     remove: function (obj) {
         var item = this._removeItem(obj, true);
-        if (item && '_remove' in item) {
-            item._remove();
+        if (item && item._map) {
+            item._map.removeLayer(item);
         }
         return item;
     } 
@@ -219,26 +227,22 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     onAdd: function (map) {
         L.LayerGroup.prototype.onAdd.call(this, map);
         this._parent._addItem(this);
+        this._fireEvent('addtomap');
     },
 
     onRemove: function (map) {
         L.LayerGroup.prototype.onRemove.call(this, map);
-        this.remove();
         if (this.points) {
             this._pointUp();
             this.removeEditMode();
             if ('hideTooltip' in this) this.hideTooltip();
         }
-        this._fireEvent('layerremove');
+        this._fireEvent('removefrommap');
     },
 
     remove: function () {
         this._parent.remove(this);
         return this;
-    },
-
-    _remove: function () {
-        if (this._map) this._map.removeLayer(this);
     },
 
     setLinesStyle: function (options) {
@@ -358,7 +362,6 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         if (this.options.type !== 'Point') L.setOptions(obj, linesStyle);
 
         if (this.options.editable) {
-            this.mode = 'add';
         
             var latlngs = obj.getLatLngs(),
             //var latlngs = obj._latlngs,
@@ -373,6 +376,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 this.lines.addLatLng(latlngs[0]);
                 this.fill.addLatLng(latlngs[0]);
             }
+            this.mode = mode;
 
             this.points = new L.GmxDrawing.PointMarkers(latlngs, this.options.pointStyle || {});
             this.points._parent = this;
@@ -569,7 +573,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 || points.length < 2
                 || (points.length < 3 && this.options.type === 'Polygon')
                 ) {
-                this.onRemove(this._map);
+                this.remove();
             } else {
                 this._setPoint(points[0], 0);
             }
@@ -837,7 +841,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 					}
 					this._setPoint(points[0], 0);
 				} else {
-					this._remove();
+					this.remove();
 				}
 				this._fireEvent('drawstop');
 				return;
