@@ -50,15 +50,19 @@
 		});
 		var map = new L.Map('map', {layers: [osm], center: new L.LatLng(50, 20), zoom: 3});
 
+        var eventShow = function (ev) {
+            //console.log(arguments);
+        };
         map.gmxDrawing
-            .on('drawstart', function (ev) { })
-            .on('drawstop', function (ev) { })
-            .on('add', function (ev) { })
-            .on('edit', function (ev) { })
-            .on('remove', function (ev) { })
-            .on('dragstart', function (ev) { })
-            .on('drag', function (ev) { })
-            .on('dragend', function (ev) { });
+            .on('drawstart', eventShow)
+            .on('drawstop', eventShow)
+            .on('add', eventShow)
+            .on('edit', eventShow)
+            .on('remove', eventShow)
+            .on('layerremove', eventShow)
+            .on('dragstart', eventShow)
+            .on('drag', eventShow)
+            .on('dragend', eventShow);
 
         var drawPolygon = map.gmxDrawing.add(L.polygon(
             [

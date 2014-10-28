@@ -223,16 +223,18 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     onRemove: function (map) {
         L.LayerGroup.prototype.onRemove.call(this, map);
-        this.remove();
+        //this.remove();
         if (this.points) {
             this._pointUp();
             this.removeEditMode();
             if ('hideTooltip' in this) this.hideTooltip();
         }
+        this._fireEvent('layerremove');
     },
 
     remove: function () {
         this._parent.remove(this);
+        return this;
     },
 
     _remove: function () {
