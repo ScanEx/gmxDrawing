@@ -223,7 +223,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     onRemove: function (map) {
         L.LayerGroup.prototype.onRemove.call(this, map);
-        //this.remove();
+        this.remove();
         if (this.points) {
             this._pointUp();
             this.removeEditMode();
