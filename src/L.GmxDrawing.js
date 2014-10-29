@@ -227,7 +227,11 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     onAdd: function (map) {
         L.LayerGroup.prototype.onAdd.call(this, map);
         this._parent._addItem(this);
+        if (this.options.type === 'Point') {
+            map.addLayer(this._obj);
+        }
         this._fireEvent('addtomap');
+        this.setEditMode();
     },
 
     onRemove: function (map) {
@@ -236,6 +240,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             this._pointUp();
             this.removeEditMode();
             if ('hideTooltip' in this) this.hideTooltip();
+        }
+        if (this.options.type === 'Point') {
+            map.removeLayer(this._obj);
         }
         this._fireEvent('removefrommap');
     },
@@ -486,6 +493,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 popup.update();
             });
         _parent._map.addLayer(marker);
+        this._fireEvent('drawstop');
     },
 
     _setPoint: function (latlng, nm, type) {
