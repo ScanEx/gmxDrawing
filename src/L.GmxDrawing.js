@@ -259,11 +259,19 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         }
     },
 
+    getLinesStyle: function () {
+        return this.lines ? this.lines.options : {};
+    },
+
     setPointsStyle: function (options) {
         if (this.points) {
             this.points.setStyle(options);
             this.points.redraw();
         }
+    },
+
+    getPointsStyle: function () {
+        return this.points ? this.points.options : {};
     },
 
     toGeoJSON: function () {
