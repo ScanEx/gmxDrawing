@@ -331,12 +331,13 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     enableEdit: function() {
+        this.options.mode = 'edit';
         var type = this.options.type;
         if (type !== 'Point' && type.indexOf('Multi') === -1) {
             this.options.editable = true;
             this._initialize(this._parent, this._obj);
-            this.setEditMode();
         }
+        this.setEditMode();
         return this;
     },
 
