@@ -62,7 +62,9 @@ enableEdit|`enableEdit()`|| Разрешить редактирование об
 disableEdit|`disableEdit()`|| Запретить редактирование объекта.
 toGeoJSON|`toGeoJSON()`||Получить GeoJSON по объекту.
 setLinesStyle|`setLinesStyle(<L.Path options>)`||Установить cтиль отрисовки линий объекта.
+getLinesStyle|`getLinesStyle()`|`<L.Path options>`|Получить cтиль отрисовки линий объекта.
 setPointsStyle|`setPointsStyle(<Point options>)`||Установить cтиль отрисовки вершин объекта.
+getPointsStyle|`getPointsStyle()`|`<L.Path options>`|Получить cтиль отрисовки вершин объекта.
 getType|`getType()`||Получить тип объекта.
 
 ### Events
