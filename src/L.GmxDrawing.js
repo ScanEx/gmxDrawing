@@ -231,6 +231,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         this._parent._addItem(this);
         if (this.options.type === 'Point') {
             map.addLayer(this._obj);
+            this._fireEvent('drawstop');
         }
         this._fireEvent('addtomap');
         this.setEditMode();
@@ -504,7 +505,6 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 popup.update();
             });
         _parent._map.addLayer(marker);
-        this._fireEvent('drawstop');
     },
 
     _setPoint: function (latlng, nm, type) {
