@@ -129,7 +129,9 @@ L.GmxDrawing = L.Class.extend({
                     var obj = null,
                         latlng = ev.latlng;
                     if (type === 'Point') {
-                        obj = my.add(L.marker(latlng, {draggable: true}) );
+                        drawOptions.draggable = true;
+                        if (drawOptions.iconUrl) drawOptions.icon = L.icon(drawOptions);
+                        obj = my.add(L.marker(latlng, drawOptions));
                     } else if (type === 'Rectangle') {
                         //console.log('Rectangle ', ev, latlng);
                         if (L.Browser.mobile) {
