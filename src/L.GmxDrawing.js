@@ -85,14 +85,14 @@ L.GmxDrawing = L.Class.extend({
         return item;
     },
 
-    _disableDrag: function (ev) {
+    _disableDrag: function () {
         this._map.dragging.disable();
         L.DomUtil.disableTextSelection();
         L.DomUtil.disableImageDrag();
 		this._map.doubleClickZoom.removeHooks();
     },
 
-    _enableDrag: function (ev) {
+    _enableDrag: function () {
         this._map.dragging.enable();
         L.DomUtil.enableTextSelection();
         L.DomUtil.enableImageDrag();
@@ -402,13 +402,11 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             this.addLayer(this.points);
 
             if (L.LineUtil.prettifyDistance) {
-                var my = this,
-                    geoType = my.options.type;
+                var my = this;
                 this._showTooltip = function (type, ev) {
                     if (!downObject || downObject === this) {
                         var _latlngs = my.points._latlngs,
                             mapOpt = my._map.options || {},
-                            ctrlKey = ev.originalEvent.ctrlKey || false,
                             distanceUnit = mapOpt.distanceUnit || 'km',
                             squareUnit = mapOpt.squareUnit || 'ha',
                             str = '',
@@ -469,19 +467,19 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             _parent = this._parent;
         marker
             .bindPopup(null, {maxWidth: 1000})
-            .on('dblclick', function(ev) {
+            .on('dblclick', function() {
                 this._map.removeLayer(this);
                 _this.remove();
                 //_parent.remove(this);
             })
-            .on('dragstart', function(ev) {
+            .on('dragstart', function() {
                 _this._fireEvent('dragstart');
             })
-            .on('drag', function(ev) {
+            .on('drag', function() {
                 _this._fireEvent('drag');
                 _this._fireEvent('edit');
             })
-            .on('dragend', function(ev) {
+            .on('dragend', function() {
                 _this._fireEvent('dragend');
             })
             .on('popupopen', function(ev) {
@@ -491,7 +489,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                     popup._input.placeholder = this.options.title || "Input text";
                     popup._contentNode.style.width = 'auto';
                 }
-                L.DomEvent.on(popup._input, 'keyup', function(ev) {
+                L.DomEvent.on(popup._input, 'keyup', function() {
                     var rows = this.value.split("\n"),
                         cols = this.cols || 0;
                      
@@ -567,7 +565,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         }
     },
 
-    _pointUp: function (ev) {
+    _pointUp: function () {
         if (!this.points) return;
         downObject = null;
         if (this._map) this._map
@@ -633,7 +631,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         this.skipClick = false;
     },
 
-    _onDragEnd: function (ev) {
+    _onDragEnd: function () {
         this._map
             .off('mouseup', this._onDragEnd, this)
             .off('mousemove', this._onDrag, this);
@@ -674,7 +672,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         if (downAttr.type === 'node') {
             this._parent._disableDrag();
             this.down = downAttr;
-            var num = downAttr.num;
+            //var num = downAttr.num;
             var my = this;
             var _touchmove = function (ev) {
                 downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
@@ -682,7 +680,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                         my._pointMove(downAttr);
                   }
             };
-            var _touchend = function (ev) {
+            var _touchend = function () {
                 L.DomEvent
                     .off(my._map._container, 'touchmove', _touchmove, my)
                     .off(my._map._container, 'touchend', _touchend, my);
@@ -699,7 +697,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     _editHandlers: function (flag) {
         if (!this.points) return;
         var stop = L.DomEvent.stopPropagation;
-        var prevent = L.DomEvent.preventDefault;
+        //var prevent = L.DomEvent.preventDefault;
 		if (this.touchstart) L.DomEvent.off(this.points._container, 'touchstart', this.touchstart, this);
 		if (this.touchstartFill) L.DomEvent.off(this.fill._container, 'touchstart', this.touchstartFill, this);
 		this.touchstart = null;
@@ -838,7 +836,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         }
     },
 
-    _mousedown: function (ev) {
+    _mousedown: function () {
         this._lastTime = new Date().getTime() + 300;  // Hack for determinating map dragging
     },
 
@@ -890,10 +888,9 @@ L.GmxDrawing._Fill = L.Polyline.extend({
     },
 
     _getPathPartStr: function (points) {
-        var options = this.options,
-            size = this.options.size/2;
+        var size = this.options.size/2,
+            arr = L.GmxDrawing.utils.getEquidistancePolygon(points, 1.5 * size);
 
-        var arr = L.GmxDrawing.utils.getEquidistancePolygon(points, 1.5 * size);
         for (var i = 0, len = arr.length, str = '', p; i < len; i++) {
             p = arr[i];
             str += 'M' + p[0][0] + ' ' + p[0][1] +
@@ -948,7 +945,6 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
     _getPathPartStr: function (points) {
         var round = L.Path.VML,
             size = this.options.size/2,
-            weight = this.options.weight,
             skipLastPoint = this._parent.mode === 'add' && !L.Browser.mobile ? 1 : 0,
             radius = (this.options.shape === 'circle' ? true : false);
 
