@@ -130,6 +130,12 @@ L.GmxDrawing = L.Class.extend({
                         latlng = ev.latlng;
                     if (type === 'Point') {
                         drawOptions.draggable = true;
+                        if (ev && ev.originalEvent) {
+                            if (ev.originalEvent.ctrlKey) drawOptions.ctrlKey = true;
+                            if (ev.originalEvent.shiftKey) drawOptions.shiftKey = true;
+                            if (ev.originalEvent.altKey) drawOptions.altKey = true;
+                        }
+
                         if (drawOptions.iconUrl) drawOptions.icon = L.icon(drawOptions);
                         obj = my.add(L.marker(latlng, drawOptions));
                     } else if (type === 'Rectangle') {
@@ -231,7 +237,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         this._parent._addItem(this);
         if (this.options.type === 'Point') {
             map.addLayer(this._obj);
-            this._fireEvent('drawstop');
+            this._fireEvent('drawstop', this._obj.options);
         }
         this._fireEvent('addtomap');
         this.setEditMode();
