@@ -492,7 +492,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 var popup = ev.popup;
                 if (!popup._input) {
                     popup._input = L.DomUtil.create('textarea', 'leaflet-gmx-popup-textarea', popup._contentNode);
-                    popup._input.placeholder = this.options.title || "Input text";
+                    popup._input.placeholder = this.options.title || "";
                     popup._contentNode.style.width = 'auto';
                 }
                 L.DomEvent.on(popup._input, 'keyup', function() {
