@@ -131,9 +131,9 @@ L.GmxDrawing = L.Class.extend({
                     if (type === 'Point') {
                         drawOptions.draggable = true;
                         if (ev && ev.originalEvent) {
-                            if (ev.originalEvent.ctrlKey) drawOptions.ctrlKey = true;
-                            if (ev.originalEvent.shiftKey) drawOptions.shiftKey = true;
-                            if (ev.originalEvent.altKey) drawOptions.altKey = true;
+                            drawOptions.ctrlKey = ev.originalEvent.ctrlKey;
+                            drawOptions.shiftKey = ev.originalEvent.shiftKey;
+                            drawOptions.altKey = ev.originalEvent.altKey;
                         }
 
                         if (drawOptions.iconUrl) drawOptions.icon = L.icon(drawOptions);
