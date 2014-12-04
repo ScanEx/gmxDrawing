@@ -18,7 +18,7 @@ L.GmxDrawing = L.Class.extend({
         this.items = [];
         this.current = null;
 
-        if (L.LineUtil.prettifyDistance) {
+        if (L.gmxUtil.prettifyDistance) {
             var tooltip = document.createElementNS(L.Path.SVG_NS, 'g');
             L.DomUtil.addClass(tooltip, 'gmxTooltip');
             var bg = document.createElementNS(L.Path.SVG_NS, 'rect');
@@ -407,7 +407,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             this.points._parent = this;
             this.addLayer(this.points);
 
-            if (L.LineUtil.prettifyDistance) {
+            if (L.gmxUtil.prettifyDistance) {
                 var my = this;
                 this._showTooltip = function (type, ev) {
                     if (!downObject || downObject === this) {
@@ -418,12 +418,12 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                             str = '',
                             arr = [];
                         if (type === 'Area') {
-                            if (!L.PolyUtil.getArea) return;
+                            if (!L.gmxUtil.getArea) return;
                             if (ev.originalEvent.ctrlKey) {
                                 arr = _latlngs.slice(0, _latlngs.length); arr.push(_latlngs[0]);
-                                str = _gtxt('Perimeter') + ': ' + L.LineUtil.prettifyDistance(L.LineUtil.getLength(arr), distanceUnit);
+                                str = _gtxt('Perimeter') + ': ' + L.gmxUtil.prettifyDistance(L.gmxUtil.getLength(arr), distanceUnit);
                             } else {
-                                str = _gtxt(type) + ': ' + L.PolyUtil.prettifyArea(L.PolyUtil.getArea(_latlngs), squareUnit);
+                                str = _gtxt(type) + ': ' + L.gmxUtil.prettifyArea(L.gmxUtil.getArea(_latlngs), squareUnit);
                             }    
                             my._parent.showTooltip(ev.layerPoint, str);
                         } else if (type === 'Length') {
@@ -434,8 +434,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                                 arr = _latlngs.slice(downAttr.num - 1, downAttr.num + 1);
                                 if (arr.length === 1) arr.push(_latlngs[0]);
                             }
-                            var length = L.LineUtil.getLength(arr),
-                                str = _gtxt(type) + ': ' + L.LineUtil.prettifyDistance(length, distanceUnit);
+                            var length = L.gmxUtil.getLength(arr),
+                                str = _gtxt(type) + ': ' + L.gmxUtil.prettifyDistance(length, distanceUnit);
                             my._parent.showTooltip(ev.layerPoint, str);
                         }
                         my._fireEvent('onMouseOver');
