@@ -18,7 +18,7 @@ L.GmxDrawing = L.Class.extend({
         this.items = [];
         this.current = null;
 
-        if (L.gmxUtil.prettifyDistance) {
+        if (L.gmxUtil && L.gmxUtil.prettifyDistance) {
             var tooltip = document.createElementNS(L.Path.SVG_NS, 'g');
             L.DomUtil.addClass(tooltip, 'gmxTooltip');
             var bg = document.createElementNS(L.Path.SVG_NS, 'rect');
@@ -407,7 +407,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             this.points._parent = this;
             this.addLayer(this.points);
 
-            if (L.gmxUtil.prettifyDistance) {
+            if (L.gmxUtil && L.gmxUtil.prettifyDistance) {
                 var my = this;
                 this._showTooltip = function (type, ev) {
                     if (!downObject || downObject === this) {
