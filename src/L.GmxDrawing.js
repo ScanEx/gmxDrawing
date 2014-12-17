@@ -285,8 +285,12 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     toGeoJSON: function () {
         if (!this.points) return this._obj.toGeoJSON();
-        var type = this.options.type === 'Rectangle' ? 'Polygon' : this.options.type,
-            coords = L.GeoJSON.latLngsToCoords(this.points.getLatLngs());
+        var coords = L.GeoJSON.latLngsToCoords(this.points.getLatLngs()),
+            type = this.options.type;
+
+        if (type === 'Rectangle') type = 'Polygon';
+        else if (type === 'Polyline') type = 'LineString';
+        else if (type === 'MultiPolyline') type = 'MultiLineString';
 
         return L.GeoJSON.getFeature(this, {
             type: type,
