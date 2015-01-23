@@ -7,6 +7,83 @@ var _gtxt = function (key) {
 var downObject = null;
 var rectDelta = 0.0000001;
 
+var defaultStyles = {
+    mode: '',
+    map: true,
+    editable: true,
+    lineStyle: {
+        opacity:1,
+        weight:2,
+        noClip: true,
+        clickable: false,
+        className: 'leaflet-drawing-lines'
+        ,
+        color: "#0033ff",
+        dashArray: null,
+        lineCap: null,
+        lineJoin: null,
+        fill: true,
+        fillColor: null,
+        fillOpacity: 0.2,
+        smoothFactor: 1,
+        stroke: true
+    },
+    pointStyle: {
+        className: 'leaflet-drawing-points',
+        noClip: true,
+        smoothFactor: 0,
+        opacity: 1,
+        shape: 'circle',
+        fill: true,
+        fillColor: '#ffffff',
+        fillOpacity: 1,
+        size: L.Browser.mobile ? 40 : 8,
+        weight: 2
+        ,
+        clickable: true,
+        color: "#0033ff",
+        dashArray: null,
+        lineCap: null,
+        lineJoin: null,
+        stroke: true
+    },
+    marker: {
+        mode: '',
+        editable: false,
+        options: {
+            alt: '',
+            title: '',
+            clickable: true,
+            draggable: false,
+            keyboard: true,
+            opacity: 1,
+            zIndexOffset: 0,
+            riseOffset: 250,
+            riseOnHover: false,
+            icon: {
+                className: '',
+                iconAnchor: [12, 41],
+                iconSize: [25, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            }
+        }
+    }
+};
+function getNotDefaults(from, def) {
+    var res = {};
+    for (var key in from) {
+        if (key === 'icon' || key === 'map') {
+            continue;
+        } else if (key === 'iconAnchor' || key === 'iconSize' || key === 'popupAnchor' || key === 'shadowSize') {
+            if (def[key][0] !== from[key][0] || def[key][1] !== from[key][1]) res[key] = from[key];
+        } else if (key === 'lineStyle' || key === 'pointStyle') {
+            res[key] = getNotDefaults(from[key], def[key]);
+        } else if (def[key] !== from[key]) res[key] = from[key];
+    }
+    return res;
+}
+
 L.GmxDrawing = L.Class.extend({
     options: {
         type: ''
@@ -79,8 +156,11 @@ L.GmxDrawing = L.Class.extend({
             }
             item = new L.GmxDrawing.Feature(this, obj, options);
         }
-        if (!item._map) this._map.addLayer(item);
-        if (item.points) item.points._path.setAttribute('fill-rule', 'inherit');
+        if (!('map' in options)) options.map = true;
+        if (options.map && !item._map) this._map.addLayer(item);
+        else this._addItem(item);
+        //if (!item._map) this._map.addLayer(item);
+        //if (item.points) item.points._path.setAttribute('fill-rule', 'inherit');
         if ('setEditMode' in item) item.setEditMode();
         return item;
     },
@@ -176,6 +256,53 @@ L.GmxDrawing = L.Class.extend({
         return this.items;
     },
 
+    loadState: function (featureCollection) {
+        var _this = this;
+        L.geoJson(featureCollection, {
+            onEachFeature: function (feature, layer) {
+                var options = feature.properties;
+                if (options.type === 'Rectangle') {
+                    layer = L.rectangle(layer.getBounds());
+                } else if (options.type === 'Point') {
+                    options = options.options;
+                    var icon = options.icon;
+                    if (icon) {
+                        delete options.icon;
+                        if (icon.iconUrl) options.icon = L.icon(icon);
+                    }
+                    layer = L.marker(layer.getLatLng(), options);
+                }
+                _this.add(layer, options);
+            }
+        })
+    },
+
+    saveState: function () {
+        var featureGroup = L.featureGroup();
+        var points = [];
+        for (var i = 0, len = this.items.length; i < len; i++) {
+            var it = this.items[i];
+            if (it.options.type === 'Point') {
+                var geojson = it.toGeoJSON();
+                geojson.properties = getNotDefaults(it.options, defaultStyles.marker);
+                if (!it._map) geojson.properties.map = false;
+                var res = getNotDefaults(it._obj.options, defaultStyles.marker.options);
+                if (Object.keys(res).length) geojson.properties.options = res;
+                res = getNotDefaults(it._obj.options.icon.options, defaultStyles.marker.options.icon);
+                if (Object.keys(res).length) {
+                    if (!geojson.properties.options) geojson.properties.options = {};
+                    geojson.properties.options.icon = res;
+                }
+                points.push(geojson);
+            } else {
+                featureGroup.addLayer(it);
+            }
+        }
+        var featureCollection = featureGroup.toGeoJSON();
+        featureCollection.features = featureCollection.features.concat(points);
+        return featureCollection;
+    },
+
     _addItem: function (item) {
         var addFlag = true;
         for (var i = 0, len = this.items.length; i < len; i++) {
@@ -265,6 +392,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         if (this.lines) {
             this.lines.setStyle(options);
             this.lines.redraw();
+            this._fireEvent('stylechange');
         }
     },
 
@@ -276,6 +404,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         if (this.points) {
             this.points.setStyle(options);
             this.points.redraw();
+            this._fireEvent('stylechange');
         }
     },
 
@@ -283,8 +412,18 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         return this.points ? this.points.options : {};
     },
 
+    getOptions: function (withDefaults) {
+        var res = getNotDefaults(this.options, defaultStyles);
+        if (!Object.keys(res.lineStyle).length) delete res.lineStyle;
+        if (!Object.keys(res.pointStyle).length) delete res.pointStyle;
+        if (!this._map) res.map = false;
+        return res;
+    },
+
     toGeoJSON: function () {
-        if (!this.points) return this._obj.toGeoJSON();
+        if (!this.points) {
+            return this._obj.toGeoJSON();
+        }
         var coords = L.GeoJSON.latLngsToCoords(this.points.getLatLngs()),
             type = this.options.type;
 
@@ -292,7 +431,12 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         else if (type === 'Polyline') type = 'LineString';
         else if (type === 'MultiPolyline') type = 'MultiLineString';
 
-        return L.GeoJSON.getFeature(this, {
+        return L.GeoJSON.getFeature({
+            feature: {
+                type: 'Feature',
+                properties: this.getOptions()
+            }
+        }, {
             type: type,
             coordinates: type === 'Polygon' ? [coords] : coords
         });
@@ -381,14 +525,14 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
         this.mode = '';
 
-        var linesStyle = {opacity:1, weight:2, noClip: true, clickable: false, className: 'leaflet-drawing-lines'};
+        var lineStyle = {opacity:1, weight:2, noClip: true, clickable: false, className: 'leaflet-drawing-lines'};
         if (this.options.type === 'Polygon' || this.options.type === 'Rectangle') {
-            linesStyle.fill = true;
+            lineStyle.fill = true;
         }
         for (var key in this.options.lineStyle) {
-            if (key !== 'fill' || this.options.type !== 'Polyline') linesStyle[key] = this.options.lineStyle[key];
+            if (key !== 'fill' || this.options.type !== 'Polyline') lineStyle[key] = this.options.lineStyle[key];
         }
-        if (this.options.type !== 'Point') L.setOptions(obj, linesStyle);
+        if (this.options.type !== 'Point') L.setOptions(obj, lineStyle);
 
         if (this.options.editable) {
         
@@ -397,7 +541,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 //holes = obj._holes || null,
                 //noClip = obj.options.noClip,
                 mode = this.options.mode || (latlngs.length ? 'edit' : 'add');
-            this.lines = new L.Polyline(latlngs, linesStyle);
+            this.lines = new L.Polyline(latlngs, lineStyle);
             this.addLayer(this.lines);
             this.fill = new L.GmxDrawing._Fill(latlngs);
             this.addLayer(this.fill);
@@ -410,6 +554,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             this.points = new L.GmxDrawing.PointMarkers(latlngs, this.options.pointStyle || {});
             this.points._parent = this;
             this.addLayer(this.points);
+            
+            this.options.lineStyle = this.lines.options;
+            this.options.pointStyle = this.points.options;
 
             if (L.gmxUtil && L.gmxUtil.prettifyDistance) {
                 var my = this;
@@ -496,7 +643,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 var popup = ev.popup;
                 if (!popup._input) {
                     popup._input = L.DomUtil.create('textarea', 'leaflet-gmx-popup-textarea', popup._contentNode);
-                    popup._input.placeholder = this.options.title || "";
+                    popup._input.placeholder = marker.options.title || "";
                     popup._contentNode.style.width = 'auto';
                 }
                 L.DomEvent.on(popup._input, 'keyup', function() {
@@ -509,6 +656,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                     this.rows = rows.length;
                     if (cols) this.cols = cols;
                     popup.update();
+                    marker.options.title = this.value;
                 }, popup._input);
                 popup.update();
             });
@@ -982,6 +1130,7 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
 
     _updatePath: function () {
         if (!this._map) { return; }
+        this._path.setAttribute('fill-rule', 'inherit');
 
         this._clipPoints();
 
