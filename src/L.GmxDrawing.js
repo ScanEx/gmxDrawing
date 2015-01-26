@@ -22,7 +22,7 @@ var defaultStyles = {
         dashArray: null,
         lineCap: null,
         lineJoin: null,
-        fill: true,
+        fill: false,
         fillColor: null,
         fillOpacity: 0.2,
         smoothFactor: 1,
@@ -413,7 +413,11 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     getOptions: function (withDefaults) {
-        var res = getNotDefaults(this.options, defaultStyles);
+        var data = L.extend({}, this.options);
+        data.lineStyle = this.lines.options;
+        data.pointStyle = this.points.options;
+
+        var res = getNotDefaults(data, defaultStyles);
         if (!Object.keys(res.lineStyle).length) delete res.lineStyle;
         if (!Object.keys(res.pointStyle).length) delete res.pointStyle;
         if (!this._map) res.map = false;
@@ -555,8 +559,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             this.points._parent = this;
             this.addLayer(this.points);
             
-            this.options.lineStyle = this.lines.options;
-            this.options.pointStyle = this.points.options;
+            // this.options.lineStyle = this.lines.options;
+            // this.options.pointStyle = this.points.options;
 
             if (L.gmxUtil && L.gmxUtil.prettifyDistance) {
                 var my = this;
