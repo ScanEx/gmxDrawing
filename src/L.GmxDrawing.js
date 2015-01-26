@@ -76,6 +76,7 @@ function getNotDefaults(from, def) {
         if (key === 'icon' || key === 'map') {
             continue;
         } else if (key === 'iconAnchor' || key === 'iconSize' || key === 'popupAnchor' || key === 'shadowSize') {
+            if (!def[key]) continue;
             if (def[key][0] !== from[key][0] || def[key][1] !== from[key][1]) res[key] = from[key];
         } else if (key === 'lineStyle' || key === 'pointStyle') {
             res[key] = getNotDefaults(from[key], def[key]);
@@ -415,7 +416,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         return this.points ? this.points.options : {};
     },
 
-    getOptions: function (withDefaults) {
+    getOptions: function () {
         var data = L.extend({}, this.options);
         data.lineStyle = this.lines.options;
         data.pointStyle = this.points.options;
