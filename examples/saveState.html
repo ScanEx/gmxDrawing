@@ -87,7 +87,7 @@
         
         document.getElementById("test").onclick = function() {
             var geojson = map.gmxDrawing.saveState();
-            alert(JSON.stringify(geojson));
+            alert(JSON.stringify(geojson, false, 2));
             console.log(geojson);
         }
 	</script>
