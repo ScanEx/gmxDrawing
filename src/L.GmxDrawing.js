@@ -439,10 +439,13 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         else if (type === 'Polyline') {type = 'LineString';}
         else if (type === 'MultiPolyline') {type = 'MultiLineString';}
 
+        var properties = this.getOptions();
+        delete properties.mode;
+
         return L.GeoJSON.getFeature({
             feature: {
                 type: 'Feature',
-                properties: this.getOptions()
+                properties: properties
             }
         }, {
             type: type,
