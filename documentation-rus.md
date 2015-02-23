@@ -50,7 +50,7 @@ remove|`remove()`|`<L.GmxDrawing.Feature>`| Удалить редактируе�
 enableEdit|`enableEdit()`|| Разрешить редактирование объекта.
 disableEdit|`disableEdit()`|| Запретить редактирование объекта.
 toGeoJSON|`toGeoJSON()`||Получить GeoJSON по объекту.
-setOptions|`setOptions(<Feature Options>)`||Установить опции объекта.
+setOptions|`setOptions(<`[Feature Options](#feature-options)`>)`||Установить опции объекта.
 getType|`getType()`||Получить тип объекта.
 
 ### Feature Options
