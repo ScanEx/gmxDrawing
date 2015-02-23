@@ -21,6 +21,7 @@ loadState|`loadState(<FeatureCollection> geojson)`|`<FeatureCollection>`| Доб
 | --- | --- | ---
 | add | `event<Draw Event>` | Добавлен редактируемый объект.
 | edit | `event<Draw Event>` | Изменен редактируемый объект.
+| optionschange | `event<Draw Event>` | Изменены опции объекта.
 | stylechange | `event<Draw Event>` | Изменен cтиль отрисовки объекта.
 | remove | `event<Draw Event>` | Удален редактируемый объект.
 | addtomap | `event<Draw Event>` | Редактируемый объект добавлен на карту.
@@ -49,10 +50,7 @@ remove|`remove()`|`<L.GmxDrawing.Feature>`| Удалить редактируе�
 enableEdit|`enableEdit()`|| Разрешить редактирование объекта.
 disableEdit|`disableEdit()`|| Запретить редактирование объекта.
 toGeoJSON|`toGeoJSON()`||Получить GeoJSON по объекту.
-setLinesStyle|`setLinesStyle(<L.Path options>)`||Установить cтиль отрисовки линий объекта.
-getLinesStyle|`getLinesStyle()`|`<L.Path options>`|Получить cтиль отрисовки линий объекта.
-setPointsStyle|`setPointsStyle(<Point options>)`||Установить cтиль отрисовки вершин объекта.
-getPointsStyle|`getPointsStyle()`|`<L.Path options>`|Получить cтиль отрисовки вершин объекта.
+setOptions|`setOptions(<Feature Options>)`||Установить опции объекта.
 getType|`getType()`||Получить тип объекта.
 
 ### Feature Options
@@ -77,6 +75,7 @@ shape | <`square`, `circle`> String | `circle` | Тип отображения �
 | --- | --- | ---
 | add | `event<Draw Event>` | Добавлен редактируемый объект.
 | edit | `event<Draw Event>` | Изменен редактируемый объект.
+| optionschange | `event<Draw Event>` | Изменены опции объекта.
 | stylechange | `event<Draw Event>` | Изменен cтиль отрисовки объекта.
 | remove | `event<Draw Event>` | Удален редактируемый объект.
 | addtomap | `event<Draw Event>` | Редактируемый объект добавлен на карту.

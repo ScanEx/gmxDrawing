@@ -392,7 +392,23 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         return this;
     },
 
-    setLinesStyle: function (options) {
+    setOptions: function (options) {
+        L.setOptions(this, options);
+        if (options.lineStyle) {
+            this._setLinesStyle(options.lineStyle);
+        }
+        if (options.pointStyle) {
+            this._setPointsStyle(options.pointStyle);
+        }
+        if ('editable' in options) {
+            if (options.editable) {this.enableEdit();}
+            else {this.disableEdit();}
+        }
+
+        this._fireEvent('optionschange');
+    },
+
+    _setLinesStyle: function (options) {
         if (this.lines) {
             this.lines.setStyle(options);
             this.lines.redraw();
@@ -400,20 +416,12 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         }
     },
 
-    getLinesStyle: function () {
-        return this.lines ? this.lines.options : {};
-    },
-
-    setPointsStyle: function (options) {
+    _setPointsStyle: function (options) {
         if (this.points) {
             this.points.setStyle(options);
             this.points.redraw();
             this._fireEvent('stylechange');
         }
-    },
-
-    getPointsStyle: function () {
-        return this.points ? this.points.options : {};
     },
 
     getOptions: function () {
@@ -891,7 +899,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 .on('click', this._pointClick, this);
 			if (L.Browser.mobile) {
 				if (this._EditOpacity) {
-					this.setPointsStyle({fillOpacity: this._EditOpacity});
+					this._setPointsStyle({fillOpacity: this._EditOpacity});
 				}
 				var my = this;
 				this.touchstart = function (ev) {
@@ -940,7 +948,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             this._parent._enableDrag();
 			if (L.Browser.mobile) {
 				this._EditOpacity = this.points.options.fillOpacity;
-				this.setPointsStyle({fillOpacity: 0.5});
+				this._setPointsStyle({fillOpacity: 0.5});
 				this.points.redraw();
 				this._map
 					.on('dblclick', stop)

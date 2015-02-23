@@ -58,6 +58,7 @@
             .on('drawstop', eventShow)
             .on('add', eventShow)
             .on('edit', eventShow)
+            .on('optionschange', eventShow)
             .on('remove', eventShow)
             .on('removefrommap', eventShow)
             .on('addtomap', eventShow)
@@ -65,11 +66,24 @@
             .on('drag', eventShow)
             .on('dragend', eventShow);
 
+        var multiPolygon = map.gmxDrawing.add(L.multiPolygon([
+            [[[45.0, 30.0], [56.0, 30.0], [56.0, 43.0], [25.0, 43.0], [45.0, 30.0]]],
+            [[[63.0, 28.0], [75.0, 28.0], [75.0, 40.0], [52.0, 40.0], [63.0, 28.0]]]
+        ], {color: '#ff0000'}));
+
+        var multiPolyline = map.gmxDrawing.add(L.multiPolyline([
+            [[75.0, 0.0], [56.0, 5.0], [56.0, 3.0]],
+            [[63.0, 8.0], [75.0, 9.0], [75.0, 10.0], [52.0, 11.0]]
+        ]));
+
         var drawPolygon = map.gmxDrawing.add(L.polygon(
             [
              [ [50.0, 20.0], [61.0, 20.0], [61.0, 33.0], [30.0, 33.0], [50.0, 20.0] ]
            ]
          ));
+        drawPolygon.on('optionschange', function (ev) {
+            //console.log('optionschange', arguments);
+        });
 
         var drawPolyline = map.gmxDrawing.add(L.polyline(
             [
