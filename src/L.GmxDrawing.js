@@ -6,7 +6,7 @@ var _gtxt = function (key) {
 };
 var downObject = null;
 var rectDelta = 0.0000001;
-var stateVersion = 1;
+var stateVersion = '1.0.0';
 
 var defaultStyles = {
     mode: '',
@@ -259,7 +259,7 @@ L.GmxDrawing = L.Class.extend({
     },
 
     loadState: function (data) {
-        if (data.version > stateVersion) return;
+        //if (data.version !== stateVersion) return;
 
         var _this = this,
             featureCollection = data.featureCollection;
