@@ -6,6 +6,7 @@ var _gtxt = function (key) {
 };
 var downObject = null;
 var rectDelta = 0.0000001;
+var stateVersion = 1;
 
 var defaultStyles = {
     mode: '',
@@ -257,8 +258,11 @@ L.GmxDrawing = L.Class.extend({
         return this.items;
     },
 
-    loadState: function (featureCollection) {
-        var _this = this;
+    loadState: function (data) {
+        if (data.version > stateVersion) return;
+
+        var _this = this,
+            featureCollection = data.featureCollection;
         L.geoJson(featureCollection, {
             onEachFeature: function (feature, layer) {
                 var options = feature.properties;
@@ -301,7 +305,10 @@ L.GmxDrawing = L.Class.extend({
         }
         var featureCollection = featureGroup.toGeoJSON();
         featureCollection.features = featureCollection.features.concat(points);
-        return featureCollection;
+        return {
+            version: stateVersion,
+            featureCollection: featureCollection
+        };
     },
 
     _addItem: function (item) {

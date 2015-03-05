@@ -36,7 +36,127 @@
 		var map = new L.Map('map', {layers: [osm], center: new L.LatLng(50, 20), zoom: 3});
 
         
-        var state = {"type":"FeatureCollection","features":[{"type":"Feature","properties":{"type":"Polygon"},"geometry":{"type":"Polygon","coordinates":[[[20,50],[20,61],[33,61],[33,30]]]}},{"type":"Feature","properties":{"lineStyle":{"color":"#ff0000"},"type":"Polyline","map":false},"geometry":{"type":"LineString","coordinates":[[30,50],[35,64],[53,71.5],[43,44]]}},{"type":"Feature","properties":{"pointStyle":{"size":12},"lineStyle":{"color":"#00ff00","fill":true},"type":"Rectangle"},"geometry":{"type":"Polygon","coordinates":[[[40,20],[40,54],[65,54],[65,20]]]}},{"type":"Feature","properties":{"type":"Point","options":{"title":"Text example","draggable":true}},"geometry":{"type":"Point","coordinates":[40,65]}}]};
+        var state = {
+          "version": 1,
+          "featureCollection": {
+            "type": "FeatureCollection",
+            "features": [
+              {
+                "type": "Feature",
+                "properties": {
+                  "type": "Polygon"
+                },
+                "geometry": {
+                  "type": "Polygon",
+                  "coordinates": [
+                    [
+                      [
+                        20,
+                        50
+                      ],
+                      [
+                        20,
+                        61
+                      ],
+                      [
+                        33,
+                        61
+                      ],
+                      [
+                        33,
+                        30
+                      ]
+                    ]
+                  ]
+                }
+              },
+              {
+                "type": "Feature",
+                "properties": {
+                  "lineStyle": {
+                    "color": "#ff0000"
+                  },
+                  "type": "Polyline",
+                  "map": false
+                },
+                "geometry": {
+                  "type": "LineString",
+                  "coordinates": [
+                    [
+                      30,
+                      50
+                    ],
+                    [
+                      35,
+                      64
+                    ],
+                    [
+                      53,
+                      71.5
+                    ],
+                    [
+                      43,
+                      44
+                    ]
+                  ]
+                }
+              },
+              {
+                "type": "Feature",
+                "properties": {
+                  "pointStyle": {
+                    "size": 12
+                  },
+                  "lineStyle": {
+                    "color": "#00ff00",
+                    "fill": true
+                  },
+                  "type": "Rectangle"
+                },
+                "geometry": {
+                  "type": "Polygon",
+                  "coordinates": [
+                    [
+                      [
+                        40,
+                        20
+                      ],
+                      [
+                        40,
+                        54
+                      ],
+                      [
+                        65,
+                        54
+                      ],
+                      [
+                        65,
+                        20
+                      ]
+                    ]
+                  ]
+                }
+              },
+              {
+                "type": "Feature",
+                "properties": {
+                  "type": "Point",
+                  "options": {
+                    "title": "Text example",
+                    "draggable": true
+                  }
+                },
+                "geometry": {
+                  "type": "Point",
+                  "coordinates": [
+                    40,
+                    65
+                  ]
+                }
+              }
+            ]
+          }
+        };
         map.gmxDrawing.loadState(state);
 
         map.addControl(new L.Control.gmxDrawing());

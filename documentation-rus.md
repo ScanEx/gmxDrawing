@@ -12,8 +12,15 @@ add|`add(<L.Polyline, L.Polygon, L.Rectangle, L.GmxDrawing.Feature, L.MultiPolyg
 create|`create(<string> type, <Feature options> options? )`|| Переход в режим создания редактируемого объекта заданного типа type.
 getFeatures|`getFeatures()`|`<L.GmxDrawing.Feature[]> array`| Получить массив редактируемых объектов.
 remove|`remove(<L.GmxDrawing.Feature>)`|`<L.GmxDrawing.Feature>`| Удалить редактируемый объект.
-saveState|`saveState()`|`<FeatureCollection> geojson`| Получить массив редактируемых объектов в формате [FeatureCollection](http://geojson.org/geojson-spec.html#feature-collection-objects).
-loadState|`loadState(<FeatureCollection> geojson)`|`<FeatureCollection>`| Добавить массив редактируемых объектов в формате [FeatureCollection](http://geojson.org/geojson-spec.html#feature-collection-objects).
+saveState|`saveState()`|`<State Options>`| Получить состояние редактируемых объектов в формате [FeatureCollection](http://geojson.org/geojson-spec.html#feature-collection-objects).
+loadState|`loadState(<State Options>)`|| Добавить массив редактируемых объектов в формате [FeatureCollection](http://geojson.org/geojson-spec.html#feature-collection-objects).
+
+### State Options
+
+Опция|Тип|По умолчанию|Описание
+------|------|:---------:|-----------
+version | `<UInt>` | 1 | Номер версии сохраненного состояния (необходим при восстановлении объектов).
+featureCollection | `<FeatureCollection>` | [] | Массив редактируемых объектов в формате [FeatureCollection](http://geojson.org/geojson-spec.html#feature-collection-objects).
 
 ### Events
 
