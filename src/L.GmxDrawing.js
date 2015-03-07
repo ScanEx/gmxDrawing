@@ -201,45 +201,48 @@ L.GmxDrawing = L.Class.extend({
                 this._map.dragging.disable();
             }
             drawOptions = drawOptions || {};
-            var my = this,
-                opt = drawOptions;
+            var my = this;
             this._createKey = {
                 type: type,
-                drawOptions: drawOptions,
                 eventName: type === 'Rectangle' ? (L.Browser.mobile ? 'touchstart' : 'mousedown') : 'click',
                 fn: function (ev) {
                     var obj = null,
+                        opt = {},
                         latlng = ev.latlng;
+
                     if (type === 'Point') {
-                        drawOptions.draggable = true;
+                        opt.draggable = true;
                         if (ev && ev.originalEvent) {
-                            drawOptions.ctrlKey = ev.originalEvent.ctrlKey;
-                            drawOptions.shiftKey = ev.originalEvent.shiftKey;
-                            drawOptions.altKey = ev.originalEvent.altKey;
+                            opt.ctrlKey = ev.originalEvent.ctrlKey;
+                            opt.shiftKey = ev.originalEvent.shiftKey;
+                            opt.altKey = ev.originalEvent.altKey;
                         }
 
-                        if (drawOptions.iconUrl) {drawOptions.icon = L.icon(drawOptions);}
-                        obj = my.add(L.marker(latlng, drawOptions));
-                    } else if (type === 'Rectangle') {
-                        //console.log('Rectangle ', ev, latlng);
-                        if (L.Browser.mobile) {
-                            var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
-                            latlng = downAttr.latlng;
-                        }
-                        opt.mode = 'edit';
-                        obj = my.add(
-                            L.rectangle(L.latLngBounds(L.latLng(latlng.lat + rectDelta, latlng.lng - rectDelta), latlng))
-                        , opt);
-                        if (L.Browser.mobile) {obj._startTouchMove(ev, true);}
-                        else {obj._pointDown(ev);}
+                        if (drawOptions.iconUrl) {opt.icon = L.icon(drawOptions);}
+                        obj = my.add(L.marker(latlng, opt));
+                    } else {
+                        if (drawOptions.pointStyle) {opt.pointStyle = drawOptions.pointStyle;}
+                        if (drawOptions.lineStyle) {opt.lineStyle = drawOptions.lineStyle;}
+                        if (type === 'Rectangle') {
+                            if (L.Browser.mobile) {
+                                var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
+                                latlng = downAttr.latlng;
+                            }
+                            opt.mode = 'edit';
+                            obj = my.add(
+                                L.rectangle(L.latLngBounds(L.latLng(latlng.lat + rectDelta, latlng.lng - rectDelta), latlng))
+                            , opt);
+                            if (L.Browser.mobile) {obj._startTouchMove(ev, true);}
+                            else {obj._pointDown(ev);}
 
-                        obj._drawstop = true;
-                    } else if (type === 'Polygon') {
-                        opt.mode = 'add';
-                        obj = my.add(L.polygon([latlng]), opt).setAddMode();
-                    } else if (type === 'Polyline') {
-                        opt.mode = 'add';
-                        obj = my.add(L.polyline([latlng]), opt).setAddMode();
+                            obj._drawstop = true;
+                        } else if (type === 'Polygon') {
+                            opt.mode = 'add';
+                            obj = my.add(L.polygon([latlng]), opt).setAddMode();
+                        } else if (type === 'Polyline') {
+                            opt.mode = 'add';
+                            obj = my.add(L.polyline([latlng]), opt).setAddMode();
+                        }
                     }
                     my._clearCreate();
                 }
