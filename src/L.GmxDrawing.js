@@ -46,7 +46,7 @@ var defaultStyles = {
         lineJoin: null,
         stroke: true
     },
-    marker: {
+    markerStyle: {
         mode: '',
         editable: false,
         options: {
@@ -61,6 +61,7 @@ var defaultStyles = {
             riseOnHover: false,
             icon: {
                 className: '',
+                iconUrl: '',
                 iconAnchor: [12, 41],
                 iconSize: [25, 41],
                 popupAnchor: [1, -34],
@@ -79,7 +80,7 @@ function getNotDefaults(from, def) {
             if (def[key][0] !== from[key][0] || def[key][1] !== from[key][1]) {res[key] = from[key];}
         } else if (key === 'lineStyle' || key === 'pointStyle') {
             res[key] = getNotDefaults(from[key], def[key]);
-        } else if (def[key] !== from[key]) {
+        } else if (!def || def[key] !== from[key]) {
             res[key] = from[key];
         }
     }
@@ -200,26 +201,61 @@ L.GmxDrawing = L.Class.extend({
                 this._map._initPathRoot();
                 this._map.dragging.disable();
             }
+            var my = this,
+                iconStyle;
             drawOptions = drawOptions || {};
-            var my = this;
+            if (drawOptions.iconUrl) {
+                iconStyle = {
+                    iconUrl: drawOptions.iconUrl
+                };
+                delete drawOptions.iconUrl;
+                if (drawOptions.iconAnchor) {
+                    iconStyle.iconAnchor = drawOptions.iconAnchor;
+                    delete drawOptions.iconAnchor;
+                }
+                if (drawOptions.iconSize) {
+                    iconStyle.iconSize = drawOptions.iconSize;
+                    delete drawOptions.iconSize;
+                }
+                if (drawOptions.popupAnchor) {
+                    iconStyle.popupAnchor = drawOptions.popupAnchor;
+                    delete drawOptions.popupAnchor;
+                }
+                if (drawOptions.shadowSize) {
+                    iconStyle.shadowSize = drawOptions.shadowSize;
+                    delete drawOptions.shadowSize;
+                }
+                drawOptions.markerStyle = {
+                    iconStyle: iconStyle
+                }
+            }
             this._createKey = {
                 type: type,
                 eventName: type === 'Rectangle' ? (L.Browser.mobile ? 'touchstart' : 'mousedown') : 'click',
                 fn: function (ev) {
-                    var obj = null,
+                    var obj, key,
                         opt = {},
                         latlng = ev.latlng;
 
-                    if (type === 'Point') {
-                        opt.draggable = true;
-                        if (ev && ev.originalEvent) {
-                            opt.ctrlKey = ev.originalEvent.ctrlKey;
-                            opt.shiftKey = ev.originalEvent.shiftKey;
-                            opt.altKey = ev.originalEvent.altKey;
+                    for (key in drawOptions) {
+                        if (!(key in defaultStyles)) {
+                            opt[key] = drawOptions[key];
                         }
-
-                        if (drawOptions.iconUrl) {opt.icon = L.icon(drawOptions);}
-                        obj = my.add(L.marker(latlng, opt));
+                    }
+                    if (type === 'Point') {
+                        var markerStyle = drawOptions.markerStyle || {},
+                            markerOpt = {
+                                draggable: true
+                            };
+                        if (ev && ev.originalEvent) {
+                            markerOpt.ctrlKey = ev.originalEvent.ctrlKey;
+                            markerOpt.shiftKey = ev.originalEvent.shiftKey;
+                            markerOpt.altKey = ev.originalEvent.altKey;
+                        }
+                        if (markerStyle.iconStyle) {
+                            markerOpt.icon = L.icon(markerStyle.iconStyle);
+                        }
+                        obj = my.add(L.marker(latlng, markerOpt), opt);
                     } else {
                         if (drawOptions.pointStyle) {opt.pointStyle = drawOptions.pointStyle;}
                         if (drawOptions.lineStyle) {opt.lineStyle = drawOptions.lineStyle;}
@@ -292,11 +328,11 @@ L.GmxDrawing = L.Class.extend({
             var it = this.items[i];
             if (it.options.type === 'Point') {
                 var geojson = it.toGeoJSON();
-                geojson.properties = getNotDefaults(it.options, defaultStyles.marker);
+                geojson.properties = getNotDefaults(it.options, defaultStyles.markerStyle);
                 if (!it._map) {geojson.properties.map = false;}
-                var res = getNotDefaults(it._obj.options, defaultStyles.marker.options);
+                var res = getNotDefaults(it._obj.options, defaultStyles.markerStyle.options);
                 if (Object.keys(res).length) {geojson.properties.options = res;}
-                res = getNotDefaults(it._obj.options.icon.options, defaultStyles.marker.options.icon);
+                res = getNotDefaults(it._obj.options.icon.options, defaultStyles.markerStyle.options.icon);
                 if (Object.keys(res).length) {
                     if (!geojson.properties.options) {geojson.properties.options = {};}
                     geojson.properties.options.icon = res;
