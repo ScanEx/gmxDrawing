@@ -551,6 +551,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     initialize: function (parent, obj, options) {
         options = options || {};
+        options.mode = '';
         L.setOptions(this, options);
 
         this._layers = {};
