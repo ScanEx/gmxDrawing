@@ -147,6 +147,11 @@ L.GmxDrawing = L.Class.extend({
         if (obj instanceof L.GmxDrawing.Feature) {
             item = obj;
         } else {
+            if (obj instanceof L.GeoJSON) {
+                var layers = obj.getLayers();
+                if (!layers || !layers.length) {return null;}
+                obj = layers[0];
+            }
             options = options || {};
             if (!('editable' in options)) {options.editable = true;}
             if (obj instanceof L.Rectangle)     {options.type = 'Rectangle';}
