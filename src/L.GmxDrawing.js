@@ -142,16 +142,24 @@ L.GmxDrawing = L.Class.extend({
         }
     },
 
+    addGeoJSON: function (obj, options) {
+        var arr = [];
+        if (obj instanceof L.GeoJSON) {
+            var layers = obj.getLayers();
+            if (layers) {
+                for (var i = 0, len = layers.length; i < len; i++) {
+                    arr.push(this.add(layers[i], options));
+                }
+            }
+        }
+        return arr;
+    },
+
     add: function (obj, options) {
         var item = null;
         if (obj instanceof L.GmxDrawing.Feature) {
             item = obj;
         } else {
-            if (obj instanceof L.GeoJSON) {
-                var layers = obj.getLayers();
-                if (!layers || !layers.length) {return null;}
-                obj = layers[0];
-            }
             options = options || {};
             if (!('editable' in options)) {options.editable = true;}
             if (obj instanceof L.Rectangle)     {options.type = 'Rectangle';}

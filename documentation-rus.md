@@ -8,7 +8,8 @@
 
 Метод|Синтаксис|Возвращаемое значение|Описание
 ------|------|:---------:|-----------
-add|`add(<L.GeoJSON, L.Polyline, L.Polygon, L.Rectangle, L.GmxDrawing.Feature, L.MultiPolygon, L.MultiPolyline, L.Marker> object, <Feature options> options? )`|`<L.GmxDrawing.Feature>`| Добавить редактируемый объект.
+add|`add(<L.Polyline, L.Polygon, L.Rectangle, L.GmxDrawing.Feature, L.MultiPolygon, L.MultiPolyline, L.Marker> object, <Feature options> options? )`|`<L.GmxDrawing.Feature>`| Добавить редактируемый объект.
+addGeoJSON|`addGeoJSON(<L.GeoJSON> object, <Feature options> options? )`|`<L.GmxDrawing.Feature[]> array`| Добавить редактируемые объекты из `L.GeoJSON`.
 create|`create(<string> type, <Feature options> options? )`|| Переход в режим создания редактируемого объекта заданного типа type.
 getFeatures|`getFeatures()`|`<L.GmxDrawing.Feature[]> array`| Получить массив редактируемых объектов.
 remove|`remove(<L.GmxDrawing.Feature>)`|`<L.GmxDrawing.Feature>`| Удалить редактируемый объект.
