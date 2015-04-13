@@ -487,8 +487,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     getOptions: function () {
         var data = L.extend({}, this.options);
-        data.lineStyle = this.lines.options;
-        data.pointStyle = this.points.options;
+        data.lineStyle = this.options.lineStyle;
+        data.pointStyle = this.options.pointStyle;
 
         var res = getNotDefaults(data, defaultStyles);
         if (!Object.keys(res.lineStyle).length) { delete res.lineStyle; }
@@ -498,11 +498,14 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     toGeoJSON: function () {
-        if (!this.points) {
-            return this._obj.toGeoJSON();
+        var type = this.options.type,
+            coords;
+        if (this.points) {
+            coords = L.GeoJSON.latLngsToCoords(this.points.getLatLngs());
+        } else {
+            var geojson = this._obj.toGeoJSON();
+            coords = geojson.geometry.coordinates;
         }
-        var coords = L.GeoJSON.latLngsToCoords(this.points.getLatLngs()),
-            type = this.options.type;
 
         if (type === 'Rectangle') { type = 'Polygon'; }
         else if (type === 'Polyline') { type = 'LineString'; }
@@ -610,9 +613,11 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         if (this.options.type === 'Polygon' || this.options.type === 'Rectangle') {
             lineStyle.fill = true;
         }
-        for (var key in this.options.lineStyle) {
-            if (key !== 'fill' || this.options.type !== 'Polyline') {
-                lineStyle[key] = this.options.lineStyle[key];
+        if (this.options.lineStyle) {
+            for (var key in this.options.lineStyle) {
+                if (key !== 'fill' || this.options.type !== 'Polyline') {
+                    lineStyle[key] = this.options.lineStyle[key];
+                }
             }
         }
         if (this.options.type !== 'Point') { L.setOptions(obj, lineStyle); }
@@ -637,9 +642,6 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             this.points = new L.GmxDrawing.PointMarkers(latlngs, this.options.pointStyle || {});
             this.points._parent = this;
             this.addLayer(this.points);
-
-            // this.options.lineStyle = this.lines.options;
-            // this.options.pointStyle = this.points.options;
 
             if (L.gmxUtil && L.gmxUtil.prettifyDistance) {
                 var my = this;
