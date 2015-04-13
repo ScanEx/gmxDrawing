@@ -307,7 +307,11 @@ L.GmxDrawing = L.Class.extend({
     },
 
     getFeatures: function () {
-        return this.items;
+        var out = [];
+        for (var i = 0, len = this.items.length; i < len; i++) {
+            out.push(this.items[i]);
+        }
+        return out;
     },
 
     loadState: function (data) {
@@ -390,6 +394,20 @@ L.GmxDrawing = L.Class.extend({
             }
         }
         return null;
+    },
+
+    clear: function () {
+        for (var i = 0, len = this.items.length; i < len; i++) {
+            var item = this.items[i];
+            if (item && item._map) {
+                item._map.removeLayer(item);
+            }
+            var ev = {type: item.options.type, mode: item.mode, object: item};
+            this.fire('remove', ev);
+            item.fire('remove', ev);
+        }
+        this.items = [];
+        return this;
     },
 
     remove: function (obj) {
