@@ -80,7 +80,7 @@ function getNotDefaults(from, def) {
             if (def[key][0] !== from[key][0] || def[key][1] !== from[key][1]) { res[key] = from[key]; }
         } else if (key === 'lineStyle' || key === 'pointStyle') {
             res[key] = getNotDefaults(from[key], def[key]);
-        } else if (!def || def[key] !== from[key]) {
+        } else if (!def || (def[key] !== from[key] || key === 'fill')) {
             res[key] = from[key];
         }
     }
@@ -539,7 +539,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             }
         }, {
             type: type,
-            coordinates: type === 'Polygon' ? [coords] : coords
+            coordinates: coords
         });
     },
 
