@@ -519,7 +519,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         var type = this.options.type,
             coords;
         if (this.points) {
-            coords = [L.GeoJSON.latLngsToCoords(this.points.getLatLngs())];
+            coords = L.GeoJSON.latLngsToCoords(this.points.getLatLngs());
+            if (type === 'Polygon' || type === 'Rectangle') { coords = [coords]; }
         } else {
             var geojson = this._obj.toGeoJSON();
             coords = geojson.geometry.coordinates;
