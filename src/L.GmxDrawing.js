@@ -301,6 +301,7 @@ L.GmxDrawing = L.Class.extend({
             } else {
                 this._map.on(this._createKey.eventName, this._createKey.fn, this);
             }
+            L.DomUtil.addClass(my._map._mapPane, 'leaflet-clickable');
             this.fire('drawstart', {mode: type});
         }
         this.options.type = type;
@@ -933,6 +934,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         var event = {mode: this.mode || '', object: this};
         this.fire(name, event);
         this._parent.fire(name, event);
+        if (name === 'drawstop') {
+            L.DomUtil.removeClass(this._map._mapPane, 'leaflet-clickable');
+        }
     },
 
     _startTouchMove: function (ev, drawstop) {
