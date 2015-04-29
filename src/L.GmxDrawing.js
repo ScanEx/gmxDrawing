@@ -143,7 +143,11 @@ L.GmxDrawing = L.Class.extend({
     },
 
     addGeoJSON: function (obj, options) {
-        var arr = [];
+        var arr = [],
+            isLGeoJSON = obj instanceof L.GeoJSON;
+        if (!isLGeoJSON) {
+            obj = L.geoJson(obj, options);
+        }
         if (obj instanceof L.GeoJSON) {
             var layers = obj.getLayers();
             if (layers) {
