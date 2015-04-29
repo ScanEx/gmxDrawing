@@ -584,7 +584,14 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     getBounds: function() {
-        return (this.lines || this._obj).getBounds();
+        var out = null;
+        if (this.options.type === 'Point') {
+            var lantlg = this.getLatLng();
+            out = L.latLngBounds([lantlg.lat, lantlg.lng], [lantlg.lat, lantlg.lng]);
+        } else {
+            out = (this.lines || this._obj).getBounds();
+        }
+        return out;
     },
 
     initialize: function (parent, obj, options) {
