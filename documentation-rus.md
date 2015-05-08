@@ -58,7 +58,7 @@ enableEdit|`enableEdit()`|| Разрешить редактирование об
 disableEdit|`disableEdit()`|| Запретить редактирование объекта.
 toGeoJSON|`toGeoJSON()`||Получить GeoJSON по объекту.
 setOptions|`setOptions(<`[Feature Options](#feature-options)`>)`||Установить опции объекта.
-getType|`getType()`||Получить тип объекта.
+getType|`getType()`|`<String>`|Получить тип объекта. Возвращаемые типы: 'Rectangle', 'Polygon', 'Polyline', 'MultiPolygon', 'MultiPolyline', 'Point'
 
 ### Feature Options
 
