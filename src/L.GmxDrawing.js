@@ -174,7 +174,7 @@ L.GmxDrawing = L.Class.extend({
             else if (obj instanceof L.Polygon)  { options.type = 'Polygon'; }
             else if (obj instanceof L.MultiPolygon)  { options.type = 'MultiPolygon'; options.editable = true; }
             else if (obj instanceof L.Polyline) { options.type = 'Polyline'; }
-            else if (obj instanceof L.MultiPolyline) { options.type = 'MultiPolyline'; options.editable = false; }
+            else if (obj instanceof L.MultiPolyline) { options.type = 'MultiPolyline'; options.editable = true; }
             else if (obj instanceof L.Marker) {
                 options.type = 'Point'; options.editable = false;
             }
@@ -684,10 +684,12 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                     ring = new L.GmxDrawing.Ring(this, it._latlngs, {ring: true});
 
                 this.addLayer(ring);
-                for (var j = 0, len1 = it._holes.length; j < len1; j++) {
-                    var hole = new L.GmxDrawing.Ring(this, it._holes[j], {hole: true});
-                    this.addLayer(hole);
-                    holes.push(hole);
+                if (it._holes) {
+                    for (var j = 0, len1 = it._holes.length; j < len1; j++) {
+                        var hole = new L.GmxDrawing.Ring(this, it._holes[j], {hole: true});
+                        this.addLayer(hole);
+                        holes.push(hole);
+                    }
                 }
                 this.rings.push({ring: ring, holes: holes});
             }
@@ -1243,6 +1245,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         delete this.points;
 
         this.mode = '';
+        this.lineType = this.options.type.indexOf('Polyline') === -1;
 
         var pointStyle = this.options.pointStyle;
         var lineStyle = {opacity:1, weight:2, noClip: true, clickable: false, className: 'leaflet-drawing-lines'};
@@ -1251,7 +1254,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
         if (this.options.lineStyle) {
             for (var key in this.options.lineStyle) {
-                if (key !== 'fill' || this.options.type !== 'Polyline') {
+                if (key !== 'fill' || !this.lineType) {
                     lineStyle[key] = this.options.lineStyle[key];
                 }
             }
@@ -1262,13 +1265,14 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
 
         var latlngs = coords,
+            _this = this,
             mode = this.options.mode || (latlngs.length ? 'edit' : 'add');
 
         this.lines = new L.Polyline(latlngs, lineStyle);
         this.addLayer(this.lines);
         this.fill = new L.GmxDrawing._Fill(latlngs);
         this.addLayer(this.fill);
-        if (this.options.type !== 'Polyline' && mode === 'edit') {
+        if (!this.lineType && mode === 'edit') {
             this.lines.addLatLng(latlngs[0]);
             this.fill.addLatLng(latlngs[0]);
         }
@@ -1279,7 +1283,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this.addLayer(this.points);
         this.points
             .on('mouseover mousemove', function (ev) {
-                parent._showTooltip(parent.options.type === 'Polyline' ? 'Length' : 'Area', ev);
+                parent._showTooltip(_this.lineType ? 'Length' : 'Area', ev);
             }, parent)
             .on('mouseout', function (ev) {
                 parent.hideTooltip();
@@ -1342,7 +1346,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         if (this.points) {
             this.fill.setLatLngs(points);
             this.lines.setLatLngs(points);
-            if (this.options.type !== 'Polyline' && this.mode === 'edit' && points.length > 2) {
+            if (!this.lineType && this.mode === 'edit' && points.length > 2) {
                 this.lines.addLatLng(points[0]);
                 this.fill.addLatLng(points[0]);
             }
@@ -1382,11 +1386,11 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     _pointMove: function (ev) {
         if (this.down) {
-            if (this.options.type !== 'Polyline') { this.lines.setStyle({fill: true}); }
+            if (!this.lineType) { this.lines.setStyle({fill: true}); }
             this._setPoint(ev.latlng, this.down.num, this.down.type);
             this.skipClick = true;
             if ('_showTooltip' in this) {
-                this._showTooltip(this.options.type === 'Polyline' ? 'Length' : 'Area', ev);
+                this._showTooltip(this.lineType ? 'Length' : 'Area', ev);
             }
         }
     },
@@ -1406,7 +1410,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this._drawstop = false;
         this.down = null;
         var lineStyle = this.options.lineStyle || {};
-        if (!lineStyle.fill && this.options.type !== 'Polyline') {
+        if (!lineStyle.fill && !this.lineType) {
             this.lines.setStyle({fill: false});
         }
     },
@@ -1442,7 +1446,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 }
                 this._removePoint(num);
                 this.setEditMode();
-            } else if (this.options.type === 'Polyline' && downAttr.end) {
+            } else if (this.lineType && downAttr.end) {
                 if (!this.addLinePointTimer) {
                     var my = this,
                         latlng = downAttr.latlng;
@@ -1613,7 +1617,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 					.on('mousemove', this._moseMove, this);
             }
 			this._fireEvent('addmode');
-            if (this.options.type !== 'Polyline') { this.lines.setStyle({fill: true}); }
+            if (!this.lineType) { this.lines.setStyle({fill: true}); }
         } else {
 			if (L.Browser.mobile) {
 				if (this._map) {
@@ -1632,7 +1636,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                     .off('mouseup', this._mouseup, this)
                     .off('mousemove', this._moseMove, this);
 			}
-            if (!lineStyle.fill && this.options.type !== 'Polyline') {
+            if (!lineStyle.fill && !this.lineType) {
                 this.lines.setStyle({fill: false});
             }
         }
@@ -1692,10 +1696,10 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 				if (!L.Browser.mobile) { points.pop(); }
                 var len = points.length,
                     opt = this.options;
-				if (len > 2 || (len > 1 && opt.type === 'Polyline')) {
+				if (len > 2 || (len > 1 && this.lineType)) {
 					this.skipClick = true;
 
-					if (down.num === 0 && opt.type === 'Polyline') {
+					if (down.num === 0 && this.lineType) {
 						opt.type = 'Polygon';
 					}
 					this._setPoint(points[0], 0);
