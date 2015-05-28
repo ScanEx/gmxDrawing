@@ -292,10 +292,11 @@ L.GmxDrawing = L.Class.extend({
                             if (L.Browser.mobile) { obj._startTouchMove(ev, true); }
                             else { obj._pointDown(ev); }
 
-                            obj._drawstop = true;
+                            obj.rings[0].ring._drawstop = true;
                         } else if (type === 'Polygon') {
                             opt.mode = 'add';
-                            obj = my.add(L.polygon([latlng]), opt).setAddMode();
+                            obj = my.add(L.polygon([latlng]), opt);
+                            obj.setAddMode();
                         } else if (type === 'Polyline') {
                             opt.mode = 'add';
                             obj = my.add(L.polyline([latlng]), opt).setAddMode();
@@ -513,6 +514,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     _fireEvent: function (name) {
+console.log('_fireEvent', name);
         if (name === 'removefrommap' && this.rings.length > 1) {
             return;
         }
@@ -577,9 +579,21 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     toGeoJSON: function () {
         var type = this.options.type,
             coords;
-        if (this.points) {
-            coords = L.GeoJSON.latLngsToCoords(this.points.getLatLngs());
-            if (type === 'Polygon' || type === 'Rectangle') { coords = [coords]; }
+        if (this.rings) {
+            coords = [];
+            for (var i = 0, arr = [], len = this.rings.length; i < len; i++) {
+                var it = this.rings[i];
+                arr.push(L.GeoJSON.latLngsToCoords(it.ring.points.getLatLngs()));
+                if (it.holes && it.holes.length) {
+                    for (var j = 0, len1 = it.holes.length; j < len1; j++) {
+                        arr.push(L.GeoJSON.latLngsToCoords(it.holes[j].points.getLatLngs()));
+                    }
+                }
+                coords.push(arr);
+            }
+            if (type === 'Polyline') { coords = coords[0]; }
+            //coords = L.GeoJSON.latLngsToCoords(this.points.getLatLngs());
+            //if (type === 'Polygon' || type === 'Rectangle') { coords = [coords]; }
         } else {
             var geojson = this._obj.toGeoJSON();
             coords = geojson.geometry.coordinates;
@@ -708,7 +722,6 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 var my = this;
                 this._showTooltip = function (type, ev) {
                     if (!downObject || downObject === this) {
-                        //var _latlngs = my.points._latlngs,
                         var mapOpt = my._map.options || {},
                             distanceUnit = mapOpt.distanceUnit || 'km',
                             squareUnit = mapOpt.squareUnit || 'ha',
@@ -724,7 +737,16 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                             }
                             my._parent.showTooltip(ev.layerPoint, str);
                         } else if (type === 'Length') {
-                            var length = my.getLength();
+                            var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
+//console.log('downAttr', downAttr);
+                            var _latlngs = ev.ring.points._latlngs;
+                            if (downAttr.type === 'node') {
+                                arr = _latlngs.slice(0, downAttr.num + 1);
+                            } else {
+                                arr = _latlngs.slice(downAttr.num - 1, downAttr.num + 1);
+                                if (arr.length === 1) { arr.push(_latlngs[0]); }
+                            }
+                            var length = L.gmxUtil.getLength(arr);
                             str = _gtxt(type) + ': ' + L.gmxUtil.prettifyDistance(length, distanceUnit);
                             my._parent.showTooltip(ev.layerPoint, str);
                         }
@@ -798,39 +820,18 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             });
         _parent._map.addLayer(marker);
     },
-});
 
-L.GmxDrawing._Fill = L.Polyline.extend({
-    options: {
-        className: 'leaflet-drawing-lines-fill',
-        opacity: 0,
-        noClip: true,
-        fill: true,
-        fillOpacity: 0,
-        size: 10,
-        weight: 1
-    },
-
-    _getPathPartStr: function (points) {
-        var size = this.options.size / 2,
-            arr = L.GmxDrawing.utils.getEquidistancePolygon(points, 1.5 * size);
-
-        for (var i = 0, len = arr.length, str = '', p; i < len; i++) {
-            p = arr[i];
-            str += 'M' + p[0][0] + ' ' + p[0][1] +
-                'L' + p[1][0] + ' ' + p[1][1] +
-                'L' + p[2][0] + ' ' + p[2][1] +
-                'L' + p[3][0] + ' ' + p[3][1] +
-                'L' + p[0][0] + ' ' + p[0][1];
+    setAddMode: function () {
+        if (this.rings.length) {
+            this.rings[0].ring.setAddMode();
         }
-        return str;
+		return this;
     },
-    _updatePath: function () {
-        if (!this._map) { return; }
 
-        this._clipPoints();
-
-        L.Path.prototype._updatePath.call(this);
+    _pointDown: function (ev) {
+        if (this.rings.length) {
+            this.rings[0].ring._pointDown(ev);
+        }
     }
 });
 
@@ -904,6 +905,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this.addLayer(this.points);
         this.points
             .on('mouseover mousemove', function (ev) {
+                ev.ring = _this;
                 parent._showTooltip(_this.lineType ? 'Length' : 'Area', ev);
             }, parent)
             .on('mouseout', function (ev) {
@@ -911,6 +913,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             }, parent);
         this.fill
             .on('mouseover mousemove', function (ev) {
+                ev.ring = _this;
                 parent._showTooltip('Length', ev);
             }, parent)
             .on('mouseout', function (ev) {
@@ -992,6 +995,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             return;
         }
 
+        //ev.ring = this;
         var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map),
             num = downAttr.num,
             type = downAttr.type,
@@ -1005,7 +1009,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             points.splice(num, 0, points[num]);
             this._setPoint(latlng, num, type);
         }
-        downObject = this;
+        downObject = this._parent;
         this._map
             .on('mousemove', this._pointMove, this)
             .on('mouseup', this._pointUp, this);
@@ -1032,6 +1036,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 .off('mousemove', this._pointMove, this)
                 .off('mouseup', this._pointUp, this);
         }
+console.log('_pointUp', this.mode, this._drawstop);
         if (this._drawstop) {
             this._fireEvent('drawstop');
             this.skipClick = false;
@@ -1234,6 +1239,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 					.on('mousemove', this._moseMove, this);
 				this.points
 					.on('dblclick click', stop, this)
+					//.on('mouseup', this._mouseup, this)
 					.on('click', this._mouseClick, this);
 			} else {
 				this._map
@@ -1241,6 +1247,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 					.on('mousedown', this._mousedown, this)
 					.on('mouseup', this._mouseup, this)
 					.on('mousemove', this._moseMove, this);
+				this.points
+					.on('mouseup', this._mouseup, this);
             }
 			this._fireEvent('addmode');
             if (!this.lineType) { this.lines.setStyle({fill: true}); }
@@ -1309,6 +1317,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     _mousedown: function () {
+console.log('_mousedown', this.mode, this._lastTime);
         this._lastTime = new Date().getTime() + 300;  // Hack for determinating map dragging
     },
 
@@ -1345,6 +1354,40 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         if (new Date().getTime() < this._lastTime && this.mode === 'add') {
 			this._mouseClick(ev);
         }
+    }
+});
+
+L.GmxDrawing._Fill = L.Polyline.extend({
+    options: {
+        className: 'leaflet-drawing-lines-fill',
+        opacity: 0,
+        noClip: true,
+        fill: true,
+        fillOpacity: 0,
+        size: 10,
+        weight: 1
+    },
+
+    _getPathPartStr: function (points) {
+        var size = this.options.size / 2,
+            arr = L.GmxDrawing.utils.getEquidistancePolygon(points, 1.5 * size);
+
+        for (var i = 0, len = arr.length, str = '', p; i < len; i++) {
+            p = arr[i];
+            str += 'M' + p[0][0] + ' ' + p[0][1] +
+                'L' + p[1][0] + ' ' + p[1][1] +
+                'L' + p[2][0] + ' ' + p[2][1] +
+                'L' + p[3][0] + ' ' + p[3][1] +
+                'L' + p[0][0] + ' ' + p[0][1];
+        }
+        return str;
+    },
+    _updatePath: function () {
+        if (!this._map) { return; }
+
+        this._clipPoints();
+
+        L.Path.prototype._updatePath.call(this);
     }
 });
 
@@ -1443,12 +1486,14 @@ L.GmxDrawing.utils = {
             latlng = map.layerPointToLatLng(layerPoint);
         }
         var out = {type: '', latlng: latlng, ctrlKey: ctrlKey},
-            points = this.points ? this.points._parts[0] : [],
+            ring = this.points ? this : ev.ring,
+            points = ring.points._parts[0] || [],
             len = points.length;
+
         if (len === 0) { return out; }
 
-        var size = (this.points.options.size || 10) / 2;
-        size += 1 + (this.points.options.weight || 2);
+        var size = (ring.points.options.size || 10) / 2;
+        size += 1 + (ring.points.options.weight || 2);
 
         var cursorBounds = new L.Bounds(
             L.point(layerPoint.x - size, layerPoint.y - size),
