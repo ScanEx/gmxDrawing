@@ -651,7 +651,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 }
             }
         }
-        if (this.options.type !== 'Point') { L.setOptions(obj, lineStyle); }
+        if (this.options.type !== 'Point') { obj.setStyle(lineStyle); }
 
         if (this.options.editable) {
 
