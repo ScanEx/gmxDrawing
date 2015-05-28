@@ -475,8 +475,40 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         this._fireEvent('removefrommap');
     },
 
-    remove: function () {
-        this._parent.remove(this);
+    remove: function (ring) {
+        var i, j, len, len1, hole;
+        for (i = 0, len = this.rings.length; i < len; i++) {
+            if (ring.options.hole) {
+                for (j = 0, len1 = this.rings[i].holes.length; j < len1; j++) {
+                    hole = this.rings[i].holes[j];
+                    if (ring === hole) {
+                        this.rings[i].holes.splice(j, 1);
+                        if (hole._map) {
+                            hole._map.removeLayer(hole);
+                        }
+                        break;
+                    }
+                }
+                if (!ring._map) {
+                    break;
+                }
+            } else if (ring === this.rings[i].ring) {
+                for (j = 0, len1 = this.rings[i].holes.length; j < len1; j++) {
+                    hole = this.rings[i].holes[j];
+                    if (hole._map) {
+                        hole._map.removeLayer(hole);
+                    }
+                }
+                this.rings.splice(i, 1);
+                if (ring._map) {
+                    ring._map.removeLayer(ring);
+                }
+                break;
+            }
+        }
+        if (this.rings.length < 1) {
+            this._parent.remove(this);
+        }
         return this;
     },
 
@@ -1245,11 +1277,11 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         delete this.points;
 
         this.mode = '';
-        this.lineType = this.options.type.indexOf('Polyline') === -1;
+        this.lineType = this.options.type.indexOf('Polyline') !== -1;
 
         var pointStyle = this.options.pointStyle;
         var lineStyle = {opacity:1, weight:2, noClip: true, clickable: false, className: 'leaflet-drawing-lines'};
-        if (this.options.type === 'Polygon' || this.options.type === 'Rectangle') {
+        if (!this.lineType) {
             lineStyle.fill = true;
         }
         if (this.options.lineStyle) {
@@ -1341,6 +1373,14 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this.setLatLngs(points);
     },
 
+    addLatLng: function (point) {
+        if (this.points) {
+            this._setPoint(point, this.points._latlngs.length, 'node');
+        } else if ('addLatLng' in this._obj) {
+            this._obj.addLatLng(point);
+        }
+    },
+
     setLatLngs: function (points) {
         //console.log('setLatLngs', points);
         if (this.points) {
@@ -1422,9 +1462,11 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             points.splice(num, 1);
             if (this.options.type === 'Rectangle'
                 || points.length < 2
-                || (points.length < 3 && this.options.type === 'Polygon')
+                || (points.length < 3 && !this.lineType)
+                //|| (points.length < 3 && this.options.type === 'Polygon')
                 ) {
-                this.remove();
+                this._parent.remove(this);
+                //this.remove();
             } else {
                 this._setPoint(points[0], 0);
             }
@@ -1712,7 +1754,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 		}
 
 		this.addLatLng(ev.latlng);
-		this._parent._clearCreate();
+		this._parent._parent._clearCreate();
     },
 
     _mouseup: function (ev) {
