@@ -642,7 +642,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
         var lineStyle = {opacity:1, weight:2, noClip: true, clickable: false, className: 'leaflet-drawing-lines'};
         if (this.options.type === 'Polygon' || this.options.type === 'Rectangle') {
-            lineStyle.fill = true;
+            lineStyle.fill = 'fill' in this.options ? this.options.fill : true;
         }
         if (this.options.lineStyle) {
             for (var key in this.options.lineStyle) {
