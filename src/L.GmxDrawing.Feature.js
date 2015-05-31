@@ -146,9 +146,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             coords;
         if (this.rings) {
             coords = [];
-            for (var i = 0, arr = [], len = this.rings.length; i < len; i++) {
-                var it = this.rings[i];
-                arr.push(L.GeoJSON.latLngsToCoords(it.ring.points.getLatLngs()));
+            for (var i = 0, len = this.rings.length; i < len; i++) {
+                var it = this.rings[i],
+                    arr = [L.GeoJSON.latLngsToCoords(it.ring.points.getLatLngs())];
                 if (it.holes && it.holes.length) {
                     for (var j = 0, len1 = it.holes.length; j < len1; j++) {
                         arr.push(L.GeoJSON.latLngsToCoords(it.holes[j].points.getLatLngs()));
