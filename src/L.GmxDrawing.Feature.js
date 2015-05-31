@@ -327,10 +327,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                     }
                 };
                 this.hideTooltip = function() {
-                    // if (my.downObject || my.downObject === null) {
-                        this._parent.hideTooltip();
-                        this._fireEvent('onMouseOut');
-                    // }
+                    this._parent.hideTooltip();
+                    this._fireEvent('onMouseOut');
                 };
             }
         } else {

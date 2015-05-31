@@ -1,9 +1,7 @@
 (function () {
 
-// var downObject = null;
 var rectDelta = 0.0000001;
 var stateVersion = '1.0.0';
-
 
 L.GmxDrawing = L.Class.extend({
     options: {
