@@ -8,7 +8,7 @@
 
 ];
 var depsCSS = [
-    "css/L.GmxDrawing.css"
+    "css/L.gmxDrawing.css"
 ];
 
 if (typeof exports !== 'undefined') {
