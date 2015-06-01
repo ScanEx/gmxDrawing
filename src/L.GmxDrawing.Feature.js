@@ -156,9 +156,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 }
                 coords.push(arr);
             }
-            if (type === 'Polyline') { coords = coords[0]; }
-            //coords = L.GeoJSON.latLngsToCoords(this.points.getLatLngs());
-            //if (type === 'Polygon' || type === 'Rectangle') { coords = [coords]; }
+            if (type === 'Polygon' || type === 'Rectangle' || type === 'Polyline') { coords = coords[0]; }
         } else {
             var geojson = this._obj.toGeoJSON();
             coords = geojson.geometry.coordinates;
@@ -184,6 +182,32 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     getType: function () {
         return this.options.type;
+    },
+
+    hideFill: function () {
+        if (this._fill._map) {
+             this._map.removeLayer(this._fill);
+        }
+    },
+
+    showFill: function () {
+        var geoJSON = this.toGeoJSON(),
+            obj = L.GeoJSON.geometryToLayer(geoJSON, null, null, {weight: 0});
+
+        this._fill.clearLayers();
+        if (obj instanceof L.LayerGroup) {
+            obj.eachLayer(function (layer) {
+                this._fill.addLayer(layer);
+            }, this);
+        } else {
+            obj.setStyle({weight: 0, fill: true, fillColor: '#0033ff'});
+            this._fill.addLayer(obj);
+        }
+        if (!this._fill._map) {
+            this._map.addLayer(this._fill);
+            this._fill.bringToBack();
+        }
+        return this;
     },
 /*
     getBounds: function() {
@@ -264,6 +288,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         this.rings = [];
 
         this.mode = '';
+        this._fill = L.featureGroup();
 
         if (this.options.editable) {
             var layers = obj instanceof L.LayerGroup ? obj._layers : [obj];

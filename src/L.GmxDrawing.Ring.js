@@ -183,7 +183,10 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     _pointMove: function (ev) {
         if (this.down) {
-            if (!this.lineType) { this.lines.setStyle({fill: true}); }
+            if (!this.lineType) {
+                this._parent.showFill();
+            }
+            
             this._setPoint(ev.latlng, this.down.num, this.down.type);
             this.skipClick = true;
             if ('_showTooltip' in this) {
@@ -209,7 +212,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this.down = null;
         var lineStyle = this.options.lineStyle || {};
         if (!lineStyle.fill && !this.lineType) {
-            this.lines.setStyle({fill: false});
+            this._parent.hideFill();
         }
     },
     _lastPointClickTime: 0,  // Hack for emulate dblclick on Point
