@@ -1143,7 +1143,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 var len = points.length,
                     opt = this.options;
 				if (len > 2 || (len > 1 && opt.type === 'Polyline')) {
-					if (L.Browser.gecko) { this.skipClick = true; }
+					if (!L.Browser.webkit) { this.skipClick = true; }
 
 					if (down.num === 0 && opt.type === 'Polyline') {
 						opt.type = 'Polygon';
