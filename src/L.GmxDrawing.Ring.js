@@ -499,7 +499,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 var len = points.length,
                     opt = this.options;
                 if (len > 2 || (len > 1 && this.lineType)) {
-                    this.skipClick = true;
+                    if (!L.Browser.webkit) { this.skipClick = true; }
 
                     if (down.num === 0 && this.lineType && this.options.type !== 'MultiPolyline') {
                         opt.type = 'Polygon';
