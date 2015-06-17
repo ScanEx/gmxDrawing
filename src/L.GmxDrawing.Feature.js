@@ -144,7 +144,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     toGeoJSON: function () {
         var type = this.options.type,
             coords;
-        if (this.rings) {
+        if (this.rings && type !== 'Point') {
             coords = [];
             for (var i = 0, len = this.rings.length; i < len; i++) {
                 var it = this.rings[i],
@@ -156,7 +156,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 }
                 coords.push(arr);
             }
-            if (type === 'Polygon' || type === 'Rectangle' || type === 'Polyline') { coords = coords[0]; }
+            if (type === 'Polygon' || type === 'Rectangle') { coords = coords[0]; }
+            if (type === 'Polyline') { coords = coords[0][0]; }
         } else {
             var geojson = this._obj.toGeoJSON();
             coords = geojson.geometry.coordinates;
@@ -427,6 +428,12 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     _pointDown: function (ev) {
         if (this.rings.length) {
             this.rings[0].ring._pointDown(ev);
+        }
+    },
+    
+    getPopup: function() {
+        if (this.options.type === 'Point') {
+            return this._obj.getPopup();
         }
     }
 });
