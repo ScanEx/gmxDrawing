@@ -44,9 +44,10 @@ L.GmxDrawing.utils = {
         markerStyle: {
             mode: '',
             editable: false,
+            title: 'Text example',
             options: {
                 alt: '',
-                title: '',
+                //title: '',
                 clickable: true,
                 draggable: false,
                 keyboard: true,
@@ -74,7 +75,7 @@ L.GmxDrawing.utils = {
             } else if (key === 'iconAnchor' || key === 'iconSize' || key === 'popupAnchor' || key === 'shadowSize') {
                 if (!def[key]) { continue; }
                 if (def[key][0] !== from[key][0] || def[key][1] !== from[key][1]) { res[key] = from[key]; }
-            } else if (key === 'lineStyle' || key === 'pointStyle') {
+            } else if (key === 'lineStyle' || key === 'pointStyle' || key === 'markerStyle') {
                 res[key] = this.getNotDefaults(from[key], def[key]);
             } else if (!def || (def[key] !== from[key] || key === 'fill')) {
                 res[key] = from[key];

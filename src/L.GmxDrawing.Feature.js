@@ -398,7 +398,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 var popup = ev.popup;
                 if (!popup._input) {
                     popup._input = L.DomUtil.create('textarea', 'leaflet-gmx-popup-textarea', popup._contentNode);
-                    popup._input.placeholder = marker.options.title || '';
+                    popup._input.placeholder = _this.options.title || marker.options.title || '';
                     popup._contentNode.style.width = 'auto';
                 }
                 L.DomEvent.on(popup._input, 'keyup', function() {
@@ -411,7 +411,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                     this.rows = rows.length;
                     if (cols) { this.cols = cols; }
                     popup.update();
-                    marker.options.title = this.value;
+                    _this.options.title = marker.options.title = this.value;
                 }, popup._input);
                 popup.update();
             });
