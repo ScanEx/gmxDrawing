@@ -49,9 +49,10 @@ var defaultStyles = {
     markerStyle: {
         mode: '',
         editable: false,
+        title: 'Text example',
         options: {
             alt: '',
-            title: '',
+            title: 'Text example',
             clickable: true,
             draggable: false,
             keyboard: true,
@@ -78,7 +79,7 @@ function getNotDefaults(from, def) {
         } else if (key === 'iconAnchor' || key === 'iconSize' || key === 'popupAnchor' || key === 'shadowSize') {
             if (!def[key]) { continue; }
             if (def[key][0] !== from[key][0] || def[key][1] !== from[key][1]) { res[key] = from[key]; }
-        } else if (key === 'lineStyle' || key === 'pointStyle') {
+        } else if (key === 'lineStyle' || key === 'pointStyle' || key === 'markerStyle') {
             res[key] = getNotDefaults(from[key], def[key]);
         } else if (!def || (def[key] !== from[key] || key === 'fill')) {
             res[key] = from[key];
@@ -350,7 +351,7 @@ L.GmxDrawing = L.Class.extend({
             var it = this.items[i];
             if (it.options.type === 'Point') {
                 var geojson = it.toGeoJSON();
-                geojson.properties = getNotDefaults(it.options, defaultStyles.markerStyle);
+                //geojson.properties = getNotDefaults(it.options, defaultStyles.markerStyle);
                 if (!it._map) { geojson.properties.map = false; }
                 var res = getNotDefaults(it._obj.options, defaultStyles.markerStyle.options);
                 if (Object.keys(res).length) { geojson.properties.options = res; }
@@ -759,7 +760,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 var popup = ev.popup;
                 if (!popup._input) {
                     popup._input = L.DomUtil.create('textarea', 'leaflet-gmx-popup-textarea', popup._contentNode);
-                    popup._input.placeholder = marker.options.title || '';
+                    popup._input.placeholder = _this.options.title || marker.options.title || '';
                     popup._contentNode.style.width = 'auto';
                 }
                 L.DomEvent.on(popup._input, 'keyup', function() {
@@ -772,7 +773,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                     this.rows = rows.length;
                     if (cols) { this.cols = cols; }
                     popup.update();
-                    marker.options.title = this.value;
+                    _this.options.title = this.value;
                 }, popup._input);
                 popup.update();
             });
