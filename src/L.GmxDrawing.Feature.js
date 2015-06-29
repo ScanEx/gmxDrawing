@@ -210,18 +210,35 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         }
         return this;
     },
-/*
+
     getBounds: function() {
-        var out = null;
+        var bounds = new L.LatLngBounds();
         if (this.options.type === 'Point') {
-            var lantlg = this.getLatLng();
-            out = L.latLngBounds([lantlg.lat, lantlg.lng], [lantlg.lat, lantlg.lng]);
+            var latLng = this._obj.getLatLng();
+            bounds.extend(latLng);
         } else {
-            out = (this.lines || this._obj).getBounds();
+            bounds = this._getBounds();
         }
-        return out;
+        return bounds;
     },
-*/
+
+    _getBounds: function(item) {
+        var layer = item || this,
+            bounds = new L.LatLngBounds(),
+            latLng;
+        if (layer instanceof L.LayerGroup) {
+            layer.eachLayer(function (it) {
+                latLng = this._getBounds(it);
+                bounds.extend(latLng);
+            }, this);
+            return bounds;
+        } else {
+            latLng = layer.getBounds();
+        }
+        bounds.extend(latLng);
+        return bounds;
+    },
+
     initialize: function (parent, obj, options) {
         options = options || {};
         options.mode = '';
