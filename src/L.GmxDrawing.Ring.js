@@ -137,7 +137,6 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     setLatLngs: function (points) {
-        //console.log('setLatLngs', points);
         if (this.points) {
             this.fill.setLatLngs(points);
             this.lines.setLatLngs(points);
@@ -151,27 +150,26 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
         this._fireEvent('edit');
     },
+
     // edit mode
     _pointDown: function (ev) {
         if (ev.originalEvent && ev.originalEvent.ctrlKey) {
             this._onDragStart(ev);
             return;
         }
-        this.invoke('bringToFront');
-
-        //ev.ring = this;
+        // this.invoke('bringToFront');     // error in IE
         var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map),
-            num = downAttr.num,
             type = downAttr.type,
-            points = this.points._latlngs,
-            opt = this.options,
-            latlng = ev.latlng;
+            opt = this.options;
 
+        this._lastDownTime = Date.now() + 100;
         this.down = downAttr;
         if (type === 'edge' && opt.type !== 'Rectangle') {
             if (opt.disableAddPoints) { return; }
+            var num = downAttr.num,
+                points = this.points._latlngs;
             points.splice(num, 0, points[num]);
-            this._setPoint(latlng, num, type);
+            this._setPoint(ev.latlng, num, type);
         }
         this.downObject = true;
         this._map
@@ -182,13 +180,12 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     _pointMove: function (ev) {
-        if (this.down) {
+        if (this.down && this._lastDownTime < Date.now()) {
             if (!this.lineType) {
                 this._parent.showFill();
             }
-            
+            this._moved = true;
             this._setPoint(ev.latlng, this.down.num, this.down.type);
-            this.skipClick = true;
             if ('_showTooltip' in this) {
                 this._showTooltip(this.lineType ? 'Length' : 'Area', ev);
             }
@@ -203,10 +200,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 .off('mousemove', this._pointMove, this)
                 .off('mouseup', this._pointUp, this);
         }
-//console.log('_pointUp', this.mode, this._drawstop);
         if (this._drawstop) {
             this._fireEvent('drawstop');
-            this.skipClick = false;
         }
         this._drawstop = false;
         this.down = null;
@@ -224,10 +219,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             if (this.options.type === 'Rectangle'
                 || points.length < 2
                 || (points.length < 3 && !this.lineType)
-                //|| (points.length < 3 && this.options.type === 'Polygon')
                 ) {
                 this._parent.remove(this);
-                //this.remove();
             } else {
                 this._setPoint(points[0], 0);
             }
@@ -236,36 +229,47 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     _pointClick: function (ev) {
         if (ev.originalEvent && ev.originalEvent.ctrlKey) { return; }
-        var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map);
-        var clickTime = new Date().getTime(),
+        var clickTime = Date.now(),
             prevClickTime = this._lastPointClickTime;
+
         this._lastPointClickTime = clickTime + 300;
-        if (downAttr.type === 'node' && !this.skipClick) {
+        if (this._moved) { this._moved = false; return; }
+
+        var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map),
+            mode = this.mode;
+        if (downAttr.type === 'node') {
             var num = downAttr.num;
             if (clickTime < prevClickTime) {  // this is dblclick on Point
-                if (this.addLinePointTimer) {
-                    clearTimeout(this.addLinePointTimer);
-                    this.addLinePointTimer = null;
+                var len = this.points._latlngs.length;
+                if (len > 2 || (len > 1 && this.lineType)) {
+                    this._pointUp();
+                    this.setEditMode();
+                    if (downAttr.prev) {
+                        this._removePoint(num - 1);
+                        num--;
+                    }
+                    this._removePoint(num);
+                } else {
+                    this.remove();
                 }
-                this._removePoint(num);
-                this.setEditMode();
-            } else if (this.lineType && downAttr.end) {
-                if (!this.addLinePointTimer) {
-                    var my = this,
-                        latlng = downAttr.latlng;
-                    this.addLinePointTimer = setTimeout(function () {
-                        clearTimeout(my.addLinePointTimer);
-                        my.addLinePointTimer = null;
-                        my._pointUp();
-                        if (num === 0) { my.points._latlngs.reverse(); }
-                        if (!L.Browser.mobile) { my.points.addLatLng(latlng); }
-                        my.setAddMode();
-                        my._fireEvent('drawstop');
-                    }, 300);
+            } else if (downAttr.end) {  // this is click on first or last Point
+                if (mode === 'add') {
+                    this._pointUp();
+                    this.setEditMode();
+                    if (this.lineType && num === 0) {
+                        this.options.type = 'Polygon';
+                        this.lineType = false;
+                    }
+                    this._fireEvent('drawstop');
+                    this._removePoint(num);
+                } else if (this.lineType) {
+                    if (num === 0) { this.points._latlngs.reverse(); }
+                    this.points.addLatLng(downAttr.latlng);
+                    this.setAddMode();
+                    this._fireEvent('drawstop');
                 }
             }
         }
-        this.skipClick = false;
     },
 
     _onDragEnd: function () {
@@ -320,7 +324,6 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                     .off(my._map._container, 'touchmove', _touchmove, my)
                     .off(my._map._container, 'touchend', _touchend, my);
                 my._parent._enableDrag();
-                my.skipClick = false;
                 if (drawstop) {
                     my._parent.fire('drawstop', {mode: my.options.type, object: my});
                 }
@@ -332,7 +335,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     _editHandlers: function (flag) {
-        if (!this.points) { return; }
+        //if (!this.points) { return; }
         var stop = L.DomEvent.stopPropagation;
         //var prevent = L.DomEvent.preventDefault;
         if (this.touchstart) {
@@ -349,7 +352,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 .on('click', this._pointClick, this);
             if (L.Browser.mobile) {
                 if (this._EditOpacity) {
-                    this._setPointsStyle({fillOpacity: this._EditOpacity});
+                    this._parent._setPointsStyle({fillOpacity: this._EditOpacity});
                 }
                 var my = this;
                 this.touchstart = function (ev) {
@@ -392,52 +395,50 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     _createHandlers: function (flag) {
         if (!this.points) { return; }
-        var stop = L.DomEvent.stopPropagation,
-            lineStyle = this.options.lineStyle || {};
+        var stop = L.DomEvent.stopPropagation;
         if (flag) {
             this._parent._enableDrag();
             if (L.Browser.mobile) {
                 this._EditOpacity = this.points.options.fillOpacity;
-                this._setPointsStyle({fillOpacity: 0.5});
-                this.points.redraw();
+                this._parent._setPointsStyle({fillOpacity: 0.5});
                 this._map
                     .on('dblclick', stop)
                     .on('click', this._mouseClick, this)
                     .on('mousemove', this._moseMove, this);
                 this.points
                     .on('dblclick click', stop, this)
-                    //.on('mouseup', this._mouseup, this)
                     .on('click', this._mouseClick, this);
             } else {
                 this._map
-                    .on('dblclick', stop)
-                    .on('mousedown', this._mousedown, this)
-                    .on('mouseup', this._mouseup, this)
+                    .on('dblclick click', stop)
+                    .on('click', this._mouseClick, this)
                     .on('mousemove', this._moseMove, this);
                 this.points
-                    .on('mouseup', this._mouseup, this);
+                    .on('click', this._pointClick, this);
             }
             this._fireEvent('addmode');
             if (!this.lineType) { this.lines.setStyle({fill: true}); }
         } else {
-            if (L.Browser.mobile) {
-                if (this._map) {
+            if (this._map) {
+                if (L.Browser.mobile) {
+                        this._map
+                            .off('dblclick click', stop)
+                            .off('click', this._mouseClick, this)
+                            .off('mousemove', this._moseMove, this);
+                        this.points
+                            .off('dblclick click', stop, this)
+                            .off('click', this._mouseClick, this);
+                } else {
                     this._map
                         .off('dblclick', stop)
                         .off('click', this._mouseClick, this)
                         .off('mousemove', this._moseMove, this);
                     this.points
-                        .off('dblclick click', stop, this)
-                        .off('click', this._mouseClick, this);
+                        .off('click', this._pointClick, this);
                 }
-            } else if (this._map) {
-                this._map
-                    .off('dblclick', stop)
-                    .off('mousedown', this._mousedown, this)
-                    .off('mouseup', this._mouseup, this)
-                    .off('mousemove', this._moseMove, this);
             }
-            if (!lineStyle.fill && !this.lineType) {
+            var lineStyle = this.options.lineStyle || {};
+            if (!this.lineType && !lineStyle.fill) {
                 this.lines.setStyle({fill: false});
             }
         }
@@ -483,44 +484,11 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
     },
 
-    _mousedown: function () {
-//console.log('_mousedown', this.mode, this._lastTime);
-        this._lastTime = new Date().getTime() + 300;  // Hack for determinating map dragging
-    },
-
     _mouseClick: function (ev) {
         var down = L.GmxDrawing.utils.getDownType.call(this, ev, this._map),
             points = this.points._latlngs;
 
-        if (down.type === 'node' && down.end) {
-            if (down.num === 0 || ((down.prev || L.Browser.mobile) && down.num === points.length - 1)) {
-                this.setEditMode();
-                if (!L.Browser.mobile) { points.pop(); }
-                var len = points.length,
-                    opt = this.options;
-                if (len > 2 || (len > 1 && this.lineType)) {
-                    if (!L.Browser.webkit) { this.skipClick = true; }
-
-                    if (down.num === 0 && this.lineType && this.options.type !== 'MultiPolyline') {
-                        opt.type = 'Polygon';
-                        this.lineType = false;
-                    }
-                    this._setPoint(points[0], 0);
-                } else {
-                    this.remove();
-                }
-                this._fireEvent('drawstop');
-                return;
-            }
-        }
-
         this.addLatLng(ev.latlng);
         this._parent._parent._clearCreate();
-    },
-
-    _mouseup: function (ev) {
-        if (new Date().getTime() < this._lastTime && this.mode === 'add') {
-            this._mouseClick(ev);
-        }
     }
 });
