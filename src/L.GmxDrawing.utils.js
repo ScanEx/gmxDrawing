@@ -84,34 +84,6 @@ L.GmxDrawing.utils = {
         return res;
     },
 
-    getEquidistancePolygon: function(points, d) {   // get EquidistancePolygon from line
-        var out = [];
-        if (points.length) {
-            var p = points[0];
-            for (var i = 1, len = points.length; i < len; i++) {
-                var p1 = points[i],
-                    dx = p1.x - p.x,
-                    dy = p1.y - p.y,
-                    d2 = dx * dx + dy * dy;
-                if (d2 > 0) {
-                    var dp = d / Math.sqrt(d2),
-                        x0 = p1.x + dp * dx,        y0 = p1.y + dp * dy,
-                        x3 = p1.x - dx - dp * dx,   y3 = p1.y - dy - dp * dy,
-                        y01 = y0 - p1.y,    x01 = p1.x - x0,
-                        y30 = y3 - p.y,     x30 = p.x - x3;
-                    out.push([
-                        [x0 + y01, y0 + x01],
-                        [x0 - y01, y0 - x01],
-                        [x3 + y30, y3 + x30],
-                        [x3 - y30, y3 - x30]
-                    ]);
-                }
-                p = p1;
-            }
-        }
-        return out;
-    },
-
     getDownType: function(ev, map) {
         var layerPoint = ev.layerPoint,
             ctrlKey = false,
@@ -127,7 +99,8 @@ L.GmxDrawing.utils = {
         }
         var out = {type: '', latlng: latlng, ctrlKey: ctrlKey},
             ring = this.points ? this : ev.ring,
-            points = ring.points._parts[0] || [],
+            //points = ring.points._parts[0] || [],
+            points = ring.points._originalPoints || [],
             len = points.length;
 
         if (len === 0) { return out; }

@@ -1,8 +1,8 @@
 L.GmxDrawing.Ring = L.LayerGroup.extend({
     options: {
         className: 'leaflet-drawing-ring',
-        noClip: true,
-        smoothFactor: 0,
+        //noClip: true,
+        //smoothFactor: 0,
         opacity: 1,
         shape: 'circle',
         fill: true,
@@ -56,7 +56,14 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
         this.lines = new L.Polyline(latlngs, lineStyle);
         this.addLayer(this.lines);
-        this.fill = new L.GmxDrawing._Fill(latlngs);
+        this.fill = new L.Polyline(latlngs, {
+            className: 'leaflet-drawing-lines-fill',
+            opacity: 0,
+            fill: false,
+            size: 10,
+            weight: 10
+        });
+        
         this.addLayer(this.fill);
         if (!this.lineType && mode === 'edit') {
             this.lines.addLatLng(latlngs[0]);
@@ -107,25 +114,25 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     _setPoint: function (latlng, nm, type) {
         if (!this.points) { return; }
-        var points = this.points._latlngs;
+        var latlngs = this.points._latlngs;
         if (this.options.type === 'Rectangle') {
             if (type === 'edge') {
                 nm--;
-                if (nm === 0) { points[0].lng = points[1].lng = latlng.lng; }
-                else if (nm === 1) { points[1].lat = points[2].lat = latlng.lat; }
-                else if (nm === 2) { points[2].lng = points[3].lng = latlng.lng; }
-                else if (nm === 3) { points[0].lat = points[3].lat = latlng.lat; }
+                if (nm === 0) { latlngs[0].lng = latlngs[1].lng = latlng.lng; }
+                else if (nm === 1) { latlngs[1].lat = latlngs[2].lat = latlng.lat; }
+                else if (nm === 2) { latlngs[2].lng = latlngs[3].lng = latlng.lng; }
+                else if (nm === 3) { latlngs[0].lat = latlngs[3].lat = latlng.lat; }
             } else {
-                points[nm] = latlng;
-                if (nm === 0) { points[3].lat = latlng.lat; points[1].lng = latlng.lng; }
-                else if (nm === 1) { points[2].lat = latlng.lat; points[0].lng = latlng.lng; }
-                else if (nm === 2) { points[1].lat = latlng.lat; points[3].lng = latlng.lng; }
-                else if (nm === 3) { points[0].lat = latlng.lat; points[2].lng = latlng.lng; }
+                latlngs[nm] = latlng;
+                if (nm === 0) { latlngs[3].lat = latlng.lat; latlngs[1].lng = latlng.lng; }
+                else if (nm === 1) { latlngs[2].lat = latlng.lat; latlngs[0].lng = latlng.lng; }
+                else if (nm === 2) { latlngs[1].lat = latlng.lat; latlngs[3].lng = latlng.lng; }
+                else if (nm === 3) { latlngs[0].lat = latlng.lat; latlngs[2].lng = latlng.lng; }
             }
         } else {
-            points[nm] = latlng;
+            latlngs[nm] = latlng;
         }
-        this.setLatLngs(points);
+        this.setLatLngs(latlngs);
     },
 
     addLatLng: function (point) {
@@ -136,19 +143,22 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
     },
 
-    setLatLngs: function (points) {
+    setLatLngs: function (latlngs) {
+        //var start = Date.now();
         if (this.points) {
-            this.fill.setLatLngs(points);
-            this.lines.setLatLngs(points);
-            if (!this.lineType && this.mode === 'edit' && points.length > 2) {
-                this.lines.addLatLng(points[0]);
-                this.fill.addLatLng(points[0]);
+            var points = this.points;
+            this.fill.setLatLngs(latlngs);
+            this.lines.setLatLngs(latlngs);
+            if (!this.lineType && this.mode === 'edit' && latlngs.length > 2) {
+                this.lines.addLatLng(latlngs[0]);
+                this.fill.addLatLng(latlngs[0]);
             }
-            this.points.setLatLngs(points);
+            points.setLatLngs(latlngs);
         } else if ('setLatLngs' in this._obj) {
-            this._obj.setLatLngs(points);
+            this._obj.setLatLngs(latlngs);
         }
         this._fireEvent('edit');
+        //console.log('setLatLngs ', latlngs.length, 'time:', Date.now() - start);
     },
 
     // edit mode

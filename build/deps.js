@@ -3,7 +3,7 @@
     "src/L.GmxDrawing.Feature.js",
     "src/L.GmxDrawing.Ring.js",
     "src/L.GmxDrawing.PointMarkers.js",
-    "src/L.GmxDrawing.Fill.js",
+//    "src/L.GmxDrawing.Fill.js",
     "src/L.GmxDrawing.utils.js"
 
 ];
