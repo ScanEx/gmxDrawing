@@ -42,35 +42,39 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     remove: function (ring) {
-        var i, j, len, len1, hole;
-        for (i = 0, len = this.rings.length; i < len; i++) {
-            if (ring.options.hole) {
-                for (j = 0, len1 = this.rings[i].holes.length; j < len1; j++) {
-                    hole = this.rings[i].holes[j];
-                    if (ring === hole) {
-                        this.rings[i].holes.splice(j, 1);
+        if (ring) {
+            var i, j, len, len1, hole;
+            for (i = 0, len = this.rings.length; i < len; i++) {
+                if (ring.options.hole) {
+                    for (j = 0, len1 = this.rings[i].holes.length; j < len1; j++) {
+                        hole = this.rings[i].holes[j];
+                        if (ring === hole) {
+                            this.rings[i].holes.splice(j, 1);
+                            if (hole._map) {
+                                hole._map.removeLayer(hole);
+                            }
+                            break;
+                        }
+                    }
+                    if (!ring._map) {
+                        break;
+                    }
+                } else if (ring === this.rings[i].ring) {
+                    for (j = 0, len1 = this.rings[i].holes.length; j < len1; j++) {
+                        hole = this.rings[i].holes[j];
                         if (hole._map) {
                             hole._map.removeLayer(hole);
                         }
-                        break;
                     }
-                }
-                if (!ring._map) {
+                    this.rings.splice(i, 1);
+                    if (ring._map) {
+                        ring._map.removeLayer(ring);
+                    }
                     break;
                 }
-            } else if (ring === this.rings[i].ring) {
-                for (j = 0, len1 = this.rings[i].holes.length; j < len1; j++) {
-                    hole = this.rings[i].holes[j];
-                    if (hole._map) {
-                        hole._map.removeLayer(hole);
-                    }
-                }
-                this.rings.splice(i, 1);
-                if (ring._map) {
-                    ring._map.removeLayer(ring);
-                }
-                break;
             }
+        } else {
+            this.rings = [];
         }
         if (this.rings.length < 1) {
             this._parent.remove(this);
@@ -289,16 +293,30 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     getLength: function () {
         var out = 0;
-        if (L.gmxUtil.getLength) {
-            for (var i = 0, len = this.rings.length; i < len; i++) {
-                var it = this.rings[i];
-                out += L.gmxUtil.getLength(it.ring.points._latlngs);
-                for (var j = 0, len1 = it.holes.length; j < len1; j++) {
-                    out += L.gmxUtil.getLength(it.holes[j].points._latlngs);
-                }
+        for (var i = 0, len = this.rings.length; i < len; i++) {
+            var it = this.rings[i];
+            out += it.ring.getLength();
+            for (var j = 0, len1 = it.holes.length; j < len1; j++) {
+                out += it.holes[j].getLength();
             }
         }
         return out;
+    },
+
+    getSummary: function () {
+        var str = '',
+            mapOpt = this._map.options || {},
+            type = this.options.type;
+            
+        if (type === 'Polyline' || type === 'MultiPolyline') {
+            str = L.gmxUtil.prettifyDistance(this.getLength(), mapOpt.distanceUnit);
+        } else if (type === 'Polygon' || type === 'MultiPolygon' || type === 'Rectangle') {
+            str = L.gmxUtil.prettifyArea(this.getArea(), mapOpt.squareUnit);
+        } else if (type === 'Point') {
+            var latLng = this._obj.getLatLng();
+            str = gmxAPIutils.formatCoordinates(latLng.lng, latLng.lat);
+        }
+        return str;
     },
 
     _initialize: function (parent, obj) {
@@ -336,13 +354,12 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                     var ring = ev.ring,
                         originalEvent = ev.originalEvent,
                         down = originalEvent.buttons || originalEvent.button;
+
                     if (ring.downObject || !down) {
-//console.log('eeeeee', my._leaflet_id);
                         var mapOpt = my._map.options || {},
-                            distanceUnit = mapOpt.distanceUnit || 'km',
-                            squareUnit = mapOpt.squareUnit || 'ha',
-                            str = '',
-                            arr = [];
+                            distanceUnit = mapOpt.distanceUnit,
+                            squareUnit = mapOpt.squareUnit,
+                            str = '';
 
                         if (type === 'Area') {
                             if (!L.gmxUtil.getArea) { return; }
@@ -354,15 +371,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                             my._parent.showTooltip(ev.layerPoint, str);
                         } else if (type === 'Length') {
                             var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
-//console.log('downAttr', downAttr);
-                            var _latlngs = ring.points._latlngs;
-                            if (downAttr.type === 'node') {
-                                arr = _latlngs.slice(0, downAttr.num + 1);
-                            } else {
-                                arr = _latlngs.slice(downAttr.num - 1, downAttr.num + 1);
-                                if (arr.length === 1) { arr.push(_latlngs[0]); }
-                            }
-                            var length = L.gmxUtil.getLength(arr);
+                            var length = ring.getLength(downAttr);
                             str = _gtxt(type) + ': ' + L.gmxUtil.prettifyDistance(length, distanceUnit);
                             my._parent.showTooltip(ev.layerPoint, str);
                         }

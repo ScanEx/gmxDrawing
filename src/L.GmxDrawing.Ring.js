@@ -19,10 +19,12 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
         this._layers = {};
         this._coords = coords;
+        this._legLength = [];
         this._parent = parent;
 
         this._initialize(parent, coords);
     },
+
     _initialize: function (parent, coords) {
         this.clearLayers();
         delete this.lines;
@@ -112,6 +114,41 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this._fireEvent('removefrommap');
     },
 
+    getLength: function (downAttr) {
+        var length = 0;
+            latlngs = this.points._latlngs,
+            len = latlngs.length;
+
+        if (len) {
+            var beg = 1,
+                prev = latlngs[0];
+            if (downAttr) {
+                if (downAttr.type === 'node') {
+                    len = downAttr.num + 1;
+                } else {
+                    beg = downAttr.num;
+                    if (beg === len) {
+                        prev = latlngs[beg - 1];
+                        beg = 0;
+                    } else {
+                        prev = latlngs[beg - 1];
+                    }
+                    len = beg + 1;
+                }
+            }
+            for (var i = beg; i < len; i++) {
+                var leg = this._legLength[i] || null;
+                if (leg === null) {
+                    leg = L.gmxUtil.distVincenty(prev.lng, prev.lat, latlngs[i].lng, latlngs[i].lat);
+                    this._legLength[i] = leg;
+                }
+                prev = latlngs[i];
+                length += leg;
+            }
+        }
+        return length;
+    },
+
     _setPoint: function (latlng, nm, type) {
         if (!this.points) { return; }
         var latlngs = this.points._latlngs;
@@ -129,13 +166,17 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 else if (nm === 2) { latlngs[1].lat = latlng.lat; latlngs[3].lng = latlng.lng; }
                 else if (nm === 3) { latlngs[0].lat = latlng.lat; latlngs[2].lng = latlng.lng; }
             }
+            this._legLength = [];
         } else {
             latlngs[nm] = latlng;
+            this._legLength[nm] = null;
+            this._legLength[nm + 1] = null;
         }
         this.setLatLngs(latlngs);
     },
 
     addLatLng: function (point) {
+        this._legLength = [];
         if (this.points) {
             this._setPoint(point, this.points._latlngs.length, 'node');
         } else if ('addLatLng' in this._obj) {
@@ -176,6 +217,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this.down = downAttr;
         if (type === 'edge' && opt.type !== 'Rectangle') {
             if (opt.disableAddPoints) { return; }
+            this._legLength = [];
             var num = downAttr.num,
                 points = this.points._latlngs;
             points.splice(num, 0, points[num]);
@@ -186,7 +228,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             .on('mousemove', this._pointMove, this)
             .on('mouseup', this._pointUp, this);
 
-        this._parent._enableDrag();
+        this._parent._disableDrag();
     },
 
     _pointMove: function (ev) {
@@ -204,6 +246,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     _pointUp: function () {
         this.downObject = false;
+        this._parent._enableDrag();
         if (!this.points) { return; }
         if (this._map) {
             this._map
@@ -225,6 +268,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     _removePoint: function (num) {
         var points = this.points._latlngs;
         if (points.length > num) {
+            this._legLength = [];
             points.splice(num, 1);
             if (this.options.type === 'Rectangle'
                 || points.length < 2
@@ -308,6 +352,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         });
         this._dragstartPoint = ev.latlng;
 
+        this._legLength = [];
         this.setLatLngs(points);
         this._fireEvent('drag');
     },
@@ -374,6 +419,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                     if (downAttr.type === 'edge' && my.options.type !== 'Rectangle') {
                         var points = my.points._latlngs;
                         points.splice(downAttr.num, 0, points[downAttr.num]);
+                        my._legLength = [];
                         my._setPoint(downAttr.latlng, downAttr.num, downAttr.type);
                     }
                 };
