@@ -89,6 +89,7 @@ L.GmxDrawing = L.Class.extend({
             else if (obj instanceof L.MultiPolyline) { options.type = 'MultiPolyline'; options.editable = true; }
             else if (obj instanceof L.Marker) {
                 options.type = 'Point'; options.editable = false;
+                obj.options.draggable = true;
             }
             item = new L.GmxDrawing.Feature(this, obj, options);
         }
