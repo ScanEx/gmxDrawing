@@ -314,7 +314,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             str = L.gmxUtil.prettifyArea(this.getArea(), mapOpt.squareUnit);
         } else if (type === 'Point') {
             var latLng = this._obj.getLatLng();
-            str = gmxAPIutils.formatCoordinates(latLng.lng, latLng.lat);
+            str = L.gmxUtil.formatCoordinates(latLng);
         }
         return str;
     },
