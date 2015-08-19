@@ -16,7 +16,7 @@
     pointer-events: none;
 }
 .leaflet-drawing-lines-fill {
-    pointer-events: visible;
+    pointer-events: visiblestroke;
 }
 .leaflet-drawing-points {
     pointer-events: visible;
