@@ -79,18 +79,22 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this.points
             .on('mouseover mousemove', function (ev) {
                 ev.ring = _this;
-                parent._showTooltip(_this.lineType ? 'Length' : 'Area', ev);
+                if ('_showTooltip' in this) {
+                    this._showTooltip(_this.lineType ? 'Length' : 'Area', ev);
+                }
             }, parent)
             .on('mouseout', function () {
-                parent.hideTooltip();
+                if ('hideTooltip' in this) { this.hideTooltip(); }
             }, parent);
         this.fill
             .on('mouseover mousemove', function (ev) {
                 ev.ring = _this;
-                parent._showTooltip('Length', ev);
+                if ('_showTooltip' in this) {
+                    this._showTooltip('Length', ev);
+                }
             }, parent)
             .on('mouseout', function () {
-                parent.hideTooltip();
+                if ('hideTooltip' in this) { this.hideTooltip(); }
             }, parent);
     },
 
@@ -238,8 +242,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             }
             this._moved = true;
             this._setPoint(ev.latlng, this.down.num, this.down.type);
-            if ('_showTooltip' in this) {
-                this._showTooltip(this.lineType ? 'Length' : 'Area', ev);
+            if ('_showTooltip' in this._parent) {
+                this._parent._showTooltip(this.lineType ? 'Length' : 'Area', ev);
             }
         }
     },

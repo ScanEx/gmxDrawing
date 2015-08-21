@@ -439,6 +439,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                     if (cols) { this.cols = cols; }
                     popup.update();
                     _this.options.title = marker.options.title = this.value;
+                    this.focus();
                 }, popup._input);
                 popup.update();
             });
