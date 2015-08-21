@@ -355,7 +355,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                         originalEvent = ev.originalEvent,
                         down = originalEvent.buttons || originalEvent.button;
 
-                    if (ring.downObject || !down) {
+                    if (ring && (ring.downObject || !down)) {
                         var mapOpt = my._map.options || {},
                             distanceUnit = mapOpt.distanceUnit,
                             squareUnit = mapOpt.squareUnit,
