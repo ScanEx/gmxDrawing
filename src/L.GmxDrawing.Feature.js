@@ -145,17 +145,30 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         return res;
     },
 
+    _latLngsToCoords: function (latlngs, closed) {
+        var coords = L.GeoJSON.latLngsToCoords(latlngs);
+        if (closed) {
+            var lastCoord = coords[coords.length - 1];
+            if (lastCoord[0] !== coords[0][0] || lastCoord[1] !== coords[0][1]) {
+                coords.push(coords[0]);
+            }
+        }
+        return coords;
+    },
+
     toGeoJSON: function () {
         var type = this.options.type,
+            closed = (type === 'Polygon' || type === 'Rectangle' || type === 'MultiPolygon'),
             coords;
         if (this.rings && type !== 'Point') {
             coords = [];
             for (var i = 0, len = this.rings.length; i < len; i++) {
                 var it = this.rings[i],
-                    arr = [L.GeoJSON.latLngsToCoords(it.ring.points.getLatLngs())];
+                    arr = [this._latLngsToCoords(it.ring.points.getLatLngs(), closed)];
+
                 if (it.holes && it.holes.length) {
                     for (var j = 0, len1 = it.holes.length; j < len1; j++) {
-                        arr.push(L.GeoJSON.latLngsToCoords(it.holes[j].points.getLatLngs()));
+                        arr.push(this._latLngsToCoords(it.holes[j].points.getLatLngs(), closed));
                     }
                 }
                 coords.push(arr);
