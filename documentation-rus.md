@@ -68,6 +68,11 @@ editable | `<Bool>` | true | Флаг разрещающий редактиро�
 map | `<Bool>` | true | Флаг добавления объекта на карту(При значении `false` объект не добавляется на карту).
 lineStyle | `<L.Path options>` | `{opacity:1, weight:2}` | Стиль отрисовки линий объекта.
 pointStyle | `<Point options>` | `{size:10, opacity:1, weight:2}` | Стиль отрисовки вершин объекта (для `Polygon` и `Rectangle` устанавливается fill = true)
+iconUrl | `<String>` | `` | URL иконки для маркера.
+iconSize | `<Point>` | `null` | [iconSize](http://leafletjs.com/reference.html#icon) для иконки маркера.
+iconAnchor | `<Point>` | `null` | [iconAnchor](http://leafletjs.com/reference.html#icon) для иконки маркера.
+popupAnchor | `<Point>` | `null` | [popupAnchor](http://leafletjs.com/reference.html#icon) для иконки маркера.
+shadowSize | `<Point>` | `null` | [shadowSize](http://leafletjs.com/reference.html#icon) для иконки маркера.
 
 ### Point options
 
