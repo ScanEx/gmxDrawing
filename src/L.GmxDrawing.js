@@ -65,15 +65,10 @@ L.GmxDrawing = L.Class.extend({
             obj = L.geoJson(obj, options);
         }
         if (obj instanceof L.GeoJSON) {
-            var layers = obj.getLayers(),
-                iconStyle = options && options.markerStyle && options.markerStyle.options.icon;
+            var layers = obj.getLayers();
             if (layers) {
                 for (var i = 0, len = layers.length; i < len; i++) {
-                    var layer = layers[i];
-                    if (iconStyle && layer instanceof L.Marker) {
-                        layer.setIcon(L.icon(iconStyle));
-                    }
-                    arr.push(this.add(layer, options));
+                    arr.push(this.add(layers[i], options));
                 }
             }
         }
@@ -88,7 +83,8 @@ L.GmxDrawing = L.Class.extend({
             } else {
                 var calcOptions = {};
                 if (!options || !('editable' in options)) { calcOptions.editable = true; }
-                if (obj instanceof L.Rectangle)     { calcOptions.type = 'Rectangle'; }
+                if (obj.geometry)     { calcOptions.type = obj.geometry.type; }
+                else if (obj instanceof L.Rectangle)     { calcOptions.type = 'Rectangle'; }
                 else if (obj instanceof L.Polygon)  { calcOptions.type = 'Polygon'; }
                 else if (obj instanceof L.MultiPolygon)  { calcOptions.type = 'MultiPolygon'; calcOptions.editable = true; }
                 else if (obj instanceof L.Polyline) { calcOptions.type = 'Polyline'; }
@@ -97,11 +93,19 @@ L.GmxDrawing = L.Class.extend({
                     calcOptions.type = 'Point'; calcOptions.editable = false;
                     obj.options.draggable = true;
                 }
-                if (!options) {
-                    options = this._chkDrawOptions(calcOptions.type, options);
-                }
+                options = this._chkDrawOptions(calcOptions.type, options);
                 L.extend(options, calcOptions);
                 if (obj.geometry) {
+                    var iconStyle = options.markerStyle && options.markerStyle.iconStyle;
+                    if (options.type === 'Point' &&
+                        !options.pointToLayer &&
+                        iconStyle
+                    ) {
+                        options.icon = L.icon(iconStyle);
+                        options.pointToLayer = function (geojson, latlng) {
+                             return new L.Marker(latlng, options);
+                        };
+                    }
                     return this.addGeoJSON(obj, options);
                 }
                 item = new L.GmxDrawing.Feature(this, obj, options);
