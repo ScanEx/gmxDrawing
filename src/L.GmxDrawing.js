@@ -77,28 +77,36 @@ L.GmxDrawing = L.Class.extend({
 
     add: function (obj, options) {
         var item = null;
-        if (obj instanceof L.GmxDrawing.Feature) {
-            item = obj;
-        } else {
-            options = options || {};
-            if (!('editable' in options)) { options.editable = true; }
-            if (obj instanceof L.Rectangle)     { options.type = 'Rectangle'; }
-            else if (obj instanceof L.Polygon)  { options.type = 'Polygon'; }
-            else if (obj instanceof L.MultiPolygon)  { options.type = 'MultiPolygon'; options.editable = true; }
-            else if (obj instanceof L.Polyline) { options.type = 'Polyline'; }
-            else if (obj instanceof L.MultiPolyline) { options.type = 'MultiPolyline'; options.editable = true; }
-            else if (obj instanceof L.Marker) {
-                options.type = 'Point'; options.editable = false;
-                obj.options.draggable = true;
+        if (obj) {
+            if (obj.geometry) {
+                return this.addGeoJSON(obj, options);
+            } else if (obj instanceof L.GmxDrawing.Feature) {
+                item = obj;
+            } else {
+                var calcOptions = {};
+                if (!options || !('editable' in options)) { calcOptions.editable = true; }
+                if (obj instanceof L.Rectangle)     { calcOptions.type = 'Rectangle'; }
+                else if (obj instanceof L.Polygon)  { calcOptions.type = 'Polygon'; }
+                else if (obj instanceof L.MultiPolygon)  { calcOptions.type = 'MultiPolygon'; calcOptions.editable = true; }
+                else if (obj instanceof L.Polyline) { calcOptions.type = 'Polyline'; }
+                else if (obj instanceof L.MultiPolyline) { calcOptions.type = 'MultiPolyline'; calcOptions.editable = true; }
+                else if (obj instanceof L.Marker) {
+                    calcOptions.type = 'Point'; calcOptions.editable = false;
+                    obj.options.draggable = true;
+                }
+                if (!options) {
+                    options = this._chkDrawOptions(calcOptions.type, options);
+                }
+                L.extend(options, calcOptions);
+                item = new L.GmxDrawing.Feature(this, obj, options);
             }
-            item = new L.GmxDrawing.Feature(this, obj, options);
+            if (!('map' in options)) { options.map = true; }
+            if (options.map && !item._map) { this._map.addLayer(item); }
+            else { this._addItem(item); }
+            //if (!item._map) this._map.addLayer(item);
+            //if (item.points) item.points._path.setAttribute('fill-rule', 'inherit');
+            if ('setEditMode' in item) { item.setEditMode(); }
         }
-        if (!('map' in options)) { options.map = true; }
-        if (options.map && !item._map) { this._map.addLayer(item); }
-        else { this._addItem(item); }
-        //if (!item._map) this._map.addLayer(item);
-        //if (item.points) item.points._path.setAttribute('fill-rule', 'inherit');
-        if ('setEditMode' in item) { item.setEditMode(); }
         return item;
     },
 
@@ -128,46 +136,51 @@ L.GmxDrawing = L.Class.extend({
         this._createKey = null;
     },
 
-    create: function (type, drawOptions) {
+    _chkDrawOptions: function (type, drawOptions) {
+        if (!drawOptions) {
+            if (type === 'Point') {
+                drawOptions = L.GmxDrawing.utils.defaultStyles.markerStyle.options.icon;
+            } else {
+                drawOptions = L.GmxDrawing.utils.defaultStyles;
+            }
+        }
+        if (drawOptions.iconUrl) {
+            var iconStyle = {
+                iconUrl: drawOptions.iconUrl
+            };
+            delete drawOptions.iconUrl;
+            if (drawOptions.iconAnchor) {
+                iconStyle.iconAnchor = drawOptions.iconAnchor;
+                delete drawOptions.iconAnchor;
+            }
+            if (drawOptions.iconSize) {
+                iconStyle.iconSize = drawOptions.iconSize;
+                delete drawOptions.iconSize;
+            }
+            if (drawOptions.popupAnchor) {
+                iconStyle.popupAnchor = drawOptions.popupAnchor;
+                delete drawOptions.popupAnchor;
+            }
+            if (drawOptions.shadowSize) {
+                iconStyle.shadowSize = drawOptions.shadowSize;
+                delete drawOptions.shadowSize;
+            }
+            drawOptions.markerStyle = {
+                iconStyle: iconStyle
+            };
+        }
+        return drawOptions;
+    },
+
+    create: function (type, options) {
         this._clearCreate(null);
         if (type) {
-            var my = this;
+            var drawOptions = this._chkDrawOptions(type, options),
+                my = this;
 
             if (type === 'Rectangle') {
                 this._map._initPathRoot();
                 this._map.dragging.disable();
-            }
-            if (!drawOptions) {
-                if (type === 'Point') {
-                    drawOptions = L.GmxDrawing.utils.defaultStyles.markerStyle.options.icon;
-                } else {
-                    drawOptions = L.GmxDrawing.utils.defaultStyles;
-                }
-            }
-            if (drawOptions.iconUrl) {
-                var iconStyle = {
-                    iconUrl: drawOptions.iconUrl
-                };
-                delete drawOptions.iconUrl;
-                if (drawOptions.iconAnchor) {
-                    iconStyle.iconAnchor = drawOptions.iconAnchor;
-                    delete drawOptions.iconAnchor;
-                }
-                if (drawOptions.iconSize) {
-                    iconStyle.iconSize = drawOptions.iconSize;
-                    delete drawOptions.iconSize;
-                }
-                if (drawOptions.popupAnchor) {
-                    iconStyle.popupAnchor = drawOptions.popupAnchor;
-                    delete drawOptions.popupAnchor;
-                }
-                if (drawOptions.shadowSize) {
-                    iconStyle.shadowSize = drawOptions.shadowSize;
-                    delete drawOptions.shadowSize;
-                }
-                drawOptions.markerStyle = {
-                    iconStyle: iconStyle
-                };
             }
             this._createKey = {
                 type: type,
