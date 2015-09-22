@@ -429,9 +429,6 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         var _this = this,
             _parent = this._parent;
 
-        if (this.options.markerStyle && this.options.markerStyle.iconStyle) {
-            marker.setIcon(L.icon(this.options.markerStyle.iconStyle));
-        }
         marker
             .bindPopup(null, {maxWidth: 1000})
             .on('dblclick', function() {

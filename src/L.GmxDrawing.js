@@ -65,10 +65,15 @@ L.GmxDrawing = L.Class.extend({
             obj = L.geoJson(obj, options);
         }
         if (obj instanceof L.GeoJSON) {
-            var layers = obj.getLayers();
+            var layers = obj.getLayers(),
+                iconStyle = options && options.markerStyle && options.markerStyle.options.icon;
             if (layers) {
                 for (var i = 0, len = layers.length; i < len; i++) {
-                    arr.push(this.add(layers[i], options));
+                    var layer = layers[i];
+                    if (iconStyle && layer instanceof L.Marker) {
+                        layer.setIcon(L.icon(iconStyle));
+                    }
+                    arr.push(this.add(layer, options));
                 }
             }
         }
@@ -78,9 +83,7 @@ L.GmxDrawing = L.Class.extend({
     add: function (obj, options) {
         var item = null;
         if (obj) {
-            if (obj.geometry) {
-                return this.addGeoJSON(obj, options);
-            } else if (obj instanceof L.GmxDrawing.Feature) {
+            if (obj instanceof L.GmxDrawing.Feature) {
                 item = obj;
             } else {
                 var calcOptions = {};
@@ -98,6 +101,9 @@ L.GmxDrawing = L.Class.extend({
                     options = this._chkDrawOptions(calcOptions.type, options);
                 }
                 L.extend(options, calcOptions);
+                if (obj.geometry) {
+                    return this.addGeoJSON(obj, options);
+                }
                 item = new L.GmxDrawing.Feature(this, obj, options);
             }
             if (!('map' in options)) { options.map = true; }
