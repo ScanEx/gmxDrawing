@@ -134,14 +134,26 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     getOptions: function () {
-        var data = L.extend({}, this.options);
-        data.lineStyle = this.options.lineStyle;
-        data.pointStyle = this.options.pointStyle;
+        var options = this.options,
+            data = L.extend({}, options);
+
+        data.lineStyle = options.lineStyle;
+        data.pointStyle = options.pointStyle;
 
         var res = L.GmxDrawing.utils.getNotDefaults(data, L.GmxDrawing.utils.defaultStyles);
         if (!Object.keys(res.lineStyle).length) { delete res.lineStyle; }
         if (!Object.keys(res.pointStyle).length) { delete res.pointStyle; }
         if (!this._map) { res.map = false; }
+
+        if (options.type === 'Point') {
+            var opt = L.GmxDrawing.utils.getNotDefaults(this._obj.options, L.GmxDrawing.utils.defaultStyles.markerStyle.options);
+            if (Object.keys(opt).length) { res.options = opt; }
+            opt = L.GmxDrawing.utils.getNotDefaults(this._obj.options.icon.options, L.GmxDrawing.utils.defaultStyles.markerStyle.options.icon);
+            if (Object.keys(opt).length) {
+                res.options.icon = opt;
+            }
+        }
+
         return res;
     },
 

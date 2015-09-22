@@ -14,6 +14,7 @@ getFeatures|`getFeatures()`|`<L.GmxDrawing.Feature[]> array`| Получить �
 remove|`remove(<L.GmxDrawing.Feature>)`|`<L.GmxDrawing.Feature>`| Удалить редактируемый объект.
 saveState|`saveState()`|`<State Options>`| Получить состояние редактируемых объектов в формате [FeatureCollection](http://geojson.org/geojson-spec.html#feature-collection-objects).
 loadState|`loadState(<State Options>)`|| Добавить массив редактируемых объектов в формате [FeatureCollection](http://geojson.org/geojson-spec.html#feature-collection-objects).
+extendDefaultStyles|`extendDefaultStyles(<Feature options>)`|| Изменить дефолтные настройки стилей редактируемых объектов.
 
 ### State Options
 
@@ -68,6 +69,11 @@ editable | `<Bool>` | true | Флаг разрещающий редактиро�
 map | `<Bool>` | true | Флаг добавления объекта на карту(При значении `false` объект не добавляется на карту).
 lineStyle | `<L.Path options>` | `{opacity:1, weight:2}` | Стиль отрисовки линий объекта.
 pointStyle | `<Point options>` | `{size:10, opacity:1, weight:2}` | Стиль отрисовки вершин объекта (для `Polygon` и `Rectangle` устанавливается fill = true)
+iconUrl | `<String>` | `` | URL иконки для маркера.
+iconSize | `<Point>` | `null` | [iconSize](http://leafletjs.com/reference.html#icon) для иконки маркера.
+iconAnchor | `<Point>` | `null` | [iconAnchor](http://leafletjs.com/reference.html#icon) для иконки маркера.
+popupAnchor | `<Point>` | `null` | [popupAnchor](http://leafletjs.com/reference.html#icon) для иконки маркера.
+shadowSize | `<Point>` | `null` | [shadowSize](http://leafletjs.com/reference.html#icon) для иконки маркера.
 
 ### Point options
 
@@ -100,6 +106,3 @@ shape | <`square`, `circle`> String | `circle` | Тип отображения �
 | type | `<String>` | Тип события
 | object | `<L.GmxDrawing.Feature>` | Редактируемый объект.
 | mode | `<String>` | Текущий режим (`add` - режим добавления обьекта, `edit` - режим редактирования обьекта, `` - режим не установлен)
-
-
-

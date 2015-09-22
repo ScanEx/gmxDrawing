@@ -131,15 +131,21 @@ L.GmxDrawing = L.Class.extend({
     create: function (type, drawOptions) {
         this._clearCreate(null);
         if (type) {
+            var my = this;
+
             if (type === 'Rectangle') {
                 this._map._initPathRoot();
                 this._map.dragging.disable();
             }
-            var my = this,
-                iconStyle;
-            drawOptions = drawOptions || {};
+            if (!drawOptions) {
+                if (type === 'Point') {
+                    drawOptions = L.GmxDrawing.utils.defaultStyles.markerStyle.options.icon;
+                } else {
+                    drawOptions = L.GmxDrawing.utils.defaultStyles;
+                }
+            }
             if (drawOptions.iconUrl) {
-                iconStyle = {
+                var iconStyle = {
                     iconUrl: drawOptions.iconUrl
                 };
                 delete drawOptions.iconUrl;
@@ -227,6 +233,34 @@ L.GmxDrawing = L.Class.extend({
             this.fire('drawstart', {mode: type});
         }
         this.options.type = type;
+    },
+
+    extendDefaultStyles: function (drawOptions) {
+        var defaultStyles = L.GmxDrawing.utils.defaultStyles;
+        drawOptions = drawOptions || {};
+        if (drawOptions.iconUrl) {
+            var iconStyle = defaultStyles.markerStyle.options.icon;
+            iconStyle.iconUrl = drawOptions.iconUrl;
+            delete drawOptions.iconUrl;
+            if (drawOptions.iconAnchor) {
+                iconStyle.iconAnchor = drawOptions.iconAnchor;
+                delete drawOptions.iconAnchor;
+            }
+            if (drawOptions.iconSize) {
+                iconStyle.iconSize = drawOptions.iconSize;
+                delete drawOptions.iconSize;
+            }
+            if (drawOptions.popupAnchor) {
+                iconStyle.popupAnchor = drawOptions.popupAnchor;
+                delete drawOptions.popupAnchor;
+            }
+            if (drawOptions.shadowSize) {
+                iconStyle.shadowSize = drawOptions.shadowSize;
+                delete drawOptions.shadowSize;
+            }
+        }
+        L.extend(defaultStyles, drawOptions);
+        return this;
     },
 
     getFeatures: function () {
