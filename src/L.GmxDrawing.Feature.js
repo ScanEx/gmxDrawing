@@ -332,7 +332,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         var str = '',
             mapOpt = this._map.options || {},
             type = this.options.type;
-            
+
         if (type === 'Polyline' || type === 'MultiPolyline') {
             str = L.gmxUtil.prettifyDistance(this.getLength(), mapOpt.distanceUnit);
         } else if (type === 'Polygon' || type === 'MultiPolygon' || type === 'Rectangle') {
@@ -484,7 +484,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             this.rings[0].ring._pointDown(ev);
         }
     },
-    
+
     getPopup: function() {
         if (this.options.type === 'Point') {
             return this._obj.getPopup();

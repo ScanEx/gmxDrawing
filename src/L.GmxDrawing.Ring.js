@@ -65,7 +65,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             size: 10,
             weight: 10
         });
-        
+
         this.addLayer(this.fill);
         if (!this.lineType && mode === 'edit') {
             this.lines.addLatLng(latlngs[0]);
@@ -119,7 +119,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     getLength: function (downAttr) {
-        var length = 0;
+        var length = 0,
             latlngs = this.points._latlngs,
             len = latlngs.length;
 
@@ -545,8 +545,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     _mouseClick: function (ev) {
-        var down = L.GmxDrawing.utils.getDownType.call(this, ev, this._map),
-            points = this.points._latlngs;
+        // var down = L.GmxDrawing.utils.getDownType.call(this, ev, this._map),
+            // points = this.points._latlngs;
 
         this.addLatLng(ev.latlng);
         this._parent._parent._clearCreate();
