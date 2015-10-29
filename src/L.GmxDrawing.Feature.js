@@ -186,21 +186,20 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     setOffsetToGeometry: function (dx, dy) {
-        var i, len, j, len1,
-            origin
+        var i, len, j, len1, ring, latlngs,
             mInPixel = 256 / L.gmxUtil.tileSizes[this._map._zoom],
             shiftPixel = new L.Point(mInPixel * (this._dx || dx || 0), -mInPixel * (this._dy || dy || 0));
 
         for (i = 0, len = this.rings.length; i < len; i++) {
-            var it = this.rings[i],
-                ring = it.ring,
-                latlngs = ring.points.getLatLngs();
+            var it = this.rings[i];
+            ring = it.ring;
+            latlngs = ring.points.getLatLngs();
             ring.setLatLngs(this._latlngsAddShift(latlngs, shiftPixel));
 
             if (it.holes && it.holes.length) {
                 for (j = 0, len1 = it.holes.length; j < len1; j++) {
-                    var ring = it.holes[j].ring,
-                        latlngs = ring.points.getLatLngs();
+                    ring = it.holes[j].ring;
+                    latlngs = ring.points.getLatLngs();
                     ring.setLatLngs(this._latlngsAddShift(latlngs, shiftPixel));
                 }
             }
@@ -251,7 +250,6 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     _toGeoJSON: function (withoutShift) {
         var type = this.options.type,
-            closed = (type === 'Polygon' || type === 'Rectangle' || type === 'MultiPolygon'),
             coords;
         if (this.rings && type !== 'Point') {
             coords = this._getCoords(withoutShift);
