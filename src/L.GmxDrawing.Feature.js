@@ -420,7 +420,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         this._fill = L.featureGroup();
 
         if (this.options.editable) {
-            var layers = obj instanceof L.LayerGroup ? obj._layers : [obj];
+            var layers = obj instanceof L.LayerGroup ? obj._layers : {1: obj};
             for (var key in layers) {
                 var it = layers[key],
                     holes = [],
