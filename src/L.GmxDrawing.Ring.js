@@ -188,6 +188,12 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
     },
 
+    setPositionOffset: function (p) {
+        L.DomUtil.setPosition(this.points._container, p);
+        L.DomUtil.setPosition(this.fill._container, p);
+        L.DomUtil.setPosition(this.lines._container, p);
+    },
+
     setLatLngs: function (latlngs) {
         //var start = Date.now();
         if (this.points) {
@@ -213,7 +219,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             return;
         }
         // this.invoke('bringToFront');     // error in IE
-        var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map),
+        var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map, this._parent),
             type = downAttr.type,
             opt = this.options;
 
@@ -293,7 +299,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this._lastPointClickTime = clickTime + 300;
         if (this._moved) { this._moved = false; return; }
 
-        var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map),
+        var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map, this._parent),
             mode = this.mode;
         if (downAttr.type === 'node') {
             var num = downAttr.num;
@@ -366,14 +372,14 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     _startTouchMove: function (ev, drawstop) {
-        var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map);
+        var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map, this._parent);
         if (downAttr.type === 'node') {
             this._parent._disableDrag();
             this.down = downAttr;
             //var num = downAttr.num;
             var my = this;
             var _touchmove = function (ev) {
-                downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
+                downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map, this._parent);
                     if (ev.touches.length === 1) { // Only deal with one finger
                         my._pointMove(downAttr);
                   }
@@ -419,7 +425,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 };
                 L.DomEvent.on(this.points._container, 'touchstart', this.touchstart, this);
                 this.touchstartFill = function (ev) {
-                    var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
+                    var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map, this._parent);
                     if (downAttr.type === 'edge' && my.options.type !== 'Rectangle') {
                         var points = my.points._latlngs;
                         points.splice(downAttr.num, 0, points[downAttr.num]);

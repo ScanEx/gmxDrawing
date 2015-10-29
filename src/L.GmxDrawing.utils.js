@@ -84,7 +84,15 @@ L.GmxDrawing.utils = {
         return res;
     },
 
-    getDownType: function(ev, map) {
+    getShiftLatlng: function (latlng, map, shiftPixel) {
+        if (shiftPixel && map) {
+            var p = map.latLngToLayerPoint(latlng)._add(shiftPixel);
+            latlng = map.layerPointToLatLng(p);
+        }
+        return latlng;
+    },
+
+    getDownType: function(ev, map, feature) {
         var layerPoint = ev.layerPoint,
             ctrlKey = false,
             latlng = ev.latlng;
@@ -120,17 +128,20 @@ L.GmxDrawing.utils = {
             end: true
         };
         if (cursorBounds.contains(points[0])) {
-			return out;
-		}
+            return out;
+        }
         out.num = len - 1;
         out.prev = (len > 1 ? cursorBounds.contains(points[len - 2]) : false);
         if (cursorBounds.contains(prev)) {
-			return out;
-		}
+            return out;
+        }
 
         out = {latlng: latlng};
         for (var i = 0; i < len; i++) {
             var point = points[i];
+            if (feature.shiftPixel) {
+                point = points[i].add(feature.shiftPixel);
+            }
             if (cursorBounds.contains(point)) {
                 return {
                     type: 'node', num: i, end: (i === 0 ? true : false), ctrlKey: ctrlKey, latlng: latlng

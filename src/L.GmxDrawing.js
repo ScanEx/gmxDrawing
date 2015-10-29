@@ -223,10 +223,10 @@ L.GmxDrawing = L.Class.extend({
                         if (drawOptions.pointStyle) { opt.pointStyle = drawOptions.pointStyle; }
                         if (drawOptions.lineStyle) { opt.lineStyle = drawOptions.lineStyle; }
                         if (type === 'Rectangle') {
-                            if (L.Browser.mobile) {
-                                var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
-                                latlng = downAttr.latlng;
-                            }
+                            // if (L.Browser.mobile) {
+                                // var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
+                                // latlng = downAttr.latlng;
+                            // }
                             opt.mode = 'edit';
                             obj = my.add(
                                 L.rectangle(L.latLngBounds(L.latLng(latlng.lat + rectDelta, latlng.lng - rectDelta), latlng))

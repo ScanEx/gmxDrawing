@@ -168,25 +168,93 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         return coords;
     },
 
+    _latlngsAddShift: function (latlngs, shiftPixel) {
+        var arr = [];
+        for (var i = 0, len = latlngs.length; i < len; i++) {
+            arr.push(L.GmxDrawing.utils.getShiftLatlng(latlngs[i], this._map, shiftPixel));
+        }
+        return arr;
+    },
+
+    getPixelOffset: function () {
+        var p = this.shiftPixel;
+        if (!p && this._map) {
+            var mInPixel = 256 / L.gmxUtil.tileSizes[this._map._zoom];
+            p = this.shiftPixel = new L.Point(Math.floor(mInPixel * this._dx), -Math.floor(mInPixel * this._dy));
+        }
+        return p || new L.Point(0, 0);
+    },
+
+    setOffsetToGeometry: function (dx, dy) {
+        var i, len, j, len1,
+            origin
+            mInPixel = 256 / L.gmxUtil.tileSizes[this._map._zoom],
+            shiftPixel = new L.Point(mInPixel * (this._dx || dx || 0), -mInPixel * (this._dy || dy || 0));
+
+        for (i = 0, len = this.rings.length; i < len; i++) {
+            var it = this.rings[i],
+                ring = it.ring,
+                latlngs = ring.points.getLatLngs();
+            ring.setLatLngs(this._latlngsAddShift(latlngs, shiftPixel));
+
+            if (it.holes && it.holes.length) {
+                for (j = 0, len1 = it.holes.length; j < len1; j++) {
+                    var ring = it.holes[j].ring,
+                        latlngs = ring.points.getLatLngs();
+                    ring.setLatLngs(this._latlngsAddShift(latlngs, shiftPixel));
+                }
+            }
+        }
+        this.setPositionOffset();
+        return this;
+    },
+
+    setPositionOffset: function (mercX, mercY) {
+        this._dx = mercX || 0;
+        this._dy = mercY || 0;
+        if (this._map) {
+            this.shiftPixel = null;
+            var p = this.getPixelOffset();
+            for (var i = 0, len = this.rings.length; i < len; i++) {
+                this.rings[i].ring.setPositionOffset(p);
+                for (var j = 0, len1 = this.rings[i].holes.length; j < len1; j++) {
+                    this.rings[i].holes[j].setPositionOffset(p);
+                }
+            }
+        }
+    },
+
+    _getCoords: function (withoutShift) {
+        var type = this.options.type,
+            closed = (type === 'Polygon' || type === 'Rectangle' || type === 'MultiPolygon'),
+            shiftPixel = withoutShift ? null : this.shiftPixel,
+            coords = [];
+        for (var i = 0, len = this.rings.length; i < len; i++) {
+            var it = this.rings[i],
+                arr = [this._latLngsToCoords(it.ring.points.getLatLngs(), closed, shiftPixel)];
+
+            if (it.holes && it.holes.length) {
+                for (var j = 0, len1 = it.holes.length; j < len1; j++) {
+                    arr.push(this._latLngsToCoords(it.holes[j].points.getLatLngs(), closed, shiftPixel));
+                }
+            }
+            coords.push(arr);
+        }
+        if (type === 'Polygon' || type === 'Rectangle') { coords = coords[0]; }
+        if (type === 'Polyline') { coords = coords[0][0]; }
+        return coords;
+    },
+
     toGeoJSON: function () {
+        return this._toGeoJSON(true);
+    },
+
+    _toGeoJSON: function (withoutShift) {
         var type = this.options.type,
             closed = (type === 'Polygon' || type === 'Rectangle' || type === 'MultiPolygon'),
             coords;
         if (this.rings && type !== 'Point') {
-            coords = [];
-            for (var i = 0, len = this.rings.length; i < len; i++) {
-                var it = this.rings[i],
-                    arr = [this._latLngsToCoords(it.ring.points.getLatLngs(), closed)];
-
-                if (it.holes && it.holes.length) {
-                    for (var j = 0, len1 = it.holes.length; j < len1; j++) {
-                        arr.push(this._latLngsToCoords(it.holes[j].points.getLatLngs(), closed));
-                    }
-                }
-                coords.push(arr);
-            }
-            if (type === 'Polygon' || type === 'Rectangle') { coords = coords[0]; }
-            if (type === 'Polyline') { coords = coords[0][0]; }
+            coords = this._getCoords(withoutShift);
         } else {
             var geojson = this._obj.toGeoJSON();
             coords = geojson.geometry.coordinates;
@@ -276,6 +344,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         this._layers = {};
         this._obj = obj;
         this._parent = parent;
+        this._dx = 0;
+        this._dy = 0;
 
         this._initialize(parent, obj);
     },
@@ -369,7 +439,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 this.rings.push({ring: ring, holes: holes});
             }
 
-            if (L.gmxUtil && L.gmxUtil.prettifyDistance) {
+            if (L.gmxUtil && L.gmxUtil.prettifyDistance && !this._showTooltip) {
                 var _gtxt = function (key) {
                     var res = L.gmxLocale ? L.gmxLocale.getText(key) : null;
                     return res || key;
@@ -395,7 +465,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                             }
                             my._parent.showTooltip(ev.layerPoint, str);
                         } else if (type === 'Length') {
-                            var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
+                            var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map, my);
                             var length = ring.getLength(downAttr);
                             str = _gtxt(type) + ': ' + L.gmxUtil.prettifyDistance(length, distanceUnit);
                             my._parent.showTooltip(ev.layerPoint, str);
