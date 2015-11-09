@@ -401,6 +401,9 @@ L.GmxDrawing = L.Class.extend({
 
 L.Map.addInitHook(function () {
     this.gmxDrawing = new L.GmxDrawing(this);
+    if (L.Mixin.ContextMenu) {
+        L.GmxDrawing.PointMarkers.include(L.Mixin.ContextMenu);
+    }
 });
 
 
