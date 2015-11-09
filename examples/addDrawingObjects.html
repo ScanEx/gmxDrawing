@@ -42,7 +42,13 @@
 	<div id="map"></div>
     <div id="infoPanel">
         <span id="info">
-                Add custom editing objects: <b>`polygon`, `polyline`, `rectangle`, `marker`</b>
+                Add custom editing objects: 
+                    <button onclick="addObject('polygon');">polygon</button>
+                    <button onclick="addObject('polyline');">polyline</button>
+                    <button onclick="addObject('rectangle');">rectangle</button>
+                    <button onclick="addObject('multiPolygon');">multiPolygon</button>
+                    <button onclick="addObject('multiPolyline');">multiPolyline</button>
+                    <button onclick="addObject('marker');">marker</button>
         </span>
     </div>
 
@@ -69,41 +75,43 @@
             .on('drag', eventShow)
             .on('dragend', eventShow);
 
-        var multiPolygon = map.gmxDrawing.add(L.multiPolygon([
-            [[[45.0, 30.0], [56.0, 30.0], [56.0, 43.0], [25.0, 43.0], [45.0, 30.0]]],
-            [[[63.0, 28.0], [75.0, 28.0], [75.0, 40.0], [52.0, 40.0], [63.0, 28.0]]]
-        ], {color: '#ff0000'}));
-
-        var multiPolyline = map.gmxDrawing.add(L.multiPolyline([
-            [[75.0, 0.0], [56.0, 5.0], [56.0, 3.0]],
-            [[63.0, 8.0], [75.0, 9.0], [75.0, 10.0], [52.0, 11.0]]
-        ]));
-
-        var drawPolygon = map.gmxDrawing.add(L.polygon(
-            [
-             [ [50.0, 20.0], [61.0, 20.0], [61.0, 33.0], [30.0, 33.0], [50.0, 20.0] ]
-           ]
-         ));
-        drawPolygon.on('optionschange', function (ev) {
-            //console.log('optionschange', arguments);
-        });
-
-        var drawPolyline = map.gmxDrawing.add(L.polyline(
-            [
-             [50.0, 30.0], [64.0, 35.0], [71.5, 53.0], [44.0, 43.0]
-            ]
-         ), {pointStyle:{shape: 'circle'}, lineStyle:{color: '#ff0000'}} );
-
-        var drawRectangle = map.gmxDrawing.add(L.rectangle(
-            [
-             [20.0, 40.0], [54.0, 65.0]
-            ]
-         ), {pointStyle:{shape: 'circle', size: 12}, lineStyle:{fill: true, color: '#00ff00'}} );
-
-        var latlng = new L.LatLng(65.0, 40.0),
-            marker = L.marker(latlng, {draggable: true, title: 'Text example'}),
-            drawPoint = map.gmxDrawing.add(marker, {});
-
+        var myObject = null;
+        var addObject = function (type) {
+            if (myObject) {
+                map.gmxDrawing.remove(myObject);
+            }
+            if (type === 'multiPolygon') {
+                myObject = map.gmxDrawing.add(L.multiPolygon([
+                    [[[45.0, 30.0], [56.0, 30.0], [56.0, 43.0], [25.0, 43.0], [45.0, 30.0]]],
+                    [[[63.0, 28.0], [75.0, 28.0], [75.0, 40.0], [52.0, 40.0], [63.0, 28.0]]]
+                ], {color: '#ff0000'}));
+            } else if (type === 'multiPolyline') {
+                myObject = map.gmxDrawing.add(L.multiPolyline([
+                    [[75.0, 0.0], [56.0, 5.0], [56.0, 3.0]],
+                    [[63.0, 8.0], [75.0, 9.0], [75.0, 10.0], [52.0, 11.0]]
+                ]));
+            } else if (type === 'polygon') {
+                myObject = map.gmxDrawing.add(L.polygon(
+                    [
+                     [ [50.0, 20.0], [61.0, 20.0], [61.0, 33.0], [30.0, 33.0], [50.0, 20.0] ]
+                   ]
+                 ));
+            } else if (type === 'polyline') {
+                myObject = map.gmxDrawing.add(L.polyline(
+                    [
+                     [50.0, 30.0], [64.0, 35.0], [71.5, 53.0], [44.0, 43.0]
+                    ]
+                 ), {pointStyle:{shape: 'circle'}, lineStyle:{color: '#ff0000'}} );
+            } else if (type === 'rectangle') {
+                myObject = map.gmxDrawing.add(L.rectangle(
+                    [
+                     [20.0, 40.0], [54.0, 65.0]
+                    ]
+                 ), {pointStyle:{shape: 'circle', size: 12}, lineStyle:{fill: true, color: '#00ff00'}} );
+            } else if (type === 'marker') {
+                myObject = map.gmxDrawing.add(L.marker(new L.LatLng(65.0, 40.0), {draggable: true, title: 'Text example'}), {});
+            }
+        };
 	</script>
 </body>
 </html>
