@@ -1,7 +1,7 @@
 .leaflet-popup-content textarea {
     outline: none;
     -moz-appearance: none;
-    border: 0px;
+    border: 1px solid white;
 }
 .leaflet-popup-content textarea:hover {
     border: 1px solid #999;
