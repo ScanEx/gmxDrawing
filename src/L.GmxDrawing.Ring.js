@@ -15,7 +15,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     initialize: function (parent, coords, options) {
         options = options || {};
         options.mode = '';
-        this.options = L.extend({}, parent.options, options);
+        this.options = L.extend({}, parent.getStyles(), options);
 
         this._layers = {};
         this._coords = coords;

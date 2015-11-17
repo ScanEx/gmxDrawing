@@ -147,39 +147,46 @@ L.GmxDrawing = L.Class.extend({
     },
 
     _chkDrawOptions: function (type, drawOptions) {
+        var defaultStyles = L.GmxDrawing.utils.defaultStyles,
+            resultStyles = {};
         if (!drawOptions) {
-            if (type === 'Point') {
-                drawOptions = L.GmxDrawing.utils.defaultStyles.markerStyle.options.icon;
-            } else {
-                drawOptions = L.GmxDrawing.utils.defaultStyles;
-            }
+            drawOptions = L.extend({}, defaultStyles);
         }
-        if (drawOptions.iconUrl) {
+        if (type === 'Point') {
+            L.extend(resultStyles, defaultStyles.markerStyle.options.icon, drawOptions);
+        } else {
+            L.extend(resultStyles, drawOptions);
+            resultStyles.lineStyle = L.extend({}, defaultStyles.lineStyle, drawOptions.lineStyle);
+            resultStyles.pointStyle = L.extend({}, defaultStyles.pointStyle, drawOptions.pointStyle);
+            resultStyles.holeStyle = L.extend({}, defaultStyles.holeStyle, drawOptions.holeStyle);
+        }
+
+        if (resultStyles.iconUrl) {
             var iconStyle = {
-                iconUrl: drawOptions.iconUrl
+                iconUrl: resultStyles.iconUrl
             };
-            delete drawOptions.iconUrl;
-            if (drawOptions.iconAnchor) {
-                iconStyle.iconAnchor = drawOptions.iconAnchor;
-                delete drawOptions.iconAnchor;
+            delete resultStyles.iconUrl;
+            if (resultStyles.iconAnchor) {
+                iconStyle.iconAnchor = resultStyles.iconAnchor;
+                delete resultStyles.iconAnchor;
             }
-            if (drawOptions.iconSize) {
-                iconStyle.iconSize = drawOptions.iconSize;
-                delete drawOptions.iconSize;
+            if (resultStyles.iconSize) {
+                iconStyle.iconSize = resultStyles.iconSize;
+                delete resultStyles.iconSize;
             }
-            if (drawOptions.popupAnchor) {
-                iconStyle.popupAnchor = drawOptions.popupAnchor;
-                delete drawOptions.popupAnchor;
+            if (resultStyles.popupAnchor) {
+                iconStyle.popupAnchor = resultStyles.popupAnchor;
+                delete resultStyles.popupAnchor;
             }
-            if (drawOptions.shadowSize) {
-                iconStyle.shadowSize = drawOptions.shadowSize;
-                delete drawOptions.shadowSize;
+            if (resultStyles.shadowSize) {
+                iconStyle.shadowSize = resultStyles.shadowSize;
+                delete resultStyles.shadowSize;
             }
-            drawOptions.markerStyle = {
+            resultStyles.markerStyle = {
                 iconStyle: iconStyle
             };
         }
-        return drawOptions;
+        return resultStyles;
     },
 
     create: function (type, options) {
@@ -281,6 +288,18 @@ L.GmxDrawing = L.Class.extend({
                 iconStyle.shadowSize = drawOptions.shadowSize;
                 delete drawOptions.shadowSize;
             }
+        }
+        if (drawOptions.lineStyle) {
+            L.extend(defaultStyles.lineStyle, drawOptions.lineStyle);
+            delete drawOptions.lineStyle;
+        }
+        if (drawOptions.pointStyle) {
+            L.extend(defaultStyles.pointStyle, drawOptions.pointStyle);
+            delete drawOptions.pointStyle;
+        }
+        if (drawOptions.holeStyle) {
+            L.extend(defaultStyles.holeStyle, drawOptions.holeStyle);
+            delete drawOptions.holeStyle;
         }
         L.extend(defaultStyles, drawOptions);
         return this;

@@ -1,8 +1,8 @@
 # Документация плагина gmxDrawing
 
-## L.Map.gmxDrawing - плагин для рисования линий, полигонов, прямоугольников и маркеров.
+## L.Map.gmxDrawing - плагин для рисования линий, полигонов, прямоугольников и точек.
 
-Плагин предоставляет интерфейс управления для рисования линий, полигонов, прямоугольников и маркеров. Доступен через map.gmxDrawing
+Плагин предоставляет интерфейс управления для рисования линий, полигонов, прямоугольников и точек. Доступен через map.gmxDrawing
 ### Методы
 
 Метод|Синтаксис|Возвращаемое значение|Описание
@@ -42,7 +42,7 @@ featureCollection | `<FeatureCollection>` | [] | Массив редактиру
 
 ## Класс L.GmxDrawing.Feature
 
-Класс `L.GmxDrawing.Feature` предоставляет интерфейс для рисования линий, полигонов, прямоугольников и маркеров.
+Класс `L.GmxDrawing.Feature` предоставляет интерфейс для рисования линий, полигонов, прямоугольников и точек.
 Расширяет [L.LayerGroup](http://leafletjs.com/reference.html#layergroup).
 
 ### Creation
@@ -59,21 +59,23 @@ enableEdit|`enableEdit()`|`<L.GmxDrawing.Feature>`| Разрешить реда�
 disableEdit|`disableEdit()`|`<L.GmxDrawing.Feature>`| Запретить редактирование объекта.
 toGeoJSON|`toGeoJSON()`|[Feature Object](http://geojson.org/geojson-spec.html#feature-objects)|Получить GeoJSON по объекту.
 setOptions|`setOptions(<`[Feature Options](#feature-options)`>)`||Установить опции объекта.
-getType|`getType()`|`<String>`|Получить тип объекта. Возвращаемые типы: `'Rectangle', 'Polygon', 'Polyline', 'MultiPolygon', 'MultiPolyline', 'Point'`
+getType|`getType()`|`<String>`|Получить тип объекта. Возвращаемые типы: `Rectangle`, `Polygon`, `Polyline`, `MultiPolygon`, `MultiPolyline`, `Point`
+getStyles|`getStyles()`|`[Feature Options](#feature-options)`|Получить текущий стиль объекта.
 
 ### Feature Options
 
 Опция|Тип|По умолчанию|Описание
 ------|------|:---------:|-----------
+type|`<String>`| '' |Тип объекта. Возвращаемые типы: `Rectangle`, `Polygon`, `Polyline`, `MultiPolygon`, `MultiPolyline`, `Point`
 editable | `<Bool>` | true | Флаг разрещающий редактирование объекта(При значении `false` объект отображается не редактируемым).
 map | `<Bool>` | true | Флаг добавления объекта на карту(При значении `false` объект не добавляется на карту).
-lineStyle | `<L.Path options>` | `{opacity:1, weight:2}` | Стиль отрисовки линий объекта.
-pointStyle | `<Point options>` | `{size:10, opacity:1, weight:2}` | Стиль отрисовки вершин объекта (для `Polygon` и `Rectangle` устанавливается fill = true)
-iconUrl | `<String>` | `` | URL иконки для маркера.
-iconSize | `<Point>` | `null` | [iconSize](http://leafletjs.com/reference.html#icon) для иконки маркера.
-iconAnchor | `<Point>` | `null` | [iconAnchor](http://leafletjs.com/reference.html#icon) для иконки маркера.
-popupAnchor | `<Point>` | `null` | [popupAnchor](http://leafletjs.com/reference.html#icon) для иконки маркера.
-shadowSize | `<Point>` | `null` | [shadowSize](http://leafletjs.com/reference.html#icon) для иконки маркера.
+lineStyle | `<L.Path options>` | `{opacity:1, weight:2}` | Стиль отрисовки линий объекта. Применяется для всех объектов кроме типа `Point`.
+pointStyle | `<Point options>` | `{size:10, opacity:1, weight:2}` | Стиль отрисовки вершин объекта. Применяется для всех объектов кроме типа `Point`. (для `Polygon` и `Rectangle` устанавливается fill = true)
+iconUrl | `<String>` | `` | URL иконки. Все остальные опции применяются только для `Point`.
+iconSize | `<Point>` | `null` | [iconSize](http://leafletjs.com/reference.html#icon) для иконки.
+iconAnchor | `<Point>` | `null` | [iconAnchor](http://leafletjs.com/reference.html#icon) для иконки.
+popupAnchor | `<Point>` | `null` | [popupAnchor](http://leafletjs.com/reference.html#icon) для иконки.
+shadowSize | `<Point>` | `null` | [shadowSize](http://leafletjs.com/reference.html#icon) для иконки.
 
 ### Point options
 

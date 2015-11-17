@@ -95,6 +95,16 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         }
     },
 
+    getStyles: function () {
+        var resultStyles = L.extend({}, this._drawOptions);
+        delete resultStyles.holeStyle;
+        if (resultStyles.type === 'Point') {
+            L.extend(resultStyles, resultStyles.markerStyle.iconStyle);
+            delete resultStyles.markerStyle;
+        }
+        return resultStyles;
+    },
+
     setOptions: function (options) {
         L.setOptions(this, options);
         if (options.lineStyle) {
@@ -337,6 +347,21 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     initialize: function (parent, obj, options) {
         options = options || {};
         options.mode = '';
+        this._drawOptions = L.extend({}, options);
+        var type = options.type;
+        if (type === 'Point') {
+            delete options.pointStyle;
+            delete options.lineStyle;
+        } else {
+            delete options.iconUrl;
+            delete options.iconAnchor;
+            delete options.iconSize;
+            delete options.popupAnchor;
+            delete options.shadowSize;
+            delete options.markerStyle;
+        }
+        delete options.holeStyle;
+
         L.setOptions(this, options);
 
         this._layers = {};
