@@ -60,7 +60,7 @@ disableEdit|`disableEdit()`|`<L.GmxDrawing.Feature>`| Запретить ред�
 toGeoJSON|`toGeoJSON()`|[Feature Object](http://geojson.org/geojson-spec.html#feature-objects)|Получить GeoJSON по объекту.
 setOptions|`setOptions(<`[Feature Options](#feature-options)`>)`||Установить опции объекта.
 getType|`getType()`|`<String>`|Получить тип объекта. Возвращаемые типы: `Rectangle`, `Polygon`, `Polyline`, `MultiPolygon`, `MultiPolyline`, `Point`
-getStyles|`getStyles()`|`[Feature Options](#feature-options)`|Получить текущий стиль объекта.
+getStyle|`getStyle()`|`[Feature Options](#feature-options)`|Получить текущий стиль объекта.
 
 ### Feature Options
 

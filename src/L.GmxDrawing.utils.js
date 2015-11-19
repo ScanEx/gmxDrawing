@@ -107,7 +107,6 @@ L.GmxDrawing.utils = {
         }
         var out = {type: '', latlng: latlng, ctrlKey: ctrlKey},
             ring = this.points ? this : ev.ring,
-            //points = ring.points._parts[0] || [],
             points = ring.points._originalPoints || [],
             len = points.length;
 
@@ -120,35 +119,28 @@ L.GmxDrawing.utils = {
             L.point(layerPoint.x - size, layerPoint.y - size),
             L.point(layerPoint.x + size, layerPoint.y + size)
             ),
-            prev = points[len - 1];
-        out = {
-            type: 'node',
-            latlng: latlng, ctrlKey: ctrlKey,
-            num: 0,
-            end: true
-        };
-        if (cursorBounds.contains(points[0])) {
-            return out;
-        }
-        out.num = len - 1;
-        out.prev = (len > 1 ? cursorBounds.contains(points[len - 2]) : false);
-        if (cursorBounds.contains(prev)) {
-            return out;
-        }
+            prev = points[len - 1],
+            lastIndex = len - (ring.mode === 'add' ? 2 : 1);
 
-        out = {latlng: latlng};
+        out = {
+            layerPoint: ev.layerPoint,
+            ctrlKey: ctrlKey,
+            latlng: latlng
+        };
         for (var i = 0; i < len; i++) {
             var point = points[i];
-            if (feature.shiftPixel) {
-                point = points[i].add(feature.shiftPixel);
-            }
+            if (feature.shiftPixel) { point = points[i].add(feature.shiftPixel); }
             if (cursorBounds.contains(point)) {
-                return {
-                    type: 'node', num: i, end: (i === 0 ? true : false), ctrlKey: ctrlKey, latlng: latlng
-                };
+                out.type = 'node';
+                out.num = i;
+                out.end = (i === 0 || i === lastIndex ? true : false);
+                break;
             }
             var dist = L.LineUtil.pointToSegmentDistance(layerPoint, prev, point);
-            if (dist < size) { out = {type: 'edge', num: (i === 0 ? len : i), ctrlKey: ctrlKey, latlng: latlng}; }
+            if (dist < size) {
+                out.type = 'edge';
+                out.num = (i === 0 ? len : i);
+            }
             prev = point;
         }
         return out;

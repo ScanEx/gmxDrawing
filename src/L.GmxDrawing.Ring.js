@@ -15,7 +15,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     initialize: function (parent, coords, options) {
         options = options || {};
         options.mode = '';
-        this.options = L.extend({}, parent.getStyles(), options);
+        this.options = L.extend({}, parent.getStyle(), options);
 
         this._layers = {};
         this._coords = coords;
@@ -182,7 +182,12 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     addLatLng: function (point) {
         this._legLength = [];
         if (this.points) {
-            this._setPoint(point, this.points._latlngs.length, 'node');
+            var points = this.points._latlngs,
+                len = points.length,
+                lastPoint = points[len - 2];
+            if (!lastPoint || !lastPoint.equals(point)) {
+                this._setPoint(point, len, 'node');
+            }
         } else if ('addLatLng' in this._obj) {
             this._obj.addLatLng(point);
         }
@@ -195,7 +200,6 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     setLatLngs: function (latlngs) {
-        //var start = Date.now();
         if (this.points) {
             var points = this.points;
             this.fill.setLatLngs(latlngs);
@@ -209,14 +213,18 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             this._obj.setLatLngs(latlngs);
         }
         this._fireEvent('edit');
-        //console.log('setLatLngs ', latlngs.length, 'time:', Date.now() - start);
     },
 
     // edit mode
     _pointDown: function (ev) {
-        if (ev.originalEvent && ev.originalEvent.ctrlKey) {
-            this._onDragStart(ev);
-            return;
+        if (ev.originalEvent) {
+            var originalEvent = ev.originalEvent;
+            if (originalEvent.ctrlKey) {
+                this._onDragStart(ev);
+                return;
+            } else if (originalEvent.which !== 1 && originalEvent.button !== 1) {
+                return;
+            }
         }
         // this.invoke('bringToFront');     // error in IE
         var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map, this._parent),
@@ -246,6 +254,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             if (!this.lineType) {
                 this._parent.showFill();
             }
+            this._clearLineAddPoint();
             this._moved = true;
             this._setPoint(ev.latlng, this.down.num, this.down.type);
             if ('_showTooltip' in this._parent) {
@@ -291,47 +300,55 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
     },
 
+    _clearLineAddPoint: function (latlng) {
+        if (this._lineAddPointID) { clearTimeout(this._lineAddPointID); }
+        this._lineAddPointID = null;
+    },
+
+    _pointDblClick: function (ev) {
+        this._clearLineAddPoint();
+        if (!this._lastAddTime || Date.now() > this._lastAddTime) {
+            var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map, this._parent);
+            this._removePoint(downAttr.num);
+        }
+    },
+
     _pointClick: function (ev) {
         if (ev.originalEvent && ev.originalEvent.ctrlKey) { return; }
         var clickTime = Date.now(),
             prevClickTime = this._lastPointClickTime;
 
         this._lastPointClickTime = clickTime + 300;
-        if (this._moved) { this._moved = false; return; }
+        if (this._moved || clickTime < prevClickTime) { this._moved = false; return; }
 
         var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map, this._parent),
             mode = this.mode;
         if (downAttr.type === 'node') {
             var num = downAttr.num;
-            if (clickTime < prevClickTime) {  // this is dblclick on Point
-                var len = this.points._latlngs.length;
-                if (len > 2 || (len > 1 && this.lineType)) {
-                    this._pointUp();
-                    this.setEditMode();
-                    if (downAttr.prev) {
-                        this._removePoint(num - 1);
-                        num--;
-                    }
-                    this._removePoint(num);
-                } else {
-                    this.remove();
-                }
-            } else if (downAttr.end) {  // this is click on first or last Point
+            if (downAttr.end) {  // this is click on first or last Point
                 if (mode === 'add') {
                     this._pointUp();
                     this.setEditMode();
                     if (this.lineType && num === 0) {
                         this.options.type = 'Polygon';
                         this.lineType = false;
+                        this._removePoint(this.points._latlngs.length - 1);
                     }
                     this._fireEvent('drawstop');
                     this._removePoint(num);
                 } else if (this.lineType) {
-                    if (num === 0) { this.points._latlngs.reverse(); }
-                    this.points.addLatLng(downAttr.latlng);
-                    this.setAddMode();
-                    this._fireEvent('drawstop');
+                    var _this = this,
+                        setLineAddPoint = function () {
+                            _this._clearLineAddPoint();
+                            if (num === 0) { _this.points._latlngs.reverse(); }
+                            _this.points.addLatLng(downAttr.latlng);
+                            _this.setAddMode();
+                            _this._fireEvent('drawstop');
+                        };
+                    this._lineAddPointID = setTimeout(setLineAddPoint, 250);
                 }
+            } else if (mode === 'add') { // this is add pont
+                this.addLatLng(ev.latlng);
             }
         }
     },
@@ -414,6 +431,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         if (flag) {
             this.points
                 .on('dblclick click', stop, this)
+                .on('dblclick', this._pointDblClick, this)
                 .on('click', this._pointClick, this);
             if (L.Browser.mobile) {
                 if (this._EditOpacity) {
@@ -447,6 +465,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             this._pointUp();
             this.points
                 .off('dblclick click', stop, this)
+                .off('dblclick', this._pointDblClick, this)
                 .off('click', this._pointClick, this);
             if (!L.Browser.mobile) {
                 this.points
@@ -464,44 +483,23 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         var stop = L.DomEvent.stopPropagation;
         if (flag) {
             this._parent._enableDrag();
-            if (L.Browser.mobile) {
-                this._EditOpacity = this.points.options.fillOpacity;
-                this._parent._setPointsStyle({fillOpacity: 0.5});
-                this._map
-                    .on('dblclick', stop)
-                    .on('click', this._mouseClick, this)
-                    .on('mousemove', this._moseMove, this);
-                this.points
-                    .on('dblclick click', stop, this)
-                    .on('click', this._mouseClick, this);
-            } else {
-                this._map
-                    .on('dblclick click', stop)
-                    .on('click', this._mouseClick, this)
-                    .on('mousemove', this._moseMove, this);
-                this.points
-                    .on('click', this._pointClick, this);
-            }
+            this._map
+                .on('dblclick', stop)
+                .on('mousedown', this._mouseDown, this)
+                .on('mouseup', this._mouseUp, this)
+                .on('mousemove', this._moseMove, this);
+            this.points
+                .on('click', this._pointClick, this);
             this._fireEvent('addmode');
             if (!this.lineType) { this.lines.setStyle({fill: true}); }
         } else {
             if (this._map) {
-                if (L.Browser.mobile) {
-                        this._map
-                            .off('dblclick click', stop)
-                            .off('click', this._mouseClick, this)
-                            .off('mousemove', this._moseMove, this);
-                        this.points
-                            .off('dblclick click', stop, this)
-                            .off('click', this._mouseClick, this);
-                } else {
-                    this._map
-                        .off('dblclick', stop)
-                        .off('click', this._mouseClick, this)
-                        .off('mousemove', this._moseMove, this);
-                    this.points
-                        .off('click', this._pointClick, this);
-                }
+                this._map
+                    .off('dblclick', stop)
+                    .off('mouseup', this._mouseUp, this)
+                    .off('mousemove', this._moseMove, this);
+                this.points
+                    .off('click', this._pointClick, this);
             }
             var lineStyle = this.options.lineStyle || {};
             if (!this.lineType && !lineStyle.fill) {
@@ -550,11 +548,16 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
     },
 
-    _mouseClick: function (ev) {
-        // var down = L.GmxDrawing.utils.getDownType.call(this, ev, this._map),
-            // points = this.points._latlngs;
+    _mouseDown: function (ev) {
+        this._lastMouseDownTime = Date.now() + 200;
+    },
 
-        this.addLatLng(ev.latlng);
-        this._parent._parent._clearCreate();
+    _mouseUp: function (ev) {
+        var timeStamp = Date.now();
+        if (timeStamp < this._lastMouseDownTime) {
+            this._lastAddTime = timeStamp + 1000;
+            this.addLatLng(ev.latlng);
+            this._parent._parent._clearCreate();
+        }
     }
 });

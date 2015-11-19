@@ -95,7 +95,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         }
     },
 
-    getStyles: function () {
+    getStyle: function () {
         var resultStyles = L.extend({}, this._drawOptions);
         delete resultStyles.holeStyle;
         if (resultStyles.type === 'Point') {
