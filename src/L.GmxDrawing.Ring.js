@@ -300,7 +300,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
     },
 
-    _clearLineAddPoint: function (latlng) {
+    _clearLineAddPoint: function () {
         if (this._lineAddPointID) { clearTimeout(this._lineAddPointID); }
         this._lineAddPointID = null;
     },
@@ -548,7 +548,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
     },
 
-    _mouseDown: function (ev) {
+    _mouseDown: function () {
         this._lastMouseDownTime = Date.now() + 200;
     },
 
