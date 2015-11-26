@@ -217,6 +217,10 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     // edit mode
     _pointDown: function (ev) {
+        if (L.Browser.ie) {
+            this._map.dragging._draggable._onUp(); // error in IE
+        }
+        this._parent._disableDrag();
         if (ev.originalEvent) {
             var originalEvent = ev.originalEvent;
             if (originalEvent.ctrlKey) {
@@ -226,7 +230,6 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 return;
             }
         }
-        // this.invoke('bringToFront');     // error in IE
         var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map, this._parent),
             type = downAttr.type,
             opt = this.options;
@@ -245,8 +248,6 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this._map
             .on('mousemove', this._pointMove, this)
             .on('mouseup', this._pointUp, this);
-
-        this._parent._disableDrag();
     },
 
     _pointMove: function (ev) {
