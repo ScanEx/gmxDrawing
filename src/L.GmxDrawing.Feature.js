@@ -23,18 +23,12 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             }, 0);
         }
         this._fireEvent('addtomap');
-        //this.setEditMode();
     },
 
     onRemove: function (map) {
-        if (this.points) {
-            this._pointUp();
-            this.removeAddMode();
-            this.removeEditMode();
-
-            if ('hideTooltip' in this) { this.hideTooltip(); }
-        }
+        if ('hideTooltip' in this) { this.hideTooltip(); }
         L.LayerGroup.prototype.onRemove.call(this, map);
+
         if (this.options.type === 'Point') {
             map.removeLayer(this._obj);
         }
@@ -77,6 +71,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             this.rings = [];
         }
         if (this.rings.length < 1) {
+            if (this._originalStyle) {
+                this._obj.setStyle(this._originalStyle);
+            }
             this._parent.remove(this);
         }
         return this;
@@ -260,20 +257,21 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     _toGeoJSON: function (withoutShift) {
         var type = this.options.type,
+            properties = this.getOptions(),
             coords;
-        if (this.rings && type !== 'Point') {
-            coords = this._getCoords(withoutShift);
-        } else {
-            var geojson = this._obj.toGeoJSON();
-            coords = geojson.geometry.coordinates;
-        }
 
-        if (type === 'Rectangle') { type = 'Polygon'; }
-        else if (type === 'Polyline') { type = 'LineString'; }
-        else if (type === 'MultiPolyline') { type = 'MultiLineString'; }
-
-        var properties = this.getOptions();
         delete properties.mode;
+
+        if (!this.options.editable || type === 'Point') {
+            var geojson = this._obj.toGeoJSON();
+            geojson.properties = properties;
+            return geojson;
+        } else if (this.rings) {
+            coords = this._getCoords(withoutShift);
+            if (type === 'Rectangle') { type = 'Polygon'; }
+            else if (type === 'Polyline') { type = 'LineString'; }
+            else if (type === 'MultiPolyline') { type = 'MultiLineString'; }
+        }
 
         return L.GeoJSON.getFeature({
             feature: {
@@ -376,47 +374,57 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     enableEdit: function() {
         this.options.mode = 'edit';
         var type = this.options.type;
-        if (type !== 'Point' && type.indexOf('Multi') === -1) {
+        if (type !== 'Point') {
+            var geojson = L.geoJson(this.toGeoJSON());
+            for (var i = 0, len = this.rings.length; i < len; i++) {
+                var it = this.rings[i];
+                it.ring.setEditMode();
+                it.ring.options.editable = this.options.editable;
+                for (var j = 0, len1 = it.holes.length; j < len1; j++) {
+                    var hole = it.holes[j];
+                    hole.setEditMode();
+                    hole.options.editable = this.options.editable;
+                }
+            }
             this.options.editable = true;
-            this._initialize(this._parent, this._obj);
+            this._initialize(this._parent, geojson);
         }
-        this.setEditMode();
         return this;
     },
 
     disableEdit: function() {
         var type = this.options.type;
-        if (type !== 'Point' && type.indexOf('Multi') === -1) {
-            this.removeEditMode();
+        if (type !== 'Point') {
+            var geojson = L.geoJson(this.toGeoJSON());
+            for (var i = 0, len = this.rings.length; i < len; i++) {
+                var it = this.rings[i];
+                it.ring.removeEditMode();
+                it.ring.options.editable = false;
+                for (var j = 0, len1 = it.holes.length; j < len1; j++) {
+                    var hole = it.holes[j];
+                    hole.removeEditMode();
+                    hole.options.editable = false;
+                }
+            }
+            this._obj = geojson;
             this.options.editable = false;
-            this._obj.setLatLngs(this.getLatLngs());
-            this._initialize(this._parent, this._obj);
+            this._initialize(this._parent, geojson);
         }
         return this;
     },
 
     getArea: function () {
         var out = 0;
-        if (L.gmxUtil.getArea) {
-            for (var i = 0, len = this.rings.length; i < len; i++) {
-                var it = this.rings[i];
-                out += L.gmxUtil.getArea(it.ring.points._latlngs);
-                for (var j = 0, len1 = it.holes.length; j < len1; j++) {
-                    out -= L.gmxUtil.getArea(it.holes[j].points._latlngs);
-                }
-            }
+        if (L.gmxUtil.geoJSONGetArea) {
+            out = L.gmxUtil.geoJSONGetArea(this.toGeoJSON());
         }
         return out;
     },
 
     getLength: function () {
         var out = 0;
-        for (var i = 0, len = this.rings.length; i < len; i++) {
-            var it = this.rings[i];
-            out += it.ring.getLength();
-            for (var j = 0, len1 = it.holes.length; j < len1; j++) {
-                out += it.holes[j].getLength();
-            }
+        if (L.gmxUtil.geoJSONGetLength) {
+            out = L.gmxUtil.geoJSONGetLength(this.toGeoJSON());
         }
         return out;
     },

@@ -68,7 +68,19 @@ L.GmxDrawing = L.Class.extend({
             var layers = obj.getLayers();
             if (layers) {
                 for (var i = 0, len = layers.length; i < len; i++) {
-                    arr.push(this.add(layers[i], options));
+                    var layer = layers[i],
+                        _originalStyle = null;
+                    if (options.lineStyle) {
+                        _originalStyle = {};
+                        for (var key in options.lineStyle) {
+                            _originalStyle[key] = layer.options[key];
+                        }
+                        
+                        layer.setStyle(options.lineStyle);
+                    }
+                    var f = this.add(layer, options);
+                    f._originalStyle = _originalStyle;
+                    arr.push(f);
                 }
             }
         }
