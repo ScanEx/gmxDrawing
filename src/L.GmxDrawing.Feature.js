@@ -378,12 +378,12 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             var geojson = L.geoJson(this.toGeoJSON());
             for (var i = 0, len = this.rings.length; i < len; i++) {
                 var it = this.rings[i];
-                it.ring.setEditMode();
                 it.ring.options.editable = this.options.editable;
+                it.ring.setEditMode();
                 for (var j = 0, len1 = it.holes.length; j < len1; j++) {
                     var hole = it.holes[j];
-                    hole.setEditMode();
                     hole.options.editable = this.options.editable;
+                    hole.setEditMode();
                 }
             }
             this.options.editable = true;
@@ -457,12 +457,12 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             for (var key in layers) {
                 var it = layers[key],
                     holes = [],
-                    ring = new L.GmxDrawing.Ring(this, it._latlngs, {ring: true});
+                    ring = new L.GmxDrawing.Ring(this, it._latlngs, {ring: true, editable: this.options.editable});
 
                 this.addLayer(ring);
                 if (it._holes) {
                     for (var j = 0, len1 = it._holes.length; j < len1; j++) {
-                        var hole = new L.GmxDrawing.Ring(this, it._holes[j], {hole: true});
+                        var hole = new L.GmxDrawing.Ring(this, it._holes[j], {hole: true, editable: this.options.editable});
                         this.addLayer(hole);
                         holes.push(hole);
                     }
