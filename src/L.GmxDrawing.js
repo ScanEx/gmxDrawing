@@ -70,10 +70,10 @@ L.GmxDrawing = L.Class.extend({
                 for (var i = 0, len = layers.length; i < len; i++) {
                     var layer = layers[i],
                         _originalStyle = null;
-                    if (options && options.lineStyle) {
+                    if (layer.setStyle && options && options.lineStyle) {
                         _originalStyle = {};
                         for (var key in options.lineStyle) {
-                            _originalStyle[key] = layer.options[key];
+                            _originalStyle[key] = options.lineStyle[key];
                         }
                         
                         layer.setStyle(options.lineStyle);
