@@ -80,7 +80,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     _fireEvent: function (name) {
-// console.log('_fireEvent', name);
+        //console.log('_fireEvent', name);
         if (name === 'removefrommap' && this.rings.length > 1) {
             return;
         }
@@ -237,8 +237,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             coords = [];
         for (var i = 0, len = this.rings.length; i < len; i++) {
             var it = this.rings[i],
-                arr = [this._latLngsToCoords(it.ring.points.getLatLngs(), closed, shiftPixel)];
+                arr = this._latLngsToCoords(it.ring.points.getLatLngs(), closed, shiftPixel);
 
+            if (closed) { arr = [arr]; }
             if (it.holes && it.holes.length) {
                 for (var j = 0, len1 = it.holes.length; j < len1; j++) {
                     arr.push(this._latLngsToCoords(it.holes[j].points.getLatLngs(), closed, shiftPixel));
@@ -246,8 +247,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             }
             coords.push(arr);
         }
-        if (type === 'Polygon' || type === 'Rectangle') { coords = coords[0]; }
-        if (type === 'Polyline') { coords = coords[0][0]; }
+        if (type === 'Polyline' || (closed && type !== 'MultiPolygon')) { coords = coords[0]; }
         return coords;
     },
 
@@ -263,7 +263,11 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         delete properties.mode;
 
         if (!this.options.editable || type === 'Point') {
-            var geojson = this._obj.toGeoJSON();
+            var obj = this._obj;
+            if (obj instanceof L.GeoJSON) {
+                obj = L.GmxDrawing.utils._getLastObject(obj).getLayers()[0];
+            }
+            var geojson = obj.toGeoJSON();
             geojson.properties = properties;
             return geojson;
         } else if (this.rings) {
@@ -335,6 +339,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 bounds.extend(latLng);
             }, this);
             return bounds;
+        } else if (layer instanceof L.Marker) {
+            latLng = layer.getLatLng();
         } else {
             latLng = layer.getBounds();
         }
@@ -375,7 +381,6 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         this.options.mode = 'edit';
         var type = this.options.type;
         if (type !== 'Point') {
-            var geojson = L.geoJson(this.toGeoJSON());
             for (var i = 0, len = this.rings.length; i < len; i++) {
                 var it = this.rings[i];
                 it.ring.options.editable = this.options.editable;
@@ -386,6 +391,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                     hole.setEditMode();
                 }
             }
+            var geojson = L.geoJson(this.toGeoJSON());
             this.options.editable = true;
             this._initialize(this._parent, geojson);
         }
@@ -395,7 +401,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     disableEdit: function() {
         var type = this.options.type;
         if (type !== 'Point') {
-            var geojson = L.geoJson(this.toGeoJSON());
+            var geojson = L.geoJson(this.toGeoJSON().geometry, this._originalStyle);
             for (var i = 0, len = this.rings.length; i < len; i++) {
                 var it = this.rings[i];
                 it.ring.removeEditMode();
@@ -408,7 +414,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             }
             this._obj = geojson;
             this.options.editable = false;
-            this._initialize(this._parent, geojson);
+            this._initialize(this._parent, this._obj);
         }
         return this;
     },
@@ -448,14 +454,13 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     _initialize: function (parent, obj) {
         this.clearLayers();
         this.rings = [];
-
         this.mode = '';
         this._fill = L.featureGroup();
 
         if (this.options.editable) {
-            var layers = obj instanceof L.LayerGroup ? obj._layers : {1: obj};
-            for (var key in layers) {
-                var it = layers[key],
+            var arr = obj.getLayers ? L.GmxDrawing.utils._getLastObject(obj).getLayers() : [obj];
+            for (var i = 0, len = arr.length; i < len; i++) {
+                var it = arr[i],
                     holes = [],
                     ring = new L.GmxDrawing.Ring(this, it._latlngs, {ring: true, editable: this.options.editable});
 

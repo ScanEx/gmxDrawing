@@ -144,5 +144,13 @@ L.GmxDrawing.utils = {
             prev = point;
         }
         return out;
+    },
+
+    _getLastObject: function (obj) {
+        if (obj.getLayers) {
+            var layer = obj.getLayers().shift();
+            return layer.getLayers ? this._getLastObject(layer) : obj;
+        }
+        return obj;
     }
 };

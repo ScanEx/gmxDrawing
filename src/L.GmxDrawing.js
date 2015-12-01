@@ -98,9 +98,9 @@ L.GmxDrawing = L.Class.extend({
                 if (obj.geometry)     { calcOptions.type = obj.geometry.type; }
                 else if (obj instanceof L.Rectangle)     { calcOptions.type = 'Rectangle'; }
                 else if (obj instanceof L.Polygon)  { calcOptions.type = 'Polygon'; }
-                else if (obj instanceof L.MultiPolygon)  { calcOptions.type = 'MultiPolygon'; calcOptions.editable = true; }
+                else if (obj instanceof L.MultiPolygon)  { calcOptions.type = 'MultiPolygon'; }
                 else if (obj instanceof L.Polyline) { calcOptions.type = 'Polyline'; }
-                else if (obj instanceof L.MultiPolyline) { calcOptions.type = 'MultiPolyline'; calcOptions.editable = true; }
+                else if (obj instanceof L.MultiPolyline) { calcOptions.type = 'MultiPolyline'; }
                 else if (obj instanceof L.Marker) {
                     calcOptions.type = 'Point'; calcOptions.editable = false;
                     obj.options.draggable = true;
