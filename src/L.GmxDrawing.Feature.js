@@ -87,7 +87,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         var event = {mode: this.mode || '', object: this};
         this.fire(name, event);
         this._parent.fire(name, event);
-        if (name === 'drawstop') {
+        if (name === 'drawstop' && this._map) {
             L.DomUtil.removeClass(this._map._mapPane, 'leaflet-clickable');
         }
     },
