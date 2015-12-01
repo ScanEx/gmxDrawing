@@ -70,17 +70,22 @@ L.GmxDrawing = L.Class.extend({
                 for (var i = 0, len = layers.length; i < len; i++) {
                     var layer = layers[i],
                         _originalStyle = null;
-                    if (layer.setStyle && options && options.lineStyle) {
-                        _originalStyle = {};
-                        for (var key in options.lineStyle) {
-                            _originalStyle[key] = options.lineStyle[key];
-                        }
-                        
-                        layer.setStyle(options.lineStyle);
+
+                    if (layer.feature.geometry.type !== 'GeometryCollection') {
+                        layer = L.layerGroup([layer]);
                     }
-                    var f = this.add(layer, options);
-                    f._originalStyle = _originalStyle;
-                    arr.push(f);
+                    layer.eachLayer(function (it) {
+                        if (it.setStyle && options && options.lineStyle) {
+                            _originalStyle = {};
+                            for (var key in options.lineStyle) {
+                                _originalStyle[key] = options.lineStyle[key];
+                            }
+                            it.setStyle(options.lineStyle);
+                        }
+                        var f = this.add(it, options);
+                        f._originalStyle = _originalStyle;
+                        arr.push(f);
+                    }, this);
                 }
             }
         }
@@ -343,6 +348,9 @@ L.GmxDrawing = L.Class.extend({
                         if (icon.iconUrl) { options.icon = L.icon(icon); }
                     }
                     layer = L.marker(layer.getLatLng(), options);
+                }
+                if (layer.setStyle && options && options.lineStyle) {
+                    layer.setStyle(options.lineStyle);
                 }
                 _this.add(layer, options);
             }
