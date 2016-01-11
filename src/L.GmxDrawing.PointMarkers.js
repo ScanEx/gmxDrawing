@@ -12,6 +12,22 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
         weight: 2
     },
 
+    getPathLatLngs: function () {
+        var out = [],
+            size = this.options.size,
+            points = this._parts[0],
+            prev;
+
+        for (var i = 0, len = points.length, p; i < len; i++) {
+            p = points[i];
+            if (i === 0 || Math.abs(prev.x - p.x) > size || Math.abs(prev.y - p.y) > size) {
+                out.push(this._latlngs[i]);
+                prev = p;
+            }
+        }
+        return out;
+    },
+
     _getPathPartStr: function (points) {
         var round = L.Path.VML,
             size = this.options.size / 2,

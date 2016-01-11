@@ -4,6 +4,20 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
     includes: L.Mixin.Events,
 
+    simplify: function () {
+        var i, j, len, len1, hole;
+        for (i = 0, len = this.rings.length; i < len; i++) {
+            var it = this.rings[i],
+                ring = it.ring;
+            ring.setLatLngs(ring.points.getPathLatLngs());
+            for (j = 0, len1 = it.holes.length; j < len1; j++) {
+                hole = it.holes[j];
+                hole.setLatLngs(hole.points.getPathLatLngs());
+            }
+        }
+        return this;
+    },
+
     bringToFront: function () {
         return this.invoke('bringToFront');
     },
