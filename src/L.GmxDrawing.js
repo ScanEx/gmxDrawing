@@ -338,6 +338,7 @@ L.GmxDrawing = L.Class.extend({
         L.geoJson(featureCollection, {
             onEachFeature: function (feature, layer) {
                 var options = feature.properties;
+                    popupOpened = options.popupOpened;
                 if (options.type === 'Rectangle') {
                     layer = L.rectangle(layer.getBounds());
                 } else if (options.type === 'Point') {
@@ -353,6 +354,9 @@ L.GmxDrawing = L.Class.extend({
                     layer.setStyle(options.lineStyle);
                 }
                 _this.add(layer, options);
+                if (popupOpened) {
+                    layer.openPopup();
+                }
             }
         });
     },
@@ -366,6 +370,9 @@ L.GmxDrawing = L.Class.extend({
                 var geojson = it.toGeoJSON();
                 geojson.properties = L.GmxDrawing.utils.getNotDefaults(it.options, L.GmxDrawing.utils.defaultStyles.markerStyle);
                 if (!it._map) { geojson.properties.map = false; }
+                else if (it._map.hasLayer(it.getPopup())) {
+                    geojson.properties.popupOpened = true;
+                }
                 var res = L.GmxDrawing.utils.getNotDefaults(it._obj.options, L.GmxDrawing.utils.defaultStyles.markerStyle.options);
                 if (Object.keys(res).length) { geojson.properties.options = res; }
                 res = L.GmxDrawing.utils.getNotDefaults(it._obj.options.icon.options, L.GmxDrawing.utils.defaultStyles.markerStyle.options.icon);
