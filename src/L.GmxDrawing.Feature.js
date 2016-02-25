@@ -591,15 +591,13 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             });
         _parent._map.addLayer(marker);
 
-        if (marker._map.options.maxPopupCount > 1) {
-            marker.openPopup = function () {
-                if (marker._popup && marker._map && !marker._map.hasLayer(marker._popup)) {
-                    marker._popup.setLatLng(marker._latlng);
-                    marker._popup.addTo(marker._map);
-                }
-                return marker;
-            };
-        }
+        _this.openPopup = marker.openPopup = function () {
+            if (marker._popup && marker._map && !marker._map.hasLayer(marker._popup)) {
+                marker._popup.setLatLng(marker._latlng);
+                marker._popup.addTo(marker._map);
+            }
+            return marker;
+        };
     },
 
     setAddMode: function () {
