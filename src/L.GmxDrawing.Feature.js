@@ -550,7 +550,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             _parent = this._parent;
 
         marker
-            .bindPopup(null, {maxWidth: 1000})
+            .bindPopup(null, {maxWidth: 1000, closeOnClick: _parent._map.options.maxPopupCount > 1 ? false : true})
             .on('dblclick', function() {
                 this._map.removeLayer(this);
                 _this.remove();
@@ -590,6 +590,16 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 popup.update();
             });
         _parent._map.addLayer(marker);
+
+        if (marker._map.options.maxPopupCount > 1) {
+            marker.openPopup = function () {
+                if (marker._popup && marker._map && !marker._map.hasLayer(marker._popup)) {
+                    marker._popup.setLatLng(marker._latlng);
+                    marker._popup.addTo(marker._map);
+                }
+                return marker;
+            };
+        }
     },
 
     setAddMode: function () {
