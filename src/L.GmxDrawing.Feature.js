@@ -595,6 +595,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             if (marker._popup && marker._map && !marker._map.hasLayer(marker._popup)) {
                 marker._popup.setLatLng(marker._latlng);
                 marker._popup.addTo(marker._map);
+                marker._popup._isOpen = true;
             }
             return marker;
         };
