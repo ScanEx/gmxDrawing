@@ -67,25 +67,26 @@ L.GmxDrawing = L.Class.extend({
         if (obj instanceof L.GeoJSON) {
             var layers = obj.getLayers();
             if (layers) {
+                var parseLayer = function (it) {
+                    var _originalStyle = null;
+                    if (it.setStyle && options && options.lineStyle) {
+                        _originalStyle = {};
+                        for (var key in options.lineStyle) {
+                            _originalStyle[key] = options.lineStyle[key];
+                        }
+                        it.setStyle(options.lineStyle);
+                    }
+                    var f = this.add(it, options);
+                    f._originalStyle = _originalStyle;
+                    arr.push(f);
+                };
                 for (var i = 0, len = layers.length; i < len; i++) {
-                    var layer = layers[i],
-                        _originalStyle = null;
+                    var layer = layers[i];
 
                     if (layer.feature.geometry.type !== 'GeometryCollection') {
                         layer = L.layerGroup([layer]);
                     }
-                    layer.eachLayer(function (it) {
-                        if (it.setStyle && options && options.lineStyle) {
-                            _originalStyle = {};
-                            for (var key in options.lineStyle) {
-                                _originalStyle[key] = options.lineStyle[key];
-                            }
-                            it.setStyle(options.lineStyle);
-                        }
-                        var f = this.add(it, options);
-                        f._originalStyle = _originalStyle;
-                        arr.push(f);
-                    }, this);
+                    layer.eachLayer(parseLayer, this);
                 }
             }
         }
@@ -337,7 +338,7 @@ L.GmxDrawing = L.Class.extend({
             featureCollection = data.featureCollection;
         L.geoJson(featureCollection, {
             onEachFeature: function (feature, layer) {
-                var options = feature.properties;
+                var options = feature.properties,
                     popupOpened = options.popupOpened;
                 if (options.type === 'Rectangle') {
                     layer = L.rectangle(layer.getBounds());

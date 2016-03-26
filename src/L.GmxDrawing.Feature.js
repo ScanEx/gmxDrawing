@@ -528,12 +528,10 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                     this._fireEvent('onMouseOut');
                 };
             }
+        } else if (this.options.type === 'Point') {
+            this._setMarker(obj);
         } else {
-            if (this.options.type === 'Point') {
-                this._setMarker(obj);
-            } else {
-                this.addLayer(obj);
-            }
+            this.addLayer(obj);
         }
     },
 

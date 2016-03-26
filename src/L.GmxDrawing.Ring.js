@@ -15,6 +15,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     initialize: function (parent, coords, options) {
         options = options || {};
         options.mode = '';
+        this._activeZIndex = options.activeZIndex || 7;
+        this._notActiveZIndex = options.notActiveZIndex || 6;
         this.options = L.extend({}, parent.getStyle(), options);
 
         this._layers = {};
@@ -99,6 +101,9 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     onAdd: function (map) {
+        if (!this._overlayPane) {
+            this._overlayPane = map.getPanes().overlayPane;
+        }
         L.LayerGroup.prototype.onAdd.call(this, map);
         this.setEditMode();
     },
@@ -248,6 +253,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this._map
             .on('mousemove', this._pointMove, this)
             .on('mouseup', this._pointUp, this);
+        this._overlayPane.style.zIndex = this._activeZIndex;
     },
 
     _pointMove: function (ev) {
@@ -265,6 +271,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     _pointUp: function () {
+        this._overlayPane.style.zIndex = this._notActiveZIndex;
         this.downObject = false;
         this._parent._enableDrag();
         if (!this.points) { return; }
@@ -493,6 +500,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 .on('click', this._pointClick, this);
             this._fireEvent('addmode');
             if (!this.lineType) { this.lines.setStyle({fill: true}); }
+            this._overlayPane.style.zIndex = this._activeZIndex;
         } else {
             if (this._map) {
                 this._map
@@ -506,6 +514,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             if (!this.lineType && !lineStyle.fill) {
                 this.lines.setStyle({fill: false});
             }
+            this._overlayPane.style.zIndex = this._notActiveZIndex;
         }
     },
 
