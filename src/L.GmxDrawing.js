@@ -210,17 +210,21 @@ L.GmxDrawing = L.Class.extend({
     create: function (type, options) {
         this._clearCreate(null);
         if (type) {
-            var drawOptions = this._chkDrawOptions(type, options),
+            var map = this._map,
+                markerPane = map.getPanes().markerPane,
+                drawOptions = this._chkDrawOptions(type, options),
                 my = this;
 
             if (type === 'Rectangle') {
-                this._map._initPathRoot();
-                this._map.dragging.disable();
+                map._initPathRoot();
+                map.dragging.disable();
             }
+
             this._createKey = {
                 type: type,
                 eventName: type === 'Rectangle' ? (L.Browser.mobile ? 'touchstart' : 'mousedown') : 'click',
                 fn: function (ev) {
+                    markerPane.style.pointerEvents = '';
                     var obj, key,
                         opt = {},
                         latlng = ev.latlng;
@@ -273,11 +277,12 @@ L.GmxDrawing = L.Class.extend({
                 }
             };
             if (type === 'Rectangle' && L.Browser.mobile) {
-                L.DomEvent.on(my._map._container, 'touchstart', this._createKey.fn, this);
+                L.DomEvent.on(map._container, 'touchstart', this._createKey.fn, this);
             } else {
-                this._map.on(this._createKey.eventName, this._createKey.fn, this);
+                map.on(this._createKey.eventName, this._createKey.fn, this);
             }
-            L.DomUtil.addClass(my._map._mapPane, 'leaflet-clickable');
+            markerPane.style.pointerEvents = 'none';
+            L.DomUtil.addClass(map._mapPane, 'leaflet-clickable');
             this.fire('drawstart', {mode: type});
         }
         this.options.type = type;
