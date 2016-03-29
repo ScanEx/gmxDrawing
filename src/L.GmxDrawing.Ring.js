@@ -222,7 +222,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     // edit mode
     _pointDown: function (ev) {
-        if (L.Browser.ie) {
+        if (L.Browser.ie || L.gmxUtil.isIE12) {
             this._map.dragging._draggable._onUp(); // error in IE
         }
         this._parent._disableDrag();
