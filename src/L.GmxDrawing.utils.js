@@ -152,5 +152,17 @@ L.GmxDrawing.utils = {
             return layer.getLayers ? this._getLastObject(layer) : obj;
         }
         return obj;
+    },
+
+    getMarkerByPos: function (pos, features) {
+        for (var i = 0, len = features.length; i < len; i++) {
+            var feature = features[i],
+                fobj = feature._obj ? feature._obj : null,
+                mpos = fobj && fobj._icon ? fobj._icon._leaflet_pos : null;
+            if (mpos && mpos.x === pos.x && mpos.y === pos.y) {
+                return fobj._latlng;
+            }
+        }
+        return null;
     }
 };

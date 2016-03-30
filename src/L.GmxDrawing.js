@@ -215,7 +215,6 @@ L.GmxDrawing = L.Class.extend({
         this._clearCreate(null);
         if (type) {
             var map = this._map,
-                markerPane = map.getPanes().markerPane,
                 drawOptions = this._chkDrawOptions(type, options),
                 my = this;
 

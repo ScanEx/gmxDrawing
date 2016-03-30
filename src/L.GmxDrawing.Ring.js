@@ -267,7 +267,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
     },
 
-    _pointUp: function () {
+    _pointUp: function (ev) {
         this.downObject = false;
         this._parent._enableDrag();
         if (!this.points) { return; }
@@ -275,6 +275,12 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             this._map
                 .off('mousemove', this._pointMove, this)
                 .off('mouseup', this._pointUp, this);
+
+            var target = ev && ev.originalEvent ? ev.originalEvent.target : null;
+            if (target && target._leaflet_pos && /leaflet-marker-icon/.test(target.className)) {
+                var latlng = L.GmxDrawing.utils.getMarkerByPos(target._leaflet_pos, this._map.gmxDrawing.getFeatures());
+                this._setPoint(latlng, this.down.num, this.down.type);
+            }
         }
         if (this._drawstop) {
             this._fireEvent('drawstop');
