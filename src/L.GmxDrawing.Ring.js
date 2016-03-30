@@ -101,9 +101,6 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     onAdd: function (map) {
-        if (!this._overlayPane) {
-            this._overlayPane = map.getPanes().overlayPane;
-        }
         L.LayerGroup.prototype.onAdd.call(this, map);
         this.setEditMode();
     },
@@ -184,13 +181,14 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this.setLatLngs(latlngs);
     },
 
-    addLatLng: function (point) {
+    addLatLng: function (point, delta) {
         this._legLength = [];
         if (this.points) {
             var points = this.points._latlngs,
                 len = points.length,
                 lastPoint = points[len - 2];
             if (!lastPoint || !lastPoint.equals(point)) {
+                if (delta) { len -= delta; }    // reset existing point
                 this._setPoint(point, len, 'node');
             }
         } else if ('addLatLng' in this._obj) {
@@ -253,7 +251,6 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this._map
             .on('mousemove', this._pointMove, this)
             .on('mouseup', this._pointUp, this);
-        this._overlayPane.style.zIndex = this._activeZIndex;
     },
 
     _pointMove: function (ev) {
@@ -271,7 +268,6 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     _pointUp: function () {
-        this._overlayPane.style.zIndex = this._notActiveZIndex;
         this.downObject = false;
         this._parent._enableDrag();
         if (!this.points) { return; }
@@ -500,7 +496,6 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 .on('click', this._pointClick, this);
             this._fireEvent('addmode');
             if (!this.lineType) { this.lines.setStyle({fill: true}); }
-            this._overlayPane.style.zIndex = this._activeZIndex;
         } else {
             if (this._map) {
                 this._map
@@ -514,7 +509,6 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             if (!this.lineType && !lineStyle.fill) {
                 this.lines.setStyle({fill: false});
             }
-            this._overlayPane.style.zIndex = this._notActiveZIndex;
         }
     },
 
@@ -564,9 +558,11 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     _mouseUp: function (ev) {
         var timeStamp = Date.now();
-        if (timeStamp < this._lastMouseDownTime) {
+        if (ev.delta || timeStamp < this._lastMouseDownTime) {
             this._lastAddTime = timeStamp + 1000;
-            this.addLatLng(ev.latlng);
+            var latlng = ev._latlng || ev.latlng;
+            if (ev.delta) { this.addLatLng(latlng, ev.delta); }    // for click on marker
+            this.addLatLng(latlng);
             this._parent._parent._clearCreate();
         }
     }

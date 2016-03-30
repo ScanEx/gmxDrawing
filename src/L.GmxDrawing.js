@@ -49,6 +49,10 @@ L.GmxDrawing = L.Class.extend({
                 bg.setAttributeNS(null, 'y', y - 12);
             };
         }
+        var refreshMode = function (ev) {
+            this._drawMode = ev.mode;
+        };
+        this.on('drawstop drawstart', refreshMode);
     },
 
     bringToFront: function () {
@@ -224,7 +228,7 @@ L.GmxDrawing = L.Class.extend({
                 type: type,
                 eventName: type === 'Rectangle' ? (L.Browser.mobile ? 'touchstart' : 'mousedown') : 'click',
                 fn: function (ev) {
-                    markerPane.style.pointerEvents = '';
+                    my._createType = '';
                     var obj, key,
                         opt = {},
                         latlng = ev.latlng;
@@ -281,7 +285,7 @@ L.GmxDrawing = L.Class.extend({
             } else {
                 map.on(this._createKey.eventName, this._createKey.fn, this);
             }
-            markerPane.style.pointerEvents = 'none';
+            this._createType = type;
             L.DomUtil.addClass(map._mapPane, 'leaflet-clickable');
             this.fire('drawstart', {mode: type});
         }

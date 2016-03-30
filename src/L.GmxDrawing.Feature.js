@@ -592,8 +592,13 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         _this.openPopup = marker.openPopup = function () {
             if (marker._popup && marker._map && !marker._map.hasLayer(marker._popup)) {
                 marker._popup.setLatLng(marker._latlng);
-                marker._popup.addTo(marker._map);
-                marker._popup._isOpen = true;
+                var gmxDrawing = marker._map.gmxDrawing;
+                if (gmxDrawing._drawMode) {
+                    marker._map.fire(gmxDrawing._createType ? 'click' : 'mouseup', { latlng: marker._latlng, delta: 1 });
+                } else {
+                    marker._popup.addTo(marker._map);
+                    marker._popup._isOpen = true;
+                }
             }
             return marker;
         };
