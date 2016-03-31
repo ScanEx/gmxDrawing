@@ -281,6 +281,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 var latlng = L.GmxDrawing.utils.getMarkerByPos(target._leaflet_pos, this._map.gmxDrawing.getFeatures());
                 this._setPoint(latlng, this.down.num, this.down.type);
             }
+            this._map._skipClick = true;    // for EventsManager
         }
         if (this._drawstop) {
             this._fireEvent('drawstop');
