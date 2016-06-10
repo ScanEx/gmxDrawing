@@ -341,7 +341,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                     this._pointUp();
                     this.setEditMode();
                     if (this.lineType && num === 0) {
-                        this.options.type = 'Polygon';
+                        this._parent.options.type = this.options.type = 'Polygon';
                         this.lineType = false;
                         this._removePoint(this.points._latlngs.length - 1);
                     }
