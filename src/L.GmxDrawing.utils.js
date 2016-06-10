@@ -123,6 +123,7 @@ L.GmxDrawing.utils = {
             lastIndex = len - (ring.mode === 'add' ? 2 : 1);
 
         out = {
+            mode: ring.mode,
             layerPoint: ev.layerPoint,
             ctrlKey: ctrlKey,
             latlng: latlng

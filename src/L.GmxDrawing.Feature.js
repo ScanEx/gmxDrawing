@@ -517,7 +517,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                         } else if (type === 'Length') {
                             var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map, my),
                                 length = ring.getLength(downAttr),
-                                titleName = downAttr.type + type,
+                                titleName = (downAttr.mode === 'edit' || downAttr.num > 1 ? downAttr.type : '') + type,
                                 title = _gtxt(titleName);
                             str = (title === titleName ? _gtxt(type) : title) + ': ' + L.gmxUtil.prettifyDistance(length, distanceUnit);
                             my._parent.showTooltip(ev.layerPoint, str);
