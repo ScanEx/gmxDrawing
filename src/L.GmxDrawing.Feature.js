@@ -515,9 +515,11 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                             }
                             my._parent.showTooltip(ev.layerPoint, str);
                         } else if (type === 'Length') {
-                            var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map, my);
-                            var length = ring.getLength(downAttr);
-                            str = _gtxt(type) + ': ' + L.gmxUtil.prettifyDistance(length, distanceUnit);
+                            var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map, my),
+                                length = ring.getLength(downAttr),
+                                titleName = downAttr.type + type,
+                                title = _gtxt(titleName);
+                            str = (title === titleName ? _gtxt(type) : title) + ': ' + L.gmxUtil.prettifyDistance(length, distanceUnit);
                             my._parent.showTooltip(ev.layerPoint, str);
                         }
                         my._fireEvent('onMouseOver');
