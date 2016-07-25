@@ -12,5 +12,6 @@
 		"type": "git",
 		"url": "git://github.com/ScanEx/gmxDrawing.git"
 	},
-	"keywords": ["gis", "leaflet", "geomixer"]
+	"keywords": ["gis", "leaflet", "geomixer"],
+  	"license": "MIT"
 }
