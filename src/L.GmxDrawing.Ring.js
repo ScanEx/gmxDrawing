@@ -368,6 +368,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this._map
             .off('mouseup', this._onDragEnd, this)
             .off('mousemove', this._onDrag, this);
+
+		this._parent._enableDrag();
         this._fireEvent('dragend');
     },
 
