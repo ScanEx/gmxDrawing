@@ -130,6 +130,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         }
 
         this._fireEvent('optionschange');
+        return this;
     },
 
     _setStyleOptions: function (options, type) {
