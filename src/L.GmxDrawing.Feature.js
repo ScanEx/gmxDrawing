@@ -117,7 +117,6 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     setOptions: function (options) {
-        L.setOptions(this, options);
         if (options.lineStyle) {
             this._setStyleOptions(options.lineStyle, 'lines');
         }
@@ -128,6 +127,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             if (options.editable) { this.enableEdit(); }
             else { this.disableEdit(); }
         }
+        L.setOptions(this, options);
 
         this._fireEvent('optionschange');
         return this;
@@ -416,7 +416,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     disableEdit: function() {
         var type = this.options.type;
         if (type !== 'Point') {
-            var geojson = L.geoJson(this.toGeoJSON().geometry, this._originalStyle);
+			this._originalStyle = this.options.lineStyle;
+            var geojson = L.geoJson(this.toGeoJSON().geometry, this._originalStyle).getLayers()[0];
             for (var i = 0, len = this.rings.length; i < len; i++) {
                 var it = this.rings[i];
                 it.ring.removeEditMode();
