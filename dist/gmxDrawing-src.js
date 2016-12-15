@@ -7,12 +7,16 @@ L.GmxDrawing = L.Class.extend({
     options: {
         type: ''
     },
-    includes: L.Mixin.Events,
+    includes: [L.Mixin.Events],
 
     initialize: function (map) {
         this._map = map;
         this.items = [];
         this.current = null;
+        this.contextmenu = new L.GmxDrawingContextMenu({
+			points: [], // [{text: 'Remove point'}, {text: 'Delete feature'}],
+			lines: []
+		});
 
         if (L.gmxUtil && L.gmxUtil.prettifyDistance) {
             var tooltip = document.createElementNS(L.Path.SVG_NS, 'g');
@@ -456,12 +460,7 @@ L.GmxDrawing = L.Class.extend({
 
 L.Map.addInitHook(function () {
     this.gmxDrawing = new L.GmxDrawing(this);
-    if (L.Mixin.ContextMenu) {
-        L.GmxDrawing.PointMarkers.include(L.Mixin.ContextMenu);
-    }
 });
-
-
 })();
 
 
@@ -469,7 +468,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     options: {
         mode: '' // add, edit
     },
-    includes: L.Mixin.Events,
+    includes: [L.Mixin.Events],
 
     simplify: function () {
         var i, j, len, len1, hole;
@@ -832,6 +831,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     initialize: function (parent, obj, options) {
         options = options || {};
+
+        this.contextmenu = new L.GmxDrawingContextMenu();
         options.mode = '';
         this._drawOptions = L.extend({}, options);
         var type = options.type;
@@ -959,10 +960,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             }
 
             if (L.gmxUtil && L.gmxUtil.prettifyDistance && !this._showTooltip) {
-                var _gtxt = function (key) {
-                    var res = L.gmxLocale ? L.gmxLocale.getText(key) : null;
-                    return res || key;
-                };
+                var _gtxt = L.GmxDrawing.utils.getLocale;
                 var my = this;
                 this._showTooltip = function (type, ev) {
                     var ring = ev.ring,
@@ -998,6 +996,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                     this._parent.hideTooltip();
                     this._fireEvent('onMouseOut');
                 };
+                this.getTitle = _gtxt;
             }
         } else if (this.options.type === 'Point') {
             this._setMarker(obj);
@@ -1109,9 +1108,12 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         size: L.Browser.mobile ? 40 : 8,
         weight: 2
     },
-    includes: L.Mixin.Events,
+    includes: [L.Mixin.Events],
+
     initialize: function (parent, coords, options) {
         options = options || {};
+
+        this.contextmenu = new L.GmxDrawingContextMenu();
         options.mode = '';
         this._activeZIndex = options.activeZIndex || 7;
         this._notActiveZIndex = options.notActiveZIndex || 6;
@@ -1175,12 +1177,16 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
         this.points = new L.GmxDrawing.PointMarkers(latlngs, pointStyle);
         this.points._parent = this;
+
         this.addLayer(this.points);
         this.points
             .on('mouseover mousemove', function (ev) {
                 ev.ring = _this;
                 if ('_showTooltip' in this) {
                     this._showTooltip(_this.lineType ? 'Length' : 'Area', ev);
+                }
+                if (ev.type === 'mouseover') {
+                    _this._recheckContextItems('points', _this._map);
                 }
             }, parent)
             .on('mouseout', function () {
@@ -1196,6 +1202,41 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             .on('mouseout', function () {
                 if ('hideTooltip' in this) { this.hideTooltip(); }
             }, parent);
+
+		this.points.bindContextMenu({
+			contextmenu: false,
+			contextmenuInheritItems: false,
+			contextmenuItems: []
+		});
+    },
+
+    _recheckContextItems: function (type, map) {
+        var _this = this;
+		this[type].options.contextmenuItems = map.gmxDrawing.contextmenu.getItems()[type]
+			.concat(this._parent.contextmenu.getItems()[type])
+			.concat(this.contextmenu.getItems()[type])
+			.map(function(obj) {
+				return {
+					id: obj.text,
+					text: L.GmxDrawing.utils.getLocale(obj.text),
+					callback: obj.callback || function (ev) { _this._eventsCmd(obj, ev); }
+				};
+			});
+    },
+
+    _eventsCmd: function (obj, ev) {
+		var ring = ev.relatedTarget._parent;
+		var downAttr = L.GmxDrawing.utils.getDownType.call(ring, ev, ring._map, ring._parent);
+		if (downAttr) {
+			var type = obj.text;
+			if (obj.callback) {
+				obj.callback(downAttr);
+			} else if (type === 'Remove point') {
+				ring._removePoint(downAttr.num);
+			} else if (type === 'Delete feature') {
+                ring._parent.remove(ring);
+			}
+        }
     },
 
     onAdd: function (map) {
@@ -1763,6 +1804,49 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
 });
 
 
+(function () {
+	function GmxDrawingContextMenu(options) {
+		this.options = options || {points: [], lines: []};
+	}
+
+	GmxDrawingContextMenu.prototype = {
+		insertItem: function (obj, index, type) {
+			var optKey = type || 'points';
+			if (index === undefined) { index = this.options[optKey].length; }
+			this.options[optKey].splice(index, 0, obj);
+			return this;
+		},
+
+		removeItem: function (obj, type) {
+			var optKey = type || 'points';
+			for (var i = 0, len = this.options[optKey].length; i < len; i++) {
+				if (this.options[optKey][i].callback === obj.callback) {
+					this.options[optKey].splice(i, 1);
+					break;
+				}
+			}
+			return this;
+		},
+
+		removeAllItems: function (type) {
+			if (!type) {
+				this.options = {points: [], lines: []};
+			} else if (type === 'lines') {
+				this.options.lines = [];
+			} else {
+				this.options.points = [];
+			}
+			return this;
+		},
+
+		getItems: function () {
+			return this.options;
+		}
+	};
+	L.GmxDrawingContextMenu = GmxDrawingContextMenu;
+})();
+
+
 L.GmxDrawing.utils = {
     defaultStyles: {
         mode: '',
@@ -1871,7 +1955,7 @@ L.GmxDrawing.utils = {
             latlng = map.layerPointToLatLng(layerPoint);
         }
         var out = {type: '', latlng: latlng, ctrlKey: ctrlKey},
-            ring = this.points ? this : ev.ring,
+            ring = this.points ? this : (ev.ring || ev.relatedEvent),
             points = ring.points._originalPoints || [],
             len = points.length;
 
@@ -1930,6 +2014,11 @@ L.GmxDrawing.utils = {
             }
         }
         return null;
+    },
+
+    getLocale: function (key) {
+		var res = L.gmxLocale ? L.gmxLocale.getText(key) : null;
+		return res || key;
     }
 };
 

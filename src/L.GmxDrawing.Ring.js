@@ -11,9 +11,12 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         size: L.Browser.mobile ? 40 : 8,
         weight: 2
     },
-    includes: L.Mixin.Events,
+    includes: [L.Mixin.Events],
+
     initialize: function (parent, coords, options) {
         options = options || {};
+
+        this.contextmenu = new L.GmxDrawingContextMenu();
         options.mode = '';
         this._activeZIndex = options.activeZIndex || 7;
         this._notActiveZIndex = options.notActiveZIndex || 6;
@@ -77,12 +80,16 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
         this.points = new L.GmxDrawing.PointMarkers(latlngs, pointStyle);
         this.points._parent = this;
+
         this.addLayer(this.points);
         this.points
             .on('mouseover mousemove', function (ev) {
                 ev.ring = _this;
                 if ('_showTooltip' in this) {
                     this._showTooltip(_this.lineType ? 'Length' : 'Area', ev);
+                }
+                if (ev.type === 'mouseover') {
+                    _this._recheckContextItems('points', _this._map);
                 }
             }, parent)
             .on('mouseout', function () {
@@ -98,6 +105,41 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             .on('mouseout', function () {
                 if ('hideTooltip' in this) { this.hideTooltip(); }
             }, parent);
+
+		this.points.bindContextMenu({
+			contextmenu: false,
+			contextmenuInheritItems: false,
+			contextmenuItems: []
+		});
+    },
+
+    _recheckContextItems: function (type, map) {
+        var _this = this;
+		this[type].options.contextmenuItems = map.gmxDrawing.contextmenu.getItems()[type]
+			.concat(this._parent.contextmenu.getItems()[type])
+			.concat(this.contextmenu.getItems()[type])
+			.map(function(obj) {
+				return {
+					id: obj.text,
+					text: L.GmxDrawing.utils.getLocale(obj.text),
+					callback: obj.callback || function (ev) { _this._eventsCmd(obj, ev); }
+				};
+			});
+    },
+
+    _eventsCmd: function (obj, ev) {
+		var ring = ev.relatedTarget._parent;
+		var downAttr = L.GmxDrawing.utils.getDownType.call(ring, ev, ring._map, ring._parent);
+		if (downAttr) {
+			var type = obj.text;
+			if (obj.callback) {
+				obj.callback(downAttr);
+			} else if (type === 'Remove point') {
+				ring._removePoint(downAttr.num);
+			} else if (type === 'Delete feature') {
+                ring._parent.remove(ring);
+			}
+        }
     },
 
     onAdd: function (map) {

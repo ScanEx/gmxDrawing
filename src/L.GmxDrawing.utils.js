@@ -106,7 +106,7 @@ L.GmxDrawing.utils = {
             latlng = map.layerPointToLatLng(layerPoint);
         }
         var out = {type: '', latlng: latlng, ctrlKey: ctrlKey},
-            ring = this.points ? this : ev.ring,
+            ring = this.points ? this : (ev.ring || ev.relatedEvent),
             points = ring.points._originalPoints || [],
             len = points.length;
 
@@ -165,5 +165,10 @@ L.GmxDrawing.utils = {
             }
         }
         return null;
+    },
+
+    getLocale: function (key) {
+		var res = L.gmxLocale ? L.gmxLocale.getText(key) : null;
+		return res || key;
     }
 };

@@ -7,12 +7,16 @@ L.GmxDrawing = L.Class.extend({
     options: {
         type: ''
     },
-    includes: L.Mixin.Events,
+    includes: [L.Mixin.Events],
 
     initialize: function (map) {
         this._map = map;
         this.items = [];
         this.current = null;
+        this.contextmenu = new L.GmxDrawingContextMenu({
+			points: [], // [{text: 'Remove point'}, {text: 'Delete feature'}],
+			lines: []
+		});
 
         if (L.gmxUtil && L.gmxUtil.prettifyDistance) {
             var tooltip = document.createElementNS(L.Path.SVG_NS, 'g');
@@ -456,10 +460,5 @@ L.GmxDrawing = L.Class.extend({
 
 L.Map.addInitHook(function () {
     this.gmxDrawing = new L.GmxDrawing(this);
-    if (L.Mixin.ContextMenu) {
-        L.GmxDrawing.PointMarkers.include(L.Mixin.ContextMenu);
-    }
 });
-
-
 })();

@@ -2,7 +2,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     options: {
         mode: '' // add, edit
     },
-    includes: L.Mixin.Events,
+    includes: [L.Mixin.Events],
 
     simplify: function () {
         var i, j, len, len1, hole;
@@ -365,6 +365,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     initialize: function (parent, obj, options) {
         options = options || {};
+
+        this.contextmenu = new L.GmxDrawingContextMenu();
         options.mode = '';
         this._drawOptions = L.extend({}, options);
         var type = options.type;
@@ -492,10 +494,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             }
 
             if (L.gmxUtil && L.gmxUtil.prettifyDistance && !this._showTooltip) {
-                var _gtxt = function (key) {
-                    var res = L.gmxLocale ? L.gmxLocale.getText(key) : null;
-                    return res || key;
-                };
+                var _gtxt = L.GmxDrawing.utils.getLocale;
                 var my = this;
                 this._showTooltip = function (type, ev) {
                     var ring = ev.ring,
@@ -531,6 +530,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                     this._parent.hideTooltip();
                     this._fireEvent('onMouseOut');
                 };
+                this.getTitle = _gtxt;
             }
         } else if (this.options.type === 'Point') {
             this._setMarker(obj);
