@@ -142,6 +142,10 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
     },
 
+    getFeature: function () {
+		return this._parent;
+    },
+
     onAdd: function (map) {
         L.LayerGroup.prototype.onAdd.call(this, map);
         this.setEditMode();

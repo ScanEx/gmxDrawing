@@ -1239,6 +1239,10 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
     },
 
+    getFeature: function () {
+		return this._parent;
+    },
+
     onAdd: function (map) {
         L.LayerGroup.prototype.onAdd.call(this, map);
         this.setEditMode();
@@ -1729,6 +1733,14 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
         fillOpacity: 1,
         size: L.Browser.mobile ? 40 : 8,
         weight: 2
+    },
+
+    getRing: function () {
+		return this._parent;
+    },
+
+    getFeature: function () {
+		return this.getRing()._parent;
     },
 
     getPathLatLngs: function () {

@@ -12,6 +12,14 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
         weight: 2
     },
 
+    getRing: function () {
+		return this._parent;
+    },
+
+    getFeature: function () {
+		return this.getRing()._parent;
+    },
+
     getPathLatLngs: function () {
         var out = [],
             size = this.options.size,
