@@ -1366,7 +1366,6 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         if (L.Browser.ie || (L.gmxUtil && L.gmxUtil.gtIE11)) {
             this._map.dragging._draggable._onUp(); // error in IE
         }
-        this._parent._disableDrag();
         if (ev.originalEvent) {
             var originalEvent = ev.originalEvent;
             if (originalEvent.ctrlKey) {
@@ -1376,6 +1375,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 return;
             }
         }
+        this._parent._disableDrag();
         var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map, this._parent),
             type = downAttr.type,
             opt = this.options;
