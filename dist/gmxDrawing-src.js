@@ -1638,6 +1638,10 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         if (!this.points) { return; }
         var stop = L.DomEvent.stopPropagation;
         if (flag) {
+			if (this._map.contextmenu) {
+				this._map.contextmenu.disable();
+			}
+
             this._parent._enableDrag();
             this._map
                 .on('dblclick', stop)
@@ -1712,10 +1716,26 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         var timeStamp = Date.now();
         if (ev.delta || timeStamp < this._lastMouseDownTime) {
             this._lastAddTime = timeStamp + 1000;
-            var latlng = ev._latlng || ev.latlng;
-            if (ev.delta) { this.addLatLng(latlng, ev.delta); }    // for click on marker
-            this.addLatLng(latlng);
-            this._parent._parent._clearCreate();
+
+			if (ev.originalEvent && ev.originalEvent.which === 3
+				&& this.points && this.points._latlngs && this.points._latlngs.length) {	// for click right button
+
+				this._removePoint(this.points._latlngs.length - 1);
+				this.addLatLng(this.points._latlngs[0]);
+				this._pointUp();
+				this.setEditMode();
+				this._fireEvent('drawstop');
+				this._removePoint(this.points._latlngs.length - 1);
+
+				if (this._map && this._map.contextmenu) {
+					setTimeout(this._map.contextmenu.enable.bind(this._map.contextmenu), 250);
+				}
+			} else {
+				var latlng = ev._latlng || ev.latlng;
+				if (ev.delta) { this.addLatLng(latlng, ev.delta); }    // for click on marker
+				this.addLatLng(latlng);
+			}
+			this._parent._parent._clearCreate();
         }
     }
 });
