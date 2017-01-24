@@ -1720,12 +1720,14 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 			if (ev.originalEvent && ev.originalEvent.which === 3
 				&& this.points && this.points._latlngs && this.points._latlngs.length) {	// for click right button
 
+				this.setEditMode();
 				this._removePoint(this.points._latlngs.length - 1);
 				this.addLatLng(this.points._latlngs[0]);
 				this._pointUp();
-				this.setEditMode();
 				this._fireEvent('drawstop');
-				this._removePoint(this.points._latlngs.length - 1);
+				if (this.options.type === 'Polygon') {
+					this._removePoint(this.points._latlngs.length - 1);
+				}
 
 				if (this._map && this._map.contextmenu) {
 					setTimeout(this._map.contextmenu.enable.bind(this._map.contextmenu), 250);
