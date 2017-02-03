@@ -106,11 +106,13 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 if ('hideTooltip' in this) { this.hideTooltip(); }
             }, parent);
 
-		this.points.bindContextMenu({
-			contextmenu: false,
-			contextmenuInheritItems: false,
-			contextmenuItems: []
-		});
+		if (this.points.bindContextMenu) {
+			this.points.bindContextMenu({
+				contextmenu: false,
+				contextmenuInheritItems: false,
+				contextmenuItems: []
+			});
+		}
     },
 
     _recheckContextItems: function (type, map) {
@@ -625,13 +627,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
 				this.setEditMode();
 				this._removePoint(this.points._latlngs.length - 1);
-				this.addLatLng(this.points._latlngs[0]);
 				this._pointUp();
 				this._fireEvent('drawstop');
-				if (this.options.type === 'Polygon') {
-					this._removePoint(this.points._latlngs.length - 1);
-				}
-
 				if (this._map && this._map.contextmenu) {
 					setTimeout(this._map.contextmenu.enable.bind(this._map.contextmenu), 250);
 				}
