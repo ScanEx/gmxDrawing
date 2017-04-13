@@ -298,7 +298,12 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this.downObject = true;
         this._map
             .on('mousemove', this._pointMove, this)
-            .on('mouseup', this._pointUp, this);
+            .on('mouseup', this._mouseupPoint, this);
+    },
+
+    _mouseupPoint: function (ev) {
+		this._fireEvent('editstop');
+		this._pointUp(ev);
     },
 
     _pointMove: function (ev) {
@@ -322,7 +327,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         if (this._map) {
             this._map
                 .off('mousemove', this._pointMove, this)
-                .off('mouseup', this._pointUp, this);
+                .off('mouseup', this._mouseupPoint, this);
 
             var target = ev && ev.originalEvent ? ev.originalEvent.target : null;
             if (target && target._leaflet_pos && /leaflet-marker-icon/.test(target.className)) {
@@ -331,7 +336,6 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             }
             this._map._skipClick = true;    // for EventsManager
         }
-		this._fireEvent('editstop');
         if (this._drawstop) {
             this._fireEvent('drawstop');
         }
