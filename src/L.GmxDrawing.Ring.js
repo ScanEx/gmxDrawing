@@ -331,9 +331,10 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             }
             this._map._skipClick = true;    // for EventsManager
         }
-        // if (this._drawstop) {
+		this._fireEvent('editstop');
+        if (this._drawstop) {
             this._fireEvent('drawstop');
-        // }
+        }
         this._drawstop = false;
         this.down = null;
         var lineStyle = this.options.lineStyle || {};
