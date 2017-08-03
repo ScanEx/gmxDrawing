@@ -180,7 +180,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     _latLngsToCoords: function (latlngs, closed) {
-        var coords = L.GeoJSON.latLngsToCoords(latlngs);
+        var coords = L.GeoJSON.latLngsToCoords(L.GmxDrawing.utils.isOldVersion ? latlngs : latlngs[0]);
         if (closed) {
             var lastCoord = coords[coords.length - 1];
             if (lastCoord[0] !== coords[0][0] || lastCoord[1] !== coords[0][1]) {

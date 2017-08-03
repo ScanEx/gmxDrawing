@@ -73,8 +73,9 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
         this.addLayer(this.fill);
         if (!this.lineType && mode === 'edit') {
-            this.lines.addLatLng(latlngs[0]);
-            this.fill.addLatLng(latlngs[0]);
+			var latlng = L.GmxDrawing.utils.isOldVersion ? latlngs[0] : latlngs[0][0];
+            this.lines.addLatLng(latlng);
+            this.fill.addLatLng(latlng);
         }
         this.mode = mode;
 
@@ -170,7 +171,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     getLength: function (downAttr) {
         var length = 0,
-            latlngs = this.points._latlngs,
+            latlngs = this._getLatLngsArr(),
             len = latlngs.length;
 
         if (len) {
@@ -205,7 +206,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     _setPoint: function (latlng, nm, type) {
         if (!this.points) { return; }
-        var latlngs = this.points._latlngs;
+        var latlngs = this._getLatLngsArr();
         if (this.options.type === 'Rectangle') {
             if (type === 'edge') {
                 nm--;
@@ -232,7 +233,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     addLatLng: function (point, delta) {
         this._legLength = [];
         if (this.points) {
-            var points = this.points._latlngs,
+            var points = this._getLatLngsArr(),
                 len = points.length,
                 lastPoint = points[len - 2];
             if (!lastPoint || !lastPoint.equals(point)) {
@@ -266,6 +267,10 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this._fireEvent('edit');
     },
 
+    _getLatLngsArr: function () {
+		return L.GmxDrawing.utils.isOldVersion ? this.points._latlngs : this.points._latlngs[0];
+    },
+
     // edit mode
     _pointDown: function (ev) {
         if (L.Browser.ie || (L.gmxUtil && L.gmxUtil.gtIE11)) {
@@ -291,7 +296,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             if (opt.disableAddPoints) { return; }
             this._legLength = [];
             var num = downAttr.num,
-                points = this.points._latlngs;
+                points = this._getLatLngsArr();
             points.splice(num, 0, points[num]);
             this._setPoint(ev.latlng, num, type);
         }
@@ -349,7 +354,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     _lastPointClickTime: 0,  // Hack for emulate dblclick on Point
 
     _removePoint: function (num) {
-        var points = this.points._latlngs;
+        var points = this._getLatLngsArr();
         if (points.length > num) {
             this._legLength = [];
             points.splice(num, 1);
@@ -396,7 +401,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                     if (this.lineType && num === 0) {
                         this._parent.options.type = this.options.type = 'Polygon';
                         this.lineType = false;
-                        this._removePoint(this.points._latlngs.length - 1);
+                        this._removePoint(this._getLatLngsArr().length - 1);
                     }
                     this._fireEvent('drawstop');
                     this._removePoint(num);
@@ -404,7 +409,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                     var _this = this,
                         setLineAddPoint = function () {
                             _this._clearLineAddPoint();
-                            if (num === 0) { _this.points._latlngs.reverse(); }
+                            if (num === 0) { _this._getLatLngsArr().reverse(); }
                             _this.points.addLatLng(downAttr.latlng);
                             _this.setAddMode();
                             _this._fireEvent('drawstop');
@@ -437,7 +442,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     _onDrag: function (ev) {
         var lat = this._dragstartPoint.lat - ev.latlng.lat,
             lng = this._dragstartPoint.lng - ev.latlng.lng,
-            points = this.points._latlngs;
+            points = this._getLatLngsArr();
 
         points.forEach(function (item) {
             item.lat -= lat;
@@ -611,7 +616,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     // add mode
     _moseMove: function (ev) {
         if (this.points) {
-            var points = this.points._latlngs;
+            var points = this._getLatLngsArr();
             if (points.length === 1) { this._setPoint(ev.latlng, 1); }
 
             this._setPoint(ev.latlng, points.length - 1);
@@ -627,11 +632,12 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         if (ev.delta || timeStamp < this._lastMouseDownTime) {
             this._lastAddTime = timeStamp + 1000;
 
+			var _latlngs = this._getLatLngsArr();
 			if (ev.originalEvent && ev.originalEvent.which === 3
-				&& this.points && this.points._latlngs && this.points._latlngs.length) {	// for click right button
+				&& this.points && _latlngs && _latlngs.length) {	// for click right button
 
 				this.setEditMode();
-				this._removePoint(this.points._latlngs.length - 1);
+				this._removePoint(_latlngs.length - 1);
 				this._pointUp();
 				this._fireEvent('drawstop');
 				if (this._map && this._map.contextmenu) {

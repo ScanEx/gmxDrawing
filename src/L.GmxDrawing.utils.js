@@ -1,5 +1,6 @@
 L.GmxDrawing.utils = {
-    defaultStyles: {
+	isOldVersion: L.version.substr(0, 3) === '0.7',
+	defaultStyles: {
         mode: '',
         map: true,
         editable: true,
@@ -107,7 +108,7 @@ L.GmxDrawing.utils = {
         }
         var out = {type: '', latlng: latlng, ctrlKey: ctrlKey},
             ring = this.points ? this : (ev.ring || ev.relatedEvent),
-            points = ring.points._originalPoints || [],
+            points = ring.points._originalPoints || ring.points._parts[0] || [],
             len = points.length;
 
         if (len === 0) { return out; }

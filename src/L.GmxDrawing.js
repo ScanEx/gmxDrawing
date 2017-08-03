@@ -19,15 +19,16 @@ L.GmxDrawing = L.Class.extend({
 		});
 
         if (L.gmxUtil && L.gmxUtil.prettifyDistance) {
-            var tooltip = document.createElementNS(L.Path.SVG_NS, 'g');
+			var svgNS = 'http://www.w3.org/2000/svg';
+			var tooltip = document.createElementNS(svgNS, 'g');
             L.DomUtil.addClass(tooltip, 'gmxTooltip');
-            var bg = document.createElementNS(L.Path.SVG_NS, 'rect');
+            var bg = document.createElementNS(svgNS, 'rect');
             bg.setAttributeNS(null, 'rx', 4);
             bg.setAttributeNS(null, 'ry', 4);
             bg.setAttributeNS(null, 'height', 16);
             L.DomUtil.addClass(bg, 'gmxTooltipBG');
 
-            var text = document.createElementNS(L.Path.SVG_NS, 'text');
+            var text = document.createElementNS(svgNS, 'text');
             var userSelectProperty = L.DomUtil.testProp(
                 ['userSelect', 'WebkitUserSelect', 'OUserSelect', 'MozUserSelect', 'msUserSelect']);
             text.style[userSelectProperty] = 'none';
@@ -108,6 +109,8 @@ L.GmxDrawing = L.Class.extend({
                 item = obj;
             } else {
                 var calcOptions = {};
+                if (!L.MultiPolygon) { L.MultiPolygon = L.Polygon; }
+                if (!L.MultiPolyline) { L.MultiPolyline = L.Polyline; }
                 if (!options || !('editable' in options)) { calcOptions.editable = true; }
                 if (obj.geometry)     { calcOptions.type = obj.geometry.type; }
                 else if (obj instanceof L.Rectangle)     { calcOptions.type = 'Rectangle'; }

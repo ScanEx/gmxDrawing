@@ -64,30 +64,25 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
 
     _onMouseClick: function (e) {
         //if (this._map.dragging && this._map.dragging.moved()) { return; }
-
         this._fireMouseEvent(e);
     },
 
-    _isPathChange: function () {
-        this.projectLatlngs();
-        var pathStr = this.getPathString();
-        if (pathStr !== this._pathStr) {
-            this._pathStr = pathStr;
-            return true;
-        }
-        return false;
-    },
+	_updatePath: function () {
+		if (L.GmxDrawing.utils.isOldVersion) {
+			if (!this._map) { return; }
+			this._clipPoints();
+			this.projectLatlngs();
+			var pathStr = this.getPathString();
 
-    _updatePath: function () {
-        if (!this._map) { return; }
-        this._clipPoints();
-
-        if (this._isPathChange()) {
-            if (this._path.getAttribute('fill-rule') !== 'inherit') {
-                this._path.setAttribute('fill-rule', 'inherit');
-            }
-            this._path.setAttribute('d', this._pathStr || 'M0 0');
-            // L.Path.prototype._updatePath.call(this);
-        }
-    }
+			if (pathStr !== this._pathStr) {
+				this._pathStr = pathStr;
+				if (this._path.getAttribute('fill-rule') !== 'inherit') {
+					this._path.setAttribute('fill-rule', 'inherit');
+				}
+				this._path.setAttribute('d', this._pathStr || 'M0 0');
+			}
+		} else {
+			this._renderer._setPath(this, this._getPathPartStr(this._parts[0]));
+		}
+	}
 });
