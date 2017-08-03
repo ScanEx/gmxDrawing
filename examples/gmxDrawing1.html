@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>GmxDrawing Leaflet Quick Start Guide Example</title>
+	<meta charset="utf-8" />
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link rel="stylesheet" href="http://unpkg.com/leaflet@1.1.0/dist/leaflet.css" />
+	<script src="http://unpkg.com/leaflet@1.1.0/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" href="../css/L.gmxDrawing.css" />
+	<script src="../build/gmxDrawing-dev.js"></script>
+
+	<script src="http://scanex.github.io/gmxControls/build/gmxControls-dev.js"></script>
+
+    <style>
+        html, body, #map {
+            height: 100%;
+            width: 100%;
+            margin: 0px;
+        }
+    </style>
+</head>
+<body>
+	<div id="map"></div>
+
+	<script>
+		var osm = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+			maxZoom: 18,
+			attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
+		});
+		var map = new L.Map('map', {layers: [osm], center: new L.LatLng(50, 20), zoom: 3});
+
+        map.gmxDrawing
+            .on('drawstart', function (ev) {
+            })
+            .on('drawstop', function (ev) { })
+            .on('add', function (ev) {
+                console.log('gmxDrawing add', arguments);
+            })
+            .on('edit', function (ev) { })
+            .on('remove', function (ev) {
+                console.log('gmxDrawing remove', arguments);
+            })
+            .on('dragstart', function (ev) { })
+            .on('drag', function (ev) { })
+            .on('dragend', function (ev) { });
+
+		var drawPolygon = map.gmxDrawing.add(L.polygon(
+            [
+             [ [50.0, 20.0], [61.0, 20.0], [61.0, 33.0], [30.0, 33.0], [50.0, 20.0] ]
+           ]
+         ));
+        var drawPolyline = map.gmxDrawing.add(L.polyline(
+            [
+             [50.0, 30.0], [64.0, 35.0], [71.5, 53.0], [44.0, 43.0]
+            ]
+         ), {pointStyle:{shape: 'circle'}, lineStyle:{color: '#ff0000'}} );
+
+        // create rectangle
+        var drawRectangle = map.gmxDrawing.add(L.rectangle(
+            [
+             [20.0, 40.0], [54.0, 65.0]
+            ]
+         ), {pointStyle:{shape: 'circle', size: 12}, lineStyle:{color: '#00ff00'}} );
+
+        var latlng = new L.LatLng(65.0, 40.0),
+            marker = L.marker(latlng, {draggable: true, title: 'Text example'}),
+            drawPoint = map.gmxDrawing.add(marker, {});
+
+
+        map.addControl(new L.Control.gmxDrawing({
+            id: 'drawing',
+            stateChange: function (control, key, flag) {
+                //console.log('Control.gmxDrawing', control.options.activeKey, key, flag);
+            }
+        }));
+/**/
+	</script>
+</body>
+</html>
