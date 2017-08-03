@@ -208,7 +208,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         if (!this.points) { return; }
         var latlngs = this._getLatLngsArr();
         if (this.options.type === 'Rectangle') {
-            if (type === 'edge') {
+			if (latlngs.length < 4) { latlngs[3] = latlng; }
+			if (type === 'edge') {
                 nm--;
                 if (nm === 0) { latlngs[0].lng = latlngs[1].lng = latlng.lng; }
                 else if (nm === 1) { latlngs[1].lat = latlngs[2].lat = latlng.lat; }

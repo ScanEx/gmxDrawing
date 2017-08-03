@@ -226,7 +226,7 @@ L.GmxDrawing = L.Class.extend({
                 my = this;
 
             if (type === 'Rectangle') {
-                map._initPathRoot();
+                //map._initPathRoot();
                 map.dragging.disable();
             }
 

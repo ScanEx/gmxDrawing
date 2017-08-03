@@ -82,7 +82,7 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
 				this._path.setAttribute('d', this._pathStr || 'M0 0');
 			}
 		} else {
-			this._renderer._setPath(this, this._getPathPartStr(this._parts[0]));
+			this._renderer._setPath(this, this._parts.length ? this._getPathPartStr(this._parts[0]) : '');
 		}
 	}
 });
