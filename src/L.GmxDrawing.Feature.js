@@ -37,6 +37,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             }, 0);
         }
         this._fireEvent('addtomap');
+		if (map._pathRoot.getAttribute('pointer-events') !== 'none') {
+			map._pathRoot.setAttribute('pointer-events', 'none');
+		}
     },
 
     onRemove: function (map) {
@@ -455,7 +458,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     getSummary: function () {
         var str = '',
-            mapOpt = this._map.options || {},
+            mapOpt = this._map ? this._map.options : {},
             type = this.options.type;
 
         if (type === 'Polyline' || type === 'MultiPolyline') {
@@ -502,7 +505,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                         down = originalEvent.buttons || originalEvent.button;
 
                     if (ring && (ring.downObject || !down)) {
-                        var mapOpt = my._map.options || {},
+                        var mapOpt = my._map ? my._map.options : {},
                             distanceUnit = mapOpt.distanceUnit,
                             squareUnit = mapOpt.squareUnit,
                             str = '';
@@ -549,12 +552,14 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     _setMarker: function (marker) {
         var _this = this,
-            _parent = this._parent;
+            _parent = this._parent,
+			_map = _parent._map,
+			mapOpt = _map ? _map.options : {};
 
         marker
-            .bindPopup(null, {maxWidth: 1000, closeOnClick: _parent._map.options.maxPopupCount > 1 ? false : true})
+            .bindPopup(null, {maxWidth: 1000, closeOnClick: mapOpt.maxPopupCount > 1 ? false : true})
             .on('dblclick', function() {
-                this._map.removeLayer(this);
+                if (_map) { _map.removeLayer(this); }
                 _this.remove();
                 //_parent.remove(this);
             })
@@ -591,7 +596,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 }, popup._input);
                 popup.update();
             });
-        _parent._map.addLayer(marker);
+        _map.addLayer(marker);
 
         _this.openPopup = marker.openPopup = function () {
             if (marker._popup && marker._map && !marker._map.hasLayer(marker._popup)) {

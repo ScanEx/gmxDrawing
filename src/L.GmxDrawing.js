@@ -140,7 +140,7 @@ L.GmxDrawing = L.Class.extend({
                 item = new L.GmxDrawing.Feature(this, obj, options);
             }
             if (!('map' in options)) { options.map = true; }
-            if (options.map && !item._map) { this._map.addLayer(item); }
+            if (options.map && !item._map && this._map) { this._map.addLayer(item); }
             else { this._addItem(item); }
             //if (!item._map) this._map.addLayer(item);
             //if (item.points) item.points._path.setAttribute('fill-rule', 'inherit');
@@ -150,21 +150,25 @@ L.GmxDrawing = L.Class.extend({
     },
 
     _disableDrag: function () {
-        this._map.dragging.disable();
-        L.DomUtil.disableTextSelection();
-        L.DomUtil.disableImageDrag();
-		this._map.doubleClickZoom.removeHooks();
+		if (this._map) {
+			this._map.dragging.disable();
+			L.DomUtil.disableTextSelection();
+			L.DomUtil.disableImageDrag();
+			this._map.doubleClickZoom.removeHooks();
+		}
     },
 
     _enableDrag: function () {
-        this._map.dragging.enable();
-        L.DomUtil.enableTextSelection();
-        L.DomUtil.enableImageDrag();
-		this._map.doubleClickZoom.addHooks();
+		if (this._map) {
+			this._map.dragging.enable();
+			L.DomUtil.enableTextSelection();
+			L.DomUtil.enableImageDrag();
+			this._map.doubleClickZoom.addHooks();
+		}
     },
 
     _clearCreate: function () {
-        if (this._createKey) {
+        if (this._createKey && this._map) {
             if (this._createKey.type === 'Rectangle' && L.Browser.mobile) {
                 L.DomEvent.off(this._map._container, 'touchstart', this._createKey.fn, this);
             } else {
@@ -220,7 +224,7 @@ L.GmxDrawing = L.Class.extend({
 
     create: function (type, options) {
         this._clearCreate(null);
-        if (type) {
+        if (type && this._map) {
             var map = this._map,
                 drawOptions = this._chkDrawOptions(type, options),
                 my = this;

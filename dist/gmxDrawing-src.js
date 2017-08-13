@@ -140,7 +140,7 @@ L.GmxDrawing = L.Class.extend({
                 item = new L.GmxDrawing.Feature(this, obj, options);
             }
             if (!('map' in options)) { options.map = true; }
-            if (options.map && !item._map) { this._map.addLayer(item); }
+            if (options.map && !item._map && this._map) { this._map.addLayer(item); }
             else { this._addItem(item); }
             //if (!item._map) this._map.addLayer(item);
             //if (item.points) item.points._path.setAttribute('fill-rule', 'inherit');
@@ -150,21 +150,25 @@ L.GmxDrawing = L.Class.extend({
     },
 
     _disableDrag: function () {
-        this._map.dragging.disable();
-        L.DomUtil.disableTextSelection();
-        L.DomUtil.disableImageDrag();
-		this._map.doubleClickZoom.removeHooks();
+		if (this._map) {
+			this._map.dragging.disable();
+			L.DomUtil.disableTextSelection();
+			L.DomUtil.disableImageDrag();
+			this._map.doubleClickZoom.removeHooks();
+		}
     },
 
     _enableDrag: function () {
-        this._map.dragging.enable();
-        L.DomUtil.enableTextSelection();
-        L.DomUtil.enableImageDrag();
-		this._map.doubleClickZoom.addHooks();
+		if (this._map) {
+			this._map.dragging.enable();
+			L.DomUtil.enableTextSelection();
+			L.DomUtil.enableImageDrag();
+			this._map.doubleClickZoom.addHooks();
+		}
     },
 
     _clearCreate: function () {
-        if (this._createKey) {
+        if (this._createKey && this._map) {
             if (this._createKey.type === 'Rectangle' && L.Browser.mobile) {
                 L.DomEvent.off(this._map._container, 'touchstart', this._createKey.fn, this);
             } else {
@@ -220,7 +224,7 @@ L.GmxDrawing = L.Class.extend({
 
     create: function (type, options) {
         this._clearCreate(null);
-        if (type) {
+        if (type && this._map) {
             var map = this._map,
                 drawOptions = this._chkDrawOptions(type, options),
                 my = this;
@@ -506,6 +510,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             }, 0);
         }
         this._fireEvent('addtomap');
+		if (map._pathRoot.getAttribute('pointer-events') !== 'none') {
+			map._pathRoot.setAttribute('pointer-events', 'none');
+		}
     },
 
     onRemove: function (map) {
@@ -924,7 +931,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     getSummary: function () {
         var str = '',
-            mapOpt = this._map.options || {},
+            mapOpt = this._map ? this._map.options : {},
             type = this.options.type;
 
         if (type === 'Polyline' || type === 'MultiPolyline') {
@@ -971,7 +978,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                         down = originalEvent.buttons || originalEvent.button;
 
                     if (ring && (ring.downObject || !down)) {
-                        var mapOpt = my._map.options || {},
+                        var mapOpt = my._map ? my._map.options : {},
                             distanceUnit = mapOpt.distanceUnit,
                             squareUnit = mapOpt.squareUnit,
                             str = '';
@@ -1018,12 +1025,14 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
     _setMarker: function (marker) {
         var _this = this,
-            _parent = this._parent;
+            _parent = this._parent,
+			_map = _parent._map,
+			mapOpt = _map ? _map.options : {};
 
         marker
-            .bindPopup(null, {maxWidth: 1000, closeOnClick: _parent._map.options.maxPopupCount > 1 ? false : true})
+            .bindPopup(null, {maxWidth: 1000, closeOnClick: mapOpt.maxPopupCount > 1 ? false : true})
             .on('dblclick', function() {
-                this._map.removeLayer(this);
+                if (_map) { _map.removeLayer(this); }
                 _this.remove();
                 //_parent.remove(this);
             })
@@ -1060,7 +1069,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 }, popup._input);
                 popup.update();
             });
-        _parent._map.addLayer(marker);
+        _map.addLayer(marker);
 
         _this.openPopup = marker.openPopup = function () {
             if (marker._popup && marker._map && !marker._map.hasLayer(marker._popup)) {
@@ -1161,8 +1170,6 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             _this = this,
             mode = this.options.mode || (latlngs.length ? 'edit' : 'add');
 
-        this.lines = new L.Polyline(latlngs, lineStyle);
-        this.addLayer(this.lines);
         this.fill = new L.Polyline(latlngs, {
             className: 'leaflet-drawing-lines-fill',
             opacity: 0,
@@ -1170,8 +1177,11 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             size: 10,
             weight: 10
         });
-
         this.addLayer(this.fill);
+
+        this.lines = new L.Polyline(latlngs, lineStyle);
+        this.addLayer(this.lines);
+
         if (!this.lineType && mode === 'edit') {
 			var latlng = L.GmxDrawing.utils.isOldVersion ? latlngs[0] : latlngs[0][0];
             this.lines.addLatLng(latlng);
@@ -1196,7 +1206,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             .on('mouseout', function () {
                 if ('hideTooltip' in this) { this.hideTooltip(); }
             }, parent);
-        this.fill
+        this.lines
             .on('mouseover mousemove', function (ev) {
                 ev.ring = _this;
                 if ('_showTooltip' in this) {
@@ -1374,6 +1384,9 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     // edit mode
     _pointDown: function (ev) {
+        if (!this._map) {
+            return;
+        }
         if (L.Browser.ie || (L.gmxUtil && L.gmxUtil.gtIE11)) {
             this._map.dragging._draggable._onUp(); // error in IE
         }
@@ -1386,7 +1399,6 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 return;
             }
         }
-        this._parent._disableDrag();
         var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map, this._parent),
             type = downAttr.type,
             opt = this.options;
@@ -1402,6 +1414,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             this._setPoint(ev.latlng, num, type);
         }
         this.downObject = true;
+        this._parent._disableDrag();
         this._map
             .on('mousemove', this._pointMove, this)
             .on('mouseup', this._mouseupPoint, this);
@@ -1477,7 +1490,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     _pointDblClick: function (ev) {
         this._clearLineAddPoint();
-        if (!this._lastAddTime || Date.now() > this._lastAddTime) {
+        if (!this.options.disableAddPoints && (!this._lastAddTime || Date.now() > this._lastAddTime)) {
             var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map, this._parent);
             this._removePoint(downAttr.num);
         }
@@ -1651,7 +1664,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     _createHandlers: function (flag) {
-        if (!this.points) { return; }
+        if (!this.points || !this._map) { return; }
         var stop = L.DomEvent.stopPropagation;
         if (flag) {
 			if (this._map.contextmenu) {
