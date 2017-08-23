@@ -37,7 +37,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             }, 0);
         }
         this._fireEvent('addtomap');
-		if (map._pathRoot.getAttribute('pointer-events') !== 'none') {
+		if (map._pathRoot && map._pathRoot.getAttribute('pointer-events') !== 'none') {
 			map._pathRoot.setAttribute('pointer-events', 'none');
 		}
     },
