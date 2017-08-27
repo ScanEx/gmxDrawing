@@ -11,7 +11,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         size: L.Browser.mobile ? 40 : 8,
         weight: 2
     },
-    includes: [L.Mixin.Events],
+    includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
 
     initialize: function (parent, coords, options) {
         options = options || {};

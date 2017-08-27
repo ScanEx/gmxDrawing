@@ -7,7 +7,7 @@ L.GmxDrawing = L.Class.extend({
     options: {
         type: ''
     },
-    includes: [L.Mixin.Events],
+    includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
 
     initialize: function (map) {
         this._map = map;
@@ -45,7 +45,7 @@ L.GmxDrawing = L.Class.extend({
                 text.setAttributeNS(null, 'y', y);
                 text.textContent = mouseovertext;
                 if (tooltip.getAttributeNS(null, 'visibility') !== 'visible') {
-                    this._map._pathRoot.appendChild(tooltip);
+                    if (this._map._pathRoot) { this._map._pathRoot.appendChild(tooltip); }
                     tooltip.setAttributeNS(null, 'visibility', 'visible');
                 }
                 var length = text.getComputedTextLength();
@@ -475,7 +475,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     options: {
         mode: '' // add, edit
     },
-    includes: [L.Mixin.Events],
+    includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
 
     simplify: function () {
         var i, j, len, len1, hole;
@@ -1120,7 +1120,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         size: L.Browser.mobile ? 40 : 8,
         weight: 2
     },
-    includes: [L.Mixin.Events],
+    includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
 
     initialize: function (parent, coords, options) {
         options = options || {};

@@ -7,7 +7,7 @@ L.GmxDrawing = L.Class.extend({
     options: {
         type: ''
     },
-    includes: [L.Mixin.Events],
+    includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
 
     initialize: function (map) {
         this._map = map;
@@ -45,7 +45,7 @@ L.GmxDrawing = L.Class.extend({
                 text.setAttributeNS(null, 'y', y);
                 text.textContent = mouseovertext;
                 if (tooltip.getAttributeNS(null, 'visibility') !== 'visible') {
-                    this._map._pathRoot.appendChild(tooltip);
+                    if (this._map._pathRoot) { this._map._pathRoot.appendChild(tooltip); }
                     tooltip.setAttributeNS(null, 'visibility', 'visible');
                 }
                 var length = text.getComputedTextLength();

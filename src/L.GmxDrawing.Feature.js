@@ -2,7 +2,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     options: {
         mode: '' // add, edit
     },
-    includes: [L.Mixin.Events],
+    includes: L.Evented ? L.Evented.prototype : L.Mixin.Events,
 
     simplify: function () {
         var i, j, len, len1, hole;
