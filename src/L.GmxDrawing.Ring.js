@@ -97,7 +97,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             .on('mouseout', function () {
                 if ('hideTooltip' in this) { this.hideTooltip(); }
             }, parent);
-        this.lines
+        this.fill
             .on('mouseover mousemove', function (ev) {
                 ev.ring = _this;
                 if ('_showTooltip' in this) {
