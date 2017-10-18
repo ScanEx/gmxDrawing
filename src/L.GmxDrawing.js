@@ -104,10 +104,14 @@ L.GmxDrawing = L.Class.extend({
 
     add: function (obj, options) {
         var item = null;
+		options = options || {};
         if (obj) {
             if (obj instanceof L.GmxDrawing.Feature) {
                 item = obj;
             } else {
+				if (obj.feature && obj.feature.geometry && obj.feature.geometry.type === 'Point') {
+					obj = new L.Marker(obj._latlng);
+				}
                 var calcOptions = {};
                 if (!L.MultiPolygon) { L.MultiPolygon = L.Polygon; }
                 if (!L.MultiPolyline) { L.MultiPolyline = L.Polyline; }
@@ -261,7 +265,7 @@ L.GmxDrawing = L.Class.extend({
                         if (markerStyle.iconStyle) {
                             markerOpt.icon = L.icon(markerStyle.iconStyle);
                         }
-                        obj = my.add(L.marker(latlng, markerOpt), opt);
+                        obj = my.add(new L.Marker(latlng, markerOpt), opt);
                     } else {
                         if (drawOptions.pointStyle) { opt.pointStyle = drawOptions.pointStyle; }
                         if (drawOptions.lineStyle) { opt.lineStyle = drawOptions.lineStyle; }
