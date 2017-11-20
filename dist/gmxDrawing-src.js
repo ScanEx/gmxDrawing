@@ -17,10 +17,6 @@ L.GmxDrawing = L.Class.extend({
 			points: [], // [{text: 'Remove point'}, {text: 'Delete feature'}],
 			lines: []
 		});
-		var snaping = this.options.snaping || map.options.snaping;
-        if (snaping) {
-			L.GmxDrawing.utils.snaping = Number(snaping);
-		}
         if (L.gmxUtil && L.gmxUtil.prettifyDistance) {
 			var svgNS = 'http://www.w3.org/2000/svg';
 			var tooltip = document.createElementNS(svgNS, 'g');
@@ -1992,8 +1988,10 @@ L.GmxDrawing.utils = {
 			var drawingObjects = map.gmxDrawing.getFeatures()
 					.filter(function(it) { return it !== obj._parent && it._obj !== obj; })
 					.map(function(it) { return it.options.type === 'Point' ? it._obj : it; }),
-				closest = L.GeometryUtil.closestLayer(map, drawingObjects, latlng);
-			if (closest && closest.distance < L.GmxDrawing.utils.snaping) {
+				closest = L.GeometryUtil.closestLayer(map, drawingObjects, latlng),
+				snaping = Number(map.options.snaping || L.GmxDrawing.utils.snaping);
+
+			if (closest && closest.distance <= snaping) {
 				res = closest.latlng;
 			}
 		}
