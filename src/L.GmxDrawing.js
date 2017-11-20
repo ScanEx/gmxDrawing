@@ -17,7 +17,10 @@ L.GmxDrawing = L.Class.extend({
 			points: [], // [{text: 'Remove point'}, {text: 'Delete feature'}],
 			lines: []
 		});
-
+		var snaping = this.options.snaping || map.options.snaping;
+        if (snaping) {
+			L.GmxDrawing.utils.snaping = Number(snaping);
+		}
         if (L.gmxUtil && L.gmxUtil.prettifyDistance) {
 			var svgNS = 'http://www.w3.org/2000/svg';
 			var tooltip = document.createElementNS(svgNS, 'g');

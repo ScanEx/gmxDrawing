@@ -1,4 +1,5 @@
 L.GmxDrawing.utils = {
+	snaping: 10,			// snap distance
 	isOldVersion: L.version.substr(0, 3) === '0.7',
 	defaultStyles: {
         mode: '',
@@ -67,6 +68,20 @@ L.GmxDrawing.utils = {
             }
         }
     },
+
+    snapPoint: function (latlng, obj, map) {
+		var res = latlng;
+		if (L.GeometryUtil) {
+			var drawingObjects = map.gmxDrawing.getFeatures()
+					.filter(function(it) { return it !== obj._parent && it._obj !== obj; })
+					.map(function(it) { return it.options.type === 'Point' ? it._obj : it; }),
+				closest = L.GeometryUtil.closestLayer(map, drawingObjects, latlng);
+			if (closest && closest.distance < L.GmxDrawing.utils.snaping) {
+				res = closest.latlng;
+			}
+		}
+		return res;
+   },
 
     getNotDefaults: function(from, def) {
         var res = {};

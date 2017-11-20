@@ -17,7 +17,10 @@ L.GmxDrawing = L.Class.extend({
 			points: [], // [{text: 'Remove point'}, {text: 'Delete feature'}],
 			lines: []
 		});
-
+		var snaping = this.options.snaping || map.options.snaping;
+        if (snaping) {
+			L.GmxDrawing.utils.snaping = Number(snaping);
+		}
         if (L.gmxUtil && L.gmxUtil.prettifyDistance) {
 			var svgNS = 'http://www.w3.org/2000/svg';
 			var tooltip = document.createElementNS(svgNS, 'g');
@@ -1043,7 +1046,10 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             .on('dragstart', function() {
                 _this._fireEvent('dragstart');
             })
-            .on('drag', function() {
+            .on('drag', function(ev) {
+				if (ev.originalEvent.ctrlKey) {
+					marker.setLatLng(L.GmxDrawing.utils.snapPoint(marker.getLatLng(), marker, _map));
+				}
                 _this._fireEvent('drag');
                 _this._fireEvent('edit');
             })
@@ -1436,7 +1442,9 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             }
             this._clearLineAddPoint();
             this._moved = true;
-            this._setPoint(ev.latlng, this.down.num, this.down.type);
+
+			var latlng = ev.originalEvent.ctrlKey ? L.GmxDrawing.utils.snapPoint(ev.latlng, this, this._map) : ev.latlng;
+            this._setPoint(latlng, this.down.num, this.down.type);
             if ('_showTooltip' in this._parent) {
                 this._parent._showTooltip(this.lineType ? 'Length' : 'Area', ev);
             }
@@ -1734,10 +1742,12 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     // add mode
     _moseMove: function (ev) {
         if (this.points) {
-            var points = this._getLatLngsArr();
-            if (points.length === 1) { this._setPoint(ev.latlng, 1); }
+            var points = this._getLatLngsArr(),
+				latlng = ev.latlng;
+            if (ev.originalEvent.ctrlKey) { latlng = L.GmxDrawing.utils.snapPoint(latlng, this, this._map); }
+            if (points.length === 1) { this._setPoint(latlng, 1); }
 
-            this._setPoint(ev.latlng, points.length - 1);
+            this._setPoint(latlng, points.length - 1);
         }
     },
 
@@ -1906,6 +1916,7 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
 
 
 L.GmxDrawing.utils = {
+	snaping: 10,			// snap distance
 	isOldVersion: L.version.substr(0, 3) === '0.7',
 	defaultStyles: {
         mode: '',
@@ -1974,6 +1985,20 @@ L.GmxDrawing.utils = {
             }
         }
     },
+
+    snapPoint: function (latlng, obj, map) {
+		var res = latlng;
+		if (L.GeometryUtil) {
+			var drawingObjects = map.gmxDrawing.getFeatures()
+					.filter(function(it) { return it !== obj._parent && it._obj !== obj; })
+					.map(function(it) { return it.options.type === 'Point' ? it._obj : it; }),
+				closest = L.GeometryUtil.closestLayer(map, drawingObjects, latlng);
+			if (closest && closest.distance < L.GmxDrawing.utils.snaping) {
+				res = closest.latlng;
+			}
+		}
+		return res;
+   },
 
     getNotDefaults: function(from, def) {
         var res = {};

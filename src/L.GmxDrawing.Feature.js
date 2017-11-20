@@ -566,7 +566,10 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             .on('dragstart', function() {
                 _this._fireEvent('dragstart');
             })
-            .on('drag', function() {
+            .on('drag', function(ev) {
+				if (ev.originalEvent.ctrlKey) {
+					marker.setLatLng(L.GmxDrawing.utils.snapPoint(marker.getLatLng(), marker, _map));
+				}
                 _this._fireEvent('drag');
                 _this._fireEvent('edit');
             })

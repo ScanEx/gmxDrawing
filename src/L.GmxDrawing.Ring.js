@@ -323,7 +323,9 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             }
             this._clearLineAddPoint();
             this._moved = true;
-            this._setPoint(ev.latlng, this.down.num, this.down.type);
+
+			var latlng = ev.originalEvent.ctrlKey ? L.GmxDrawing.utils.snapPoint(ev.latlng, this, this._map) : ev.latlng;
+            this._setPoint(latlng, this.down.num, this.down.type);
             if ('_showTooltip' in this._parent) {
                 this._parent._showTooltip(this.lineType ? 'Length' : 'Area', ev);
             }
@@ -621,10 +623,12 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     // add mode
     _moseMove: function (ev) {
         if (this.points) {
-            var points = this._getLatLngsArr();
-            if (points.length === 1) { this._setPoint(ev.latlng, 1); }
+            var points = this._getLatLngsArr(),
+				latlng = ev.latlng;
+            if (ev.originalEvent.ctrlKey) { latlng = L.GmxDrawing.utils.snapPoint(latlng, this, this._map); }
+            if (points.length === 1) { this._setPoint(latlng, 1); }
 
-            this._setPoint(ev.latlng, points.length - 1);
+            this._setPoint(latlng, points.length - 1);
         }
     },
 
