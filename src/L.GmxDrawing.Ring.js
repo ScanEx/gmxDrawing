@@ -108,6 +108,13 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             .on('mouseout', function () {
                 if ('hideTooltip' in this) { this.hideTooltip(); }
             }, parent);
+        this.lines
+            .on('mouseover mousemove', function (ev) {
+                ev.ring = _this;
+                if ('_showTooltip' in this) {
+                    this._showTooltip('Length', ev);
+                }
+            }, parent);
 
 		if (this.points.bindContextMenu) {
 			this.points.bindContextMenu({
