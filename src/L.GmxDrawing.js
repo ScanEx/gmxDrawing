@@ -17,6 +17,7 @@ L.GmxDrawing = L.Class.extend({
 			points: [], // [{text: 'Remove point'}, {text: 'Delete feature'}],
 			lines: []
 		});
+
         if (L.gmxUtil && L.gmxUtil.prettifyDistance) {
 			var svgNS = 'http://www.w3.org/2000/svg';
 			var tooltip = document.createElementNS(svgNS, 'g');
@@ -108,19 +109,24 @@ L.GmxDrawing = L.Class.extend({
             if (obj instanceof L.GmxDrawing.Feature) {
                 item = obj;
             } else {
-				if (obj.feature && obj.feature.geometry && obj.feature.geometry.type === 'Point') {
-					obj = new L.Marker(obj._latlng);
-				}
                 var calcOptions = {};
-                if (!L.MultiPolygon) { L.MultiPolygon = L.Polygon; }
-                if (!L.MultiPolyline) { L.MultiPolyline = L.Polyline; }
+				if (obj.feature && obj.feature.geometry) {
+					var type = obj.feature.geometry.type;
+					if (type === 'Point') {
+						obj = new L.Marker(obj._latlng);
+					} else if (type === 'MultiPolygon') {
+						calcOptions.type = type;
+					}
+				}
+                // if (!L.MultiPolygon) { L.MultiPolygon = L.Polygon; }
+                // if (!L.MultiPolyline) { L.MultiPolyline = L.Polyline; }
                 if (!options || !('editable' in options)) { calcOptions.editable = true; }
                 if (obj.geometry)     { calcOptions.type = obj.geometry.type; }
                 else if (obj instanceof L.Rectangle)     { calcOptions.type = 'Rectangle'; }
-                else if (obj instanceof L.Polygon)  { calcOptions.type = 'Polygon'; }
-                else if (obj instanceof L.MultiPolygon)  { calcOptions.type = 'MultiPolygon'; }
+                else if (obj instanceof L.Polygon)  { calcOptions.type = calcOptions.type || 'Polygon'; }
+                else if (L.MultiPolygon && obj instanceof L.MultiPolygon)  { calcOptions.type = 'MultiPolygon'; }
                 else if (obj instanceof L.Polyline) { calcOptions.type = 'Polyline'; }
-                else if (obj instanceof L.MultiPolyline) { calcOptions.type = 'MultiPolyline'; }
+                else if (L.MultiPolyline && obj instanceof L.MultiPolyline) { calcOptions.type = 'MultiPolyline'; }
                 else if (obj instanceof L.Marker) {
                     calcOptions.type = 'Point'; calcOptions.editable = false;
                     obj.options.draggable = true;

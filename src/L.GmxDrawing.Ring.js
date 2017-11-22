@@ -74,7 +74,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this.addLayer(this.lines);
 
         if (!this.lineType && mode === 'edit') {
-			var latlng = L.GmxDrawing.utils.isOldVersion ? latlngs[0] : latlngs[0][0];
+			// var latlng = L.GmxDrawing.utils.isOldVersion ? latlngs[0] : latlngs[0][0];
+			var latlng = latlngs[0][0] || latlngs[0];
             this.lines.addLatLng(latlng);
             this.fill.addLatLng(latlng);
         }

@@ -480,6 +480,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
         if (this.options.editable) {
             var arr = obj.getLayers ? L.GmxDrawing.utils._getLastObject(obj).getLayers() : [obj];
+			if (!L.GmxDrawing.utils.isOldVersion && this.options.type === 'MultiPolygon') {
+				arr = obj.getLatLngs().map(function(it) { return {_latlngs: it.shift(), _holes: it}; });
+			}
             for (var i = 0, len = arr.length; i < len; i++) {
                 var it = arr[i],
                     holes = [],
@@ -567,7 +570,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 _this._fireEvent('dragstart');
             })
             .on('drag', function(ev) {
-				if (ev.originalEvent.ctrlKey) {
+				if (ev.originalEvent && ev.originalEvent.ctrlKey) {
 					marker.setLatLng(L.GmxDrawing.utils.snapPoint(marker.getLatLng(), marker, _map));
 				}
                 _this._fireEvent('drag');

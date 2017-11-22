@@ -17,6 +17,7 @@ L.GmxDrawing = L.Class.extend({
 			points: [], // [{text: 'Remove point'}, {text: 'Delete feature'}],
 			lines: []
 		});
+
         if (L.gmxUtil && L.gmxUtil.prettifyDistance) {
 			var svgNS = 'http://www.w3.org/2000/svg';
 			var tooltip = document.createElementNS(svgNS, 'g');
@@ -108,19 +109,24 @@ L.GmxDrawing = L.Class.extend({
             if (obj instanceof L.GmxDrawing.Feature) {
                 item = obj;
             } else {
-				if (obj.feature && obj.feature.geometry && obj.feature.geometry.type === 'Point') {
-					obj = new L.Marker(obj._latlng);
-				}
                 var calcOptions = {};
-                if (!L.MultiPolygon) { L.MultiPolygon = L.Polygon; }
-                if (!L.MultiPolyline) { L.MultiPolyline = L.Polyline; }
+				if (obj.feature && obj.feature.geometry) {
+					var type = obj.feature.geometry.type;
+					if (type === 'Point') {
+						obj = new L.Marker(obj._latlng);
+					} else if (type === 'MultiPolygon') {
+						calcOptions.type = type;
+					}
+				}
+                // if (!L.MultiPolygon) { L.MultiPolygon = L.Polygon; }
+                // if (!L.MultiPolyline) { L.MultiPolyline = L.Polyline; }
                 if (!options || !('editable' in options)) { calcOptions.editable = true; }
                 if (obj.geometry)     { calcOptions.type = obj.geometry.type; }
                 else if (obj instanceof L.Rectangle)     { calcOptions.type = 'Rectangle'; }
-                else if (obj instanceof L.Polygon)  { calcOptions.type = 'Polygon'; }
-                else if (obj instanceof L.MultiPolygon)  { calcOptions.type = 'MultiPolygon'; }
+                else if (obj instanceof L.Polygon)  { calcOptions.type = calcOptions.type || 'Polygon'; }
+                else if (L.MultiPolygon && obj instanceof L.MultiPolygon)  { calcOptions.type = 'MultiPolygon'; }
                 else if (obj instanceof L.Polyline) { calcOptions.type = 'Polyline'; }
-                else if (obj instanceof L.MultiPolyline) { calcOptions.type = 'MultiPolyline'; }
+                else if (L.MultiPolyline && obj instanceof L.MultiPolyline) { calcOptions.type = 'MultiPolyline'; }
                 else if (obj instanceof L.Marker) {
                     calcOptions.type = 'Point'; calcOptions.editable = false;
                     obj.options.draggable = true;
@@ -956,6 +962,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
         if (this.options.editable) {
             var arr = obj.getLayers ? L.GmxDrawing.utils._getLastObject(obj).getLayers() : [obj];
+			if (!L.GmxDrawing.utils.isOldVersion && this.options.type === 'MultiPolygon') {
+				arr = obj.getLatLngs().map(function(it) { return {_latlngs: it.shift(), _holes: it}; });
+			}
             for (var i = 0, len = arr.length; i < len; i++) {
                 var it = arr[i],
                     holes = [],
@@ -1043,7 +1052,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 _this._fireEvent('dragstart');
             })
             .on('drag', function(ev) {
-				if (ev.originalEvent.ctrlKey) {
+				if (ev.originalEvent && ev.originalEvent.ctrlKey) {
 					marker.setLatLng(L.GmxDrawing.utils.snapPoint(marker.getLatLng(), marker, _map));
 				}
                 _this._fireEvent('drag');
@@ -1189,7 +1198,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this.addLayer(this.lines);
 
         if (!this.lineType && mode === 'edit') {
-			var latlng = L.GmxDrawing.utils.isOldVersion ? latlngs[0] : latlngs[0][0];
+			// var latlng = L.GmxDrawing.utils.isOldVersion ? latlngs[0] : latlngs[0][0];
+			var latlng = latlngs[0][0] || latlngs[0];
             this.lines.addLatLng(latlng);
             this.fill.addLatLng(latlng);
         }
