@@ -37,8 +37,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             }, 0);
         }
         this._fireEvent('addtomap');
-		if (map._pathRoot && map._pathRoot.getAttribute('pointer-events') !== 'visible') {
-			map._pathRoot.setAttribute('pointer-events', 'visible');
+		var svgContainer = this._map._renderer._container || this._map._pathRoot;
+		if (svgContainer.getAttribute('pointer-events') !== 'visible') {
+			svgContainer.setAttribute('pointer-events', 'visible');
 		}
     },
 

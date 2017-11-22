@@ -45,7 +45,7 @@ L.GmxDrawing = L.Class.extend({
                 text.setAttributeNS(null, 'y', y);
                 text.textContent = mouseovertext;
                 if (tooltip.getAttributeNS(null, 'visibility') !== 'visible') {
-                    if (this._map._pathRoot) { this._map._pathRoot.appendChild(tooltip); }
+                    (this._map._renderer._container || this._map._pathRoot).appendChild(tooltip);
                     tooltip.setAttributeNS(null, 'visibility', 'visible');
                 }
                 var length = text.getComputedTextLength();
@@ -519,8 +519,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             }, 0);
         }
         this._fireEvent('addtomap');
-		if (map._pathRoot && map._pathRoot.getAttribute('pointer-events') !== 'visible') {
-			map._pathRoot.setAttribute('pointer-events', 'visible');
+		var svgContainer = this._map._renderer._container || this._map._pathRoot;
+		if (svgContainer.getAttribute('pointer-events') !== 'visible') {
+			svgContainer.setAttribute('pointer-events', 'visible');
 		}
     },
 
@@ -1408,7 +1409,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
         if (ev.originalEvent) {
             var originalEvent = ev.originalEvent;
-            if (originalEvent.ctrlKey) {
+            if (originalEvent.shiftKey) {
                 this._onDragStart(ev);
                 return;
             } else if (originalEvent.which !== 1 && originalEvent.button !== 1) {
@@ -1568,6 +1569,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this._map
             .on('mouseup', this._onDragEnd, this)
             .on('mousemove', this._onDrag, this);
+		this._parent._disableDrag();
         this._fireEvent('dragstart');
     },
 
@@ -1659,6 +1661,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 this.points
                     .on('mousemove', stop)
                     .on('mousedown', this._pointDown, this);
+                this.lines
+                    .on('mousedown', this._pointDown, this);
                 this.fill
                     .on('dblclick click', stop, this)
                     .on('mousedown', this._pointDown, this);
@@ -1674,6 +1678,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 this.points
                     .off('mousemove', stop)
                     .off('mousedown', this._pointDown, this);
+                this.lines
+                    .on('mousedown', this._pointDown, this);
                 this.fill
                     .off('dblclick click', stop, this)
                     .off('mousedown', this._pointDown, this);
@@ -2035,10 +2041,11 @@ L.GmxDrawing.utils = {
 
     getDownType: function(ev, map, feature) {
         var layerPoint = ev.layerPoint,
-            ctrlKey = false,
+			originalEvent = ev.originalEvent,
+            ctrlKey = false, shiftKey = false, altKey = false,
             latlng = ev.latlng;
-        if (ev.originalEvent) {
-            if (ev.originalEvent.ctrlKey) { ctrlKey = true; }
+        if (originalEvent) {
+            ctrlKey = originalEvent.ctrlKey; shiftKey = originalEvent.shiftKey; altKey = originalEvent.altKey;
         }
         if (ev.touches && ev.touches.length === 1) {
             var first = ev.touches[0],
@@ -2046,7 +2053,7 @@ L.GmxDrawing.utils = {
             layerPoint = map.containerPointToLayerPoint(containerPoint);
             latlng = map.layerPointToLatLng(layerPoint);
         }
-        var out = {type: '', latlng: latlng, ctrlKey: ctrlKey},
+        var out = {type: '', latlng: latlng, ctrlKey: ctrlKey, shiftKey: shiftKey, altKey: altKey},
             ring = this.points ? this : (ev.ring || ev.relatedEvent),
             points = ring.points._originalPoints || ring.points._parts[0] || [],
             len = points.length;
@@ -2066,7 +2073,7 @@ L.GmxDrawing.utils = {
         out = {
             mode: ring.mode,
             layerPoint: ev.layerPoint,
-            ctrlKey: ctrlKey,
+            ctrlKey: ctrlKey, shiftKey: shiftKey, altKey: altKey,
             latlng: latlng
         };
         for (var i = 0; i < len; i++) {

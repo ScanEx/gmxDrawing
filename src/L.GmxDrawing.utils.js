@@ -112,10 +112,11 @@ L.GmxDrawing.utils = {
 
     getDownType: function(ev, map, feature) {
         var layerPoint = ev.layerPoint,
-            ctrlKey = false,
+			originalEvent = ev.originalEvent,
+            ctrlKey = false, shiftKey = false, altKey = false,
             latlng = ev.latlng;
-        if (ev.originalEvent) {
-            if (ev.originalEvent.ctrlKey) { ctrlKey = true; }
+        if (originalEvent) {
+            ctrlKey = originalEvent.ctrlKey; shiftKey = originalEvent.shiftKey; altKey = originalEvent.altKey;
         }
         if (ev.touches && ev.touches.length === 1) {
             var first = ev.touches[0],
@@ -123,7 +124,7 @@ L.GmxDrawing.utils = {
             layerPoint = map.containerPointToLayerPoint(containerPoint);
             latlng = map.layerPointToLatLng(layerPoint);
         }
-        var out = {type: '', latlng: latlng, ctrlKey: ctrlKey},
+        var out = {type: '', latlng: latlng, ctrlKey: ctrlKey, shiftKey: shiftKey, altKey: altKey},
             ring = this.points ? this : (ev.ring || ev.relatedEvent),
             points = ring.points._originalPoints || ring.points._parts[0] || [],
             len = points.length;
@@ -143,7 +144,7 @@ L.GmxDrawing.utils = {
         out = {
             mode: ring.mode,
             layerPoint: ev.layerPoint,
-            ctrlKey: ctrlKey,
+            ctrlKey: ctrlKey, shiftKey: shiftKey, altKey: altKey,
             latlng: latlng
         };
         for (var i = 0; i < len; i++) {

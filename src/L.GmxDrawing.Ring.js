@@ -284,7 +284,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
         if (ev.originalEvent) {
             var originalEvent = ev.originalEvent;
-            if (originalEvent.ctrlKey) {
+            if (originalEvent.shiftKey) {
                 this._onDragStart(ev);
                 return;
             } else if (originalEvent.which !== 1 && originalEvent.button !== 1) {
@@ -444,6 +444,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this._map
             .on('mouseup', this._onDragEnd, this)
             .on('mousemove', this._onDrag, this);
+		this._parent._disableDrag();
         this._fireEvent('dragstart');
     },
 
@@ -535,6 +536,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 this.points
                     .on('mousemove', stop)
                     .on('mousedown', this._pointDown, this);
+                this.lines
+                    .on('mousedown', this._pointDown, this);
                 this.fill
                     .on('dblclick click', stop, this)
                     .on('mousedown', this._pointDown, this);
@@ -550,6 +553,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 this.points
                     .off('mousemove', stop)
                     .off('mousedown', this._pointDown, this);
+                this.lines
+                    .on('mousedown', this._pointDown, this);
                 this.fill
                     .off('dblclick click', stop, this)
                     .off('mousedown', this._pointDown, this);
