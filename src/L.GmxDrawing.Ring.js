@@ -561,7 +561,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                     .off('mousemove', stop)
                     .off('mousedown', this._pointDown, this);
                 this.lines
-                    .on('mousedown', this._pointDown, this);
+                    .off('mousedown', this._pointDown, this);
                 this.fill
                     .off('dblclick click', stop, this)
                     .off('mousedown', this._pointDown, this);
