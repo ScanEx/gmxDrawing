@@ -35,12 +35,13 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             setTimeout(function () {
                 _this._fireEvent('drawstop', _this._obj.options);
             }, 0);
+        } else {
+			var svgContainer = this._map._renderer._container || this._map._pathRoot;
+			if (svgContainer.getAttribute('pointer-events') !== 'visible') {
+				svgContainer.setAttribute('pointer-events', 'visible');
+			}
         }
         this._fireEvent('addtomap');
-		var svgContainer = this._map._renderer._container || this._map._pathRoot;
-		if (svgContainer.getAttribute('pointer-events') !== 'visible') {
-			svgContainer.setAttribute('pointer-events', 'visible');
-		}
     },
 
     onRemove: function (map) {
