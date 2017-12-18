@@ -127,7 +127,7 @@ L.GmxDrawing = L.Class.extend({
                 else if (L.MultiPolygon && obj instanceof L.MultiPolygon)  { calcOptions.type = 'MultiPolygon'; }
                 else if (obj instanceof L.Polyline) { calcOptions.type = 'Polyline'; }
                 else if (L.MultiPolyline && obj instanceof L.MultiPolyline) { calcOptions.type = 'MultiPolyline'; }
-                else if (obj instanceof L.Marker) {
+                else if (obj.setIcon || obj instanceof L.Marker) {
                     calcOptions.type = 'Point'; calcOptions.editable = false;
                     obj.options.draggable = true;
                 }
