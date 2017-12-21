@@ -36,7 +36,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 _this._fireEvent('drawstop', _this._obj.options);
             }, 0);
         } else {
-			var svgContainer = this._map._renderer._container || this._map._pathRoot;
+			var svgContainer = this._map._pathRoot || this._map._renderer._container;
 			if (svgContainer.getAttribute('pointer-events') !== 'visible') {
 				svgContainer.setAttribute('pointer-events', 'visible');
 			}

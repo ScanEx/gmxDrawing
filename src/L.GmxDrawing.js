@@ -45,7 +45,7 @@ L.GmxDrawing = L.Class.extend({
                 text.setAttributeNS(null, 'y', y);
                 text.textContent = mouseovertext;
                 if (tooltip.getAttributeNS(null, 'visibility') !== 'visible') {
-                    (this._map._renderer._container || this._map._pathRoot).appendChild(tooltip);
+                    (this._map._pathRoot || this._map._renderer._container).appendChild(tooltip);
                     tooltip.setAttributeNS(null, 'visibility', 'visible');
                 }
                 var length = text.getComputedTextLength();
