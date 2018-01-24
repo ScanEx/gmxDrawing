@@ -287,7 +287,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             return;
         }
         if (L.Browser.ie || (L.gmxUtil && L.gmxUtil.gtIE11)) {
-            this._map.dragging._draggable._onUp(); // error in IE
+            this._map.dragging._draggable._onUp(ev); // error in IE
         }
         if (ev.originalEvent) {
             var originalEvent = ev.originalEvent;
