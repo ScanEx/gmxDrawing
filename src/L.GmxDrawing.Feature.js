@@ -483,7 +483,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         this.rings = [];
         this.mode = '';
         this._fill = L.featureGroup();
-        this._fill.options.smoothFactor = 0;
+		if (this._fill.options) {
+			this._fill.options.smoothFactor = 0;
+		}
 
         if (this.options.editable) {
             var arr = obj.getLayers ? L.GmxDrawing.utils._getLastObject(obj).getLayers() : [obj];
