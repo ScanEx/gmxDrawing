@@ -22,7 +22,7 @@ L.GmxDrawing.utils = {
             fill: false,
             fillColor: null,
             fillOpacity: 0.2,
-            smoothFactor: 1,
+            smoothFactor: 0,
             stroke: true
         },
         pointStyle: {

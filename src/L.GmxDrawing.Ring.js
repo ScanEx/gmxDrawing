@@ -2,7 +2,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     options: {
         className: 'leaflet-drawing-ring',
         //noClip: true,
-        //smoothFactor: 0,
+        smoothFactor: 0,
         opacity: 1,
         shape: 'circle',
         fill: true,
@@ -20,7 +20,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         options.mode = '';
         this._activeZIndex = options.activeZIndex || 7;
         this._notActiveZIndex = options.notActiveZIndex || 6;
-        this.options = L.extend({}, parent.getStyle(), options);
+        this.options = L.extend({}, this.options, parent.getStyle(), options);
 
         this._layers = {};
         this._coords = coords;
