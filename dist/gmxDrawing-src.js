@@ -970,9 +970,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 		}
 
         if (this.options.editable) {
-            var arr = obj.getLayers ? L.GmxDrawing.utils._getLastObject(obj).getLayers() : [obj];
+            var arr = obj.getLayers ? L.GmxDrawing.utils._getLastObject(obj) : [obj];
 			if (!L.GmxDrawing.utils.isOldVersion && this.options.type === 'MultiPolygon') {
-				arr = obj.getLatLngs().map(function(it) { return {_latlngs: it.shift(), _holes: it}; });
+				arr = (obj.getLayers ? obj.getLayers()[0] : obj).getLatLngs().map(function(it) { return {_latlngs: it.shift(), _holes: it}; });
 			}
             for (var i = 0, len = arr.length; i < len; i++) {
                 var it = arr[i],
