@@ -970,9 +970,14 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 		}
 
         if (this.options.editable) {
-            var arr = obj.getLayers ? L.GmxDrawing.utils._getLastObject(obj) : [obj];
-			if (!L.GmxDrawing.utils.isOldVersion && this.options.type === 'MultiPolygon') {
-				arr = (obj.getLayers ? obj.getLayers()[0] : obj).getLatLngs().map(function(it) { return {_latlngs: it.shift(), _holes: it}; });
+            var arr = [];
+			if (L.GmxDrawing.utils.isOldVersion) {
+				arr = obj.getLayers ? L.GmxDrawing.utils._getLastObject(obj).getLayers() : [obj];
+			} else {
+				arr = obj.getLayers ? L.GmxDrawing.utils._getLastObject(obj) : [obj];
+				if (this.options.type === 'MultiPolygon') {
+					arr = (obj.getLayers ? obj.getLayers()[0] : obj).getLatLngs().map(function(it) { return {_latlngs: it.shift(), _holes: it}; });
+				}
 			}
             for (var i = 0, len = arr.length; i < len; i++) {
                 var it = arr[i],
