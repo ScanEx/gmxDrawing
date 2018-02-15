@@ -2,6 +2,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     options: {
         className: 'leaflet-drawing-ring',
         //noClip: true,
+        maxPoints: 0,
         smoothFactor: 0,
         opacity: 1,
         shape: 'circle',
@@ -96,7 +97,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 }
             }, parent)
             .on('mouseout', function () {
-                if ('hideTooltip' in this) { this.hideTooltip(); }
+                if (!_this.down && 'hideTooltip' in this) { this.hideTooltip(); }
             }, parent);
         this.fill
             .on('mouseover mousemove', function (ev) {
@@ -106,7 +107,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 }
             }, parent)
             .on('mouseout', function () {
-                if ('hideTooltip' in this) { this.hideTooltip(); }
+                if (!_this.down && 'hideTooltip' in this) { this.hideTooltip(); }
             }, parent);
         this.lines
             .on('mouseover mousemove', function (ev) {
@@ -244,9 +245,17 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this._legLength = [];
         if (this.points) {
             var points = this._getLatLngsArr(),
+                maxPoints = this.options.maxPoints,
                 len = points.length,
-                lastPoint = points[len - 2];
-            if (!lastPoint || !lastPoint.equals(point)) {
+                lastPoint = points[len - 2],
+				flag = !lastPoint || !lastPoint.equals(point);
+
+            if (maxPoints && len >= maxPoints) {
+				this.setEditMode();
+				this._fireEvent('drawstop');
+				len--;
+			}
+            if (flag) {
                 if (delta) { len -= delta; }    // reset existing point
                 this._setPoint(point, len, 'node');
             }
@@ -334,9 +343,10 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
 			var latlng = ev.originalEvent.ctrlKey ? L.GmxDrawing.utils.snapPoint(ev.latlng, this, this._map) : ev.latlng;
             this._setPoint(latlng, this.down.num, this.down.type);
-            if ('_showTooltip' in this._parent) {
-                this._parent._showTooltip(this.lineType ? 'Length' : 'Area', ev);
-            }
+			if ('_showTooltip' in this._parent) {
+				ev.ring = this;
+				this._parent._showTooltip(this.lineType ? 'Length' : 'Area', ev);
+			}
         }
     },
 
