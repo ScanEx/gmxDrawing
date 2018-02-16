@@ -12,7 +12,6 @@ L.GmxDrawing.utils = {
         lineStyle: {
             opacity:1,
             weight:2,
-            noClip: true,
             clickable: false,
             className: 'leaflet-drawing-lines',
             color: '#0033ff',
@@ -23,12 +22,13 @@ L.GmxDrawing.utils = {
             fillColor: null,
             fillOpacity: 0.2,
             smoothFactor: 0,
+			noClip: true,
             stroke: true
         },
         pointStyle: {
             className: 'leaflet-drawing-points',
-            noClip: true,
             smoothFactor: 0,
+			noClip: true,
             opacity: 1,
             shape: 'circle',
             fill: true,

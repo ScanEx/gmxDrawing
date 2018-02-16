@@ -521,8 +521,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                         originalEvent = ev.originalEvent,
                         down = originalEvent.buttons || originalEvent.button;
 
-                    if (ring && (ring.downObject || !down)) {
-                        var mapOpt = my._map ? my._map.options : {},
+					if (ring && (ring.downObject || !down)) {
+                       var mapOpt = my._map ? my._map.options : {},
                             distanceUnit = mapOpt.distanceUnit,
                             squareUnit = mapOpt.squareUnit,
                             str = '';
@@ -544,7 +544,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                             my._parent.showTooltip(ev.layerPoint, str);
                         }
                         my._fireEvent('onMouseOver');
-                    }
+					}
                 };
                 this.hideTooltip = function() {
                     this._parent.hideTooltip();

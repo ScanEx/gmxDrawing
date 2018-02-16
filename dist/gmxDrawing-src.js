@@ -1003,8 +1003,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                         originalEvent = ev.originalEvent,
                         down = originalEvent.buttons || originalEvent.button;
 
-                    if (ring && (ring.downObject || !down)) {
-                        var mapOpt = my._map ? my._map.options : {},
+					if (ring && (ring.downObject || !down)) {
+                       var mapOpt = my._map ? my._map.options : {},
                             distanceUnit = mapOpt.distanceUnit,
                             squareUnit = mapOpt.squareUnit,
                             str = '';
@@ -1026,7 +1026,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                             my._parent.showTooltip(ev.layerPoint, str);
                         }
                         my._fireEvent('onMouseOver');
-                    }
+					}
                 };
                 this.hideTooltip = function() {
                     this._parent.hideTooltip();
@@ -1142,6 +1142,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         //noClip: true,
         maxPoints: 0,
         smoothFactor: 0,
+		noClip: true,
         opacity: 1,
         shape: 'circle',
         fill: true,
@@ -1178,6 +1179,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this.downObject = false;
         this.mode = '';
         this.lineType = this.options.type.indexOf('Polyline') !== -1;
+        this.options.disableAddPoints = this.options.type === 'Rectangle';
 
         var pointStyle = this.options.pointStyle;
         var lineStyle = {opacity:1, weight:2, noClip: true, clickable: false, className: 'leaflet-drawing-lines'};
@@ -1203,6 +1205,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this.fill = new L.Polyline(latlngs, {
             className: 'leaflet-drawing-lines-fill',
             opacity: 0,
+			smoothFactor: 0,
+			noClip: true,
             fill: false,
             size: 10,
             weight: 10
@@ -1225,35 +1229,22 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
         this.addLayer(this.points);
         this.points
-            .on('mouseover mousemove', function (ev) {
-                ev.ring = _this;
-                if ('_showTooltip' in this) {
-                    this._showTooltip(_this.lineType ? 'Length' : 'Area', ev);
-                }
+            .on('mouseover', function (ev) {
+				this.toggleTooltip(ev, true, _this.lineType ? 'Length' : 'Area');
                 if (ev.type === 'mouseover') {
                     _this._recheckContextItems('points', _this._map);
                 }
-            }, parent)
-            .on('mouseout', function () {
-                if (!_this.down && 'hideTooltip' in this) { this.hideTooltip(); }
-            }, parent);
+            }, this)
+            .on('mouseout', this.toggleTooltip, this);
         this.fill
             .on('mouseover mousemove', function (ev) {
-                ev.ring = _this;
-                if ('_showTooltip' in this) {
-                    this._showTooltip('Length', ev);
-                }
-            }, parent)
-            .on('mouseout', function () {
-                if (!_this.down && 'hideTooltip' in this) { this.hideTooltip(); }
-            }, parent);
-        this.lines
-            .on('mouseover mousemove', function (ev) {
-                ev.ring = _this;
-                if ('_showTooltip' in this) {
-                    this._showTooltip('Length', ev);
-                }
-            }, parent);
+				this.toggleTooltip(ev, true);
+            }, this)
+            .on('mouseout', this.toggleTooltip, this);
+        // this.lines
+            // .on('mouseover', function (ev) {// console.log('lines___', ev);
+				// this.toggleTooltip(ev, true);
+            // }, this);
 
 		if (this.points.bindContextMenu) {
 			this.points.bindContextMenu({
@@ -1263,6 +1254,17 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 			});
 		}
     },
+    toggleTooltip: function (ev, flag, type) {
+		if ('hideTooltip' in this._parent) {
+			ev.ring = this;
+			if (flag) {
+				type = type || 'Length';
+				this._parent._showTooltip(type, ev);
+			} else if (this.mode !== 'add') {
+				this._parent.hideTooltip(ev);
+			}
+		}
+	},
 
     _recheckContextItems: function (type, map) {
         var _this = this;
@@ -1356,7 +1358,6 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         if (!this.points) { return; }
         var latlngs = this._getLatLngsArr();
         if (this.options.type === 'Rectangle') {
-			if (latlngs.length < 4) { latlngs[3] = latlng; }
 			if (type === 'edge') {
                 nm--;
                 if (nm === 0) { latlngs[0].lng = latlngs[1].lng = latlng.lng; }
@@ -1409,7 +1410,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     setLatLngs: function (latlngs) {
-        if (this.points) {
+		if (this.points) {
             var points = this.points;
             this.fill.setLatLngs(latlngs);
             this.lines.setLatLngs(latlngs);
@@ -1530,7 +1531,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 this._setPoint(points[0], 0);
             }
         }
-    },
+	},
 
     _clearLineAddPoint: function () {
         if (this._lineAddPointID) { clearTimeout(this._lineAddPointID); }
@@ -1691,8 +1692,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 this.points
                     .on('mousemove', stop)
                     .on('mousedown', this._pointDown, this);
-                this.lines
-                    .on('mousedown', this._pointDown, this);
+                // this.lines
+                    // .on('mousedown', this._pointDown, this);
                 this.fill
                     .on('dblclick click', stop, this)
                     .on('mousedown', this._pointDown, this);
@@ -1708,8 +1709,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 this.points
                     .off('mousemove', stop)
                     .off('mousedown', this._pointDown, this);
-                this.lines
-                    .off('mousedown', this._pointDown, this);
+                // this.lines
+                    // .off('mousedown', this._pointDown, this);
                 this.fill
                     .off('dblclick click', stop, this)
                     .off('mousedown', this._pointDown, this);
@@ -1790,6 +1791,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             if (points.length === 1) { this._setPoint(latlng, 1); }
 
             this._setPoint(latlng, points.length - 1);
+			this.toggleTooltip(ev, true, this.lineType ? 'Length' : 'Area');
         }
     },
 
@@ -1827,7 +1829,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 L.GmxDrawing.PointMarkers = L.Polygon.extend({
     options: {
         className: 'leaflet-drawing-points',
-        //noClip: true,
+        noClip: true,
         smoothFactor: 0,
         opacity: 1,
         shape: 'circle',
@@ -1837,6 +1839,9 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
         size: L.Browser.mobile ? 40 : 8,
         weight: 2
     },
+	_convertLatLngs: function (latlngs) {
+		return L.Polyline.prototype._convertLatLngs.call(this, latlngs);
+	},
 
     getRing: function () {
 		return this._parent;
@@ -1849,12 +1854,13 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
     getPathLatLngs: function () {
         var out = [],
             size = this.options.size,
+            dontsmooth = this._parent.options.type === 'Rectangle',
             points = this._parts[0],
             prev;
 
         for (var i = 0, len = points.length, p; i < len; i++) {
             p = points[i];
-            if (i === 0 || Math.abs(prev.x - p.x) > size || Math.abs(prev.y - p.y) > size) {
+            if (i === 0 || dontsmooth || Math.abs(prev.x - p.x) > size || Math.abs(prev.y - p.y) > size) {
                 out.push(this._latlngs[i]);
                 prev = p;
             }
@@ -1865,6 +1871,7 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
     _getPathPartStr: function (points) {
         var round = L.Path.VML,
             size = this.options.size / 2,
+            dontsmooth = this._parent.options.type === 'Rectangle',
             skipLastPoint = this._parent.mode === 'add' && !L.Browser.mobile ? 1 : 0,
             radius = (this.options.shape === 'circle' ? true : false),
             prev;
@@ -1872,7 +1879,7 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
         for (var j = 0, len2 = points.length - skipLastPoint, str = '', p; j < len2; j++) {
             p = points[j];
             if (round) { p._round(); }
-            if (j === 0 || Math.abs(prev.x - p.x) > this.options.size || Math.abs(prev.y - p.y) > this.options.size) {
+            if (j === 0 || dontsmooth || Math.abs(prev.x - p.x) > this.options.size || Math.abs(prev.y - p.y) > this.options.size) {
                 if (radius) {
                     str += 'M' + p.x + ',' + (p.y - size) +
                            ' A' + size + ',' + size + ',0,1,1,' +
@@ -1908,7 +1915,8 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
 				this._path.setAttribute('d', this._pathStr || 'M0 0');
 			}
 		} else {
-			this._renderer._setPath(this, this._parts.length ? this._getPathPartStr(this._parts[0]) : '');
+			var str = this._parts.length ? this._getPathPartStr(this._parts[0]) : '';
+			this._renderer._setPath(this, str);
 		}
 	}
 });
@@ -1971,7 +1979,6 @@ L.GmxDrawing.utils = {
         lineStyle: {
             opacity:1,
             weight:2,
-            noClip: true,
             clickable: false,
             className: 'leaflet-drawing-lines',
             color: '#0033ff',
@@ -1982,12 +1989,13 @@ L.GmxDrawing.utils = {
             fillColor: null,
             fillOpacity: 0.2,
             smoothFactor: 0,
+			noClip: true,
             stroke: true
         },
         pointStyle: {
             className: 'leaflet-drawing-points',
-            noClip: true,
             smoothFactor: 0,
+			noClip: true,
             opacity: 1,
             shape: 'circle',
             fill: true,

@@ -13,7 +13,7 @@
     opacity: 0.85;
 }
 .leaflet-drawing-lines {
-   pointer-events: visiblestroke;
+   pointer-events: none;
 }
 .leaflet-drawing-lines-fill {
     pointer-events: visiblepainted;

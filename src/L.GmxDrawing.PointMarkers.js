@@ -1,7 +1,7 @@
 L.GmxDrawing.PointMarkers = L.Polygon.extend({
     options: {
         className: 'leaflet-drawing-points',
-        //noClip: true,
+        noClip: true,
         smoothFactor: 0,
         opacity: 1,
         shape: 'circle',
@@ -11,6 +11,9 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
         size: L.Browser.mobile ? 40 : 8,
         weight: 2
     },
+	_convertLatLngs: function (latlngs) {
+		return L.Polyline.prototype._convertLatLngs.call(this, latlngs);
+	},
 
     getRing: function () {
 		return this._parent;
@@ -23,12 +26,13 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
     getPathLatLngs: function () {
         var out = [],
             size = this.options.size,
+            dontsmooth = this._parent.options.type === 'Rectangle',
             points = this._parts[0],
             prev;
 
         for (var i = 0, len = points.length, p; i < len; i++) {
             p = points[i];
-            if (i === 0 || Math.abs(prev.x - p.x) > size || Math.abs(prev.y - p.y) > size) {
+            if (i === 0 || dontsmooth || Math.abs(prev.x - p.x) > size || Math.abs(prev.y - p.y) > size) {
                 out.push(this._latlngs[i]);
                 prev = p;
             }
@@ -39,6 +43,7 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
     _getPathPartStr: function (points) {
         var round = L.Path.VML,
             size = this.options.size / 2,
+            dontsmooth = this._parent.options.type === 'Rectangle',
             skipLastPoint = this._parent.mode === 'add' && !L.Browser.mobile ? 1 : 0,
             radius = (this.options.shape === 'circle' ? true : false),
             prev;
@@ -46,7 +51,7 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
         for (var j = 0, len2 = points.length - skipLastPoint, str = '', p; j < len2; j++) {
             p = points[j];
             if (round) { p._round(); }
-            if (j === 0 || Math.abs(prev.x - p.x) > this.options.size || Math.abs(prev.y - p.y) > this.options.size) {
+            if (j === 0 || dontsmooth || Math.abs(prev.x - p.x) > this.options.size || Math.abs(prev.y - p.y) > this.options.size) {
                 if (radius) {
                     str += 'M' + p.x + ',' + (p.y - size) +
                            ' A' + size + ',' + size + ',0,1,1,' +
@@ -82,7 +87,8 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
 				this._path.setAttribute('d', this._pathStr || 'M0 0');
 			}
 		} else {
-			this._renderer._setPath(this, this._parts.length ? this._getPathPartStr(this._parts[0]) : '');
+			var str = this._parts.length ? this._getPathPartStr(this._parts[0]) : '';
+			this._renderer._setPath(this, str);
 		}
 	}
 });
