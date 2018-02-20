@@ -19,6 +19,8 @@
   },
   "globals": {
     "L": true,
+	"requestIdleCallback": true,
+	"cancelIdleCallback": true,
     "module": false,
     "define": false,
     "ActiveXObject": true,

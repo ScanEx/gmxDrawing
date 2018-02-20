@@ -253,13 +253,14 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
             if (maxPoints && len >= maxPoints) {
 				this.setEditMode();
-				this._fireEvent('drawstop');
+				this._fireEvent('drawstop', {latlng: point});
 				len--;
 			}
             if (flag) {
                 if (delta) { len -= delta; }    // reset existing point
                 this._setPoint(point, len, 'node');
             }
+			this._parent.lastAddLatLng = point;
         } else if ('addLatLng' in this._obj) {
             this._obj.addLatLng(point);
         }
@@ -330,7 +331,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     _mouseupPoint: function (ev) {
-		this._fireEvent('editstop');
+		this._fireEvent('editstop', ev);
 		this._pointUp(ev);
     },
 
@@ -368,7 +369,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             this._map._skipClick = true;    // for EventsManager
         }
         if (this._drawstop) {
-            this._fireEvent('drawstop');
+            this._fireEvent('drawstop', ev);
         }
         this._drawstop = false;
         this.down = null;
@@ -396,7 +397,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 	},
 
     _clearLineAddPoint: function () {
-        if (this._lineAddPointID) { clearTimeout(this._lineAddPointID); }
+        if (this._lineAddPointID) { cancelIdleCallback(this._lineAddPointID); }
         this._lineAddPointID = null;
     },
 
@@ -429,18 +430,16 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                         this.lineType = false;
                         this._removePoint(this._getLatLngsArr().length - 1);
                     }
-                    this._fireEvent('drawstop');
+                    this._fireEvent('drawstop', downAttr);
                     this._removePoint(num);
                 } else if (this.lineType) {
-                    var _this = this,
-                        setLineAddPoint = function () {
-                            _this._clearLineAddPoint();
-                            if (num === 0) { _this._getLatLngsArr().reverse(); }
-                            _this.points.addLatLng(downAttr.latlng);
-                            _this.setAddMode();
-                            _this._fireEvent('drawstop');
-                        };
-                    this._lineAddPointID = setTimeout(setLineAddPoint, 250);
+                    this._lineAddPointID = requestIdleCallback(function () {
+						this._clearLineAddPoint();
+						if (num === 0) { this._getLatLngsArr().reverse(); }
+						this.points.addLatLng(downAttr.latlng);
+						this.setAddMode();
+						this._fireEvent('drawstop', downAttr);
+					}.bind(this), {timeout: 250});
                 }
             } else if (mode === 'add') { // this is add pont
                 this.addLatLng(ev.latlng);
@@ -482,8 +481,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this._fireEvent('drag');
     },
 
-    _fireEvent: function (name) {
-        this._parent._fireEvent(name);
+    _fireEvent: function (name, options) {
+        this._parent._fireEvent(name, options);
     },
 
     _startTouchMove: function (ev, drawstop) {
@@ -675,7 +674,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 				this._pointUp();
 				this._fireEvent('drawstop');
 				if (this._map && this._map.contextmenu) {
-					setTimeout(this._map.contextmenu.enable.bind(this._map.contextmenu), 250);
+					requestIdleCallback(this._map.contextmenu.enable.bind(this._map.contextmenu), {timeout: 250});
 				}
 			} else {
 				var latlng = ev._latlng || ev.latlng;

@@ -22,4 +22,19 @@
     pointer-events: visible;
 }
 
+/* static Tooltips */
+.leaflet-tooltip.staticTooltip  {
+	pointer-events: auto;
+}
+.leaflet-tooltip.staticTooltip  .content {
+	display: flex;
+	cursor: text;
+}
+.leaflet-tooltip.staticTooltip .closeBtn {
+    position: relative;
+    right: -6px;
+    top: -11px;
+	cursor: pointer;
+}
+
 
