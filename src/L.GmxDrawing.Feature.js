@@ -1,7 +1,6 @@
 L.GmxDrawing.Feature = L.LayerGroup.extend({
     options: {
-        // endTooltip: true,
-        endTooltip: '',
+        endTooltip: 'center',
         smoothFactor: 0,
         mode: '' // add, edit
     },
@@ -590,19 +589,28 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 				tCont = L.DomUtil.create('div', 'content'),
 				info = L.DomUtil.create('div', 'infoTooltip', tCont),
 				closeBtn = L.DomUtil.create('div', 'closeBtn', tCont),
-				str = this.options.type === 'Polygon' ?
-					L.gmxUtil.prettifyArea(this.getArea(), squareUnit)
-					:
-					L.gmxUtil.prettifyDistance(this.getLength(), distanceUnit);
+				polygon = this.options.type === 'Polygon',
+				tOptions = {interactive: true, sticky: true, permanent: true, className: 'staticTooltip'};
 
-			info.innerHTML = str;
+			if (polygon) {
+				if (this.options.endTooltip === 'center') {
+					tOptions.direction = 'center';
+					latlng = this.getBounds().getCenter();
+				}
+				info.innerHTML = L.gmxUtil.prettifyArea(this.getArea(), squareUnit);
+			} else {
+				tOptions.offset = L.point(10, 0);
+				var arr = this.rings[0].ring.points.getLatLngs()[0];
+				latlng = arr[arr.length - 1];
+				info.innerHTML = L.gmxUtil.prettifyDistance(this.getLength(), distanceUnit);
+			}
 			closeBtn.innerHTML = '×';
 			L.DomEvent.on(closeBtn, 'click', function() {
 				this._removeStaticTooltip();
 				this.remove();
 			}, this);
 
-			this.staticTooltip = L.tooltip({interactive: true, sticky: true, permanent: true, className: 'staticTooltip'})
+			this.staticTooltip = L.tooltip(tOptions)
 				.setLatLng(latlng)
 				.setContent(tCont)
 				.addTo(this._map);
