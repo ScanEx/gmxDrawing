@@ -331,8 +331,11 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     _mouseupPoint: function (ev) {
-		this._fireEvent('editstop', ev);
 		this._pointUp(ev);
+        if (this.__mouseupPointTimer) { cancelIdleCallback(this.__mouseupPointTimer); }
+		this.__mouseupPointTimer = requestIdleCallback(function() {
+			this._fireEvent('editstop', ev);
+		}.bind(this), {timeout: 250});
     },
 
     _pointMove: function (ev) {

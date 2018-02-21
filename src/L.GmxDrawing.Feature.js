@@ -1,6 +1,6 @@
 L.GmxDrawing.Feature = L.LayerGroup.extend({
     options: {
-        endTooltip: 'center',
+        endTooltip: '',
         smoothFactor: 0,
         mode: '' // add, edit
     },

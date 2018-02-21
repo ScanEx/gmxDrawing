@@ -482,7 +482,7 @@ L.Map.addInitHook(function () {
 
 L.GmxDrawing.Feature = L.LayerGroup.extend({
     options: {
-        endTooltip: 'center',
+        endTooltip: '',
         smoothFactor: 0,
         mode: '' // add, edit
     },
@@ -1538,8 +1538,11 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     _mouseupPoint: function (ev) {
-		this._fireEvent('editstop', ev);
 		this._pointUp(ev);
+        if (this.__mouseupPointTimer) { cancelIdleCallback(this.__mouseupPointTimer); }
+		this.__mouseupPointTimer = requestIdleCallback(function() {
+			this._fireEvent('editstop', ev);
+		}.bind(this), {timeout: 250});
     },
 
     _pointMove: function (ev) {
