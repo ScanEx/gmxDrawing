@@ -176,6 +176,10 @@ L.GmxDrawing = L.Class.extend({
 		}
     },
 
+    clearCreate: function () {
+		this._clearCreate();
+    },
+
     _clearCreate: function () {
         if (this._createKey && this._map) {
             if (this._createKey.type === 'Rectangle' && L.Browser.mobile) {
