@@ -41,7 +41,9 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this.downObject = false;
         this.mode = '';
         this.lineType = this.options.type.indexOf('Polyline') !== -1;
-        this.options.disableAddPoints = this.options.type === 'Rectangle';
+		if (this.options.type === 'Rectangle') {
+			this.options.disableAddPoints = true;
+		}
 
         var pointStyle = this.options.pointStyle;
         var lineStyle = {opacity:1, weight:2, noClip: true, clickable: false, className: 'leaflet-drawing-lines'};
