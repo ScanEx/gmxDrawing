@@ -10,6 +10,7 @@
 add|`add(<L.Polyline, L.Polygon, L.Rectangle, L.GmxDrawing.Feature, L.MultiPolygon, L.MultiPolyline, L.Marker> object, <Feature options> options? )`|`<L.GmxDrawing.Feature>`| Добавить редактируемый объект.
 addGeoJSON|`addGeoJSON(<L.GeoJSON, GeoJSON data> object, <Feature options> options? )`|`<L.GmxDrawing.Feature[]> array`| Добавить редактируемые объекты из `L.GeoJSON` либо из `GeoJSON data`.
 create|`create(<string> type, <Feature options> options? )`|| Переход в режим создания редактируемого объекта заданного типа type.
+clearCreate|`clearCreate()`|| Отключить режим создания редактируемого объекта.
 getFeatures|`getFeatures()`|`<L.GmxDrawing.Feature[]> array`| Получить массив редактируемых объектов.
 remove|`remove(<L.GmxDrawing.Feature>)`|`<L.GmxDrawing.Feature>`| Удалить редактируемый объект.
 saveState|`saveState()`|`<State Options>`| Получить состояние редактируемых объектов в формате [FeatureCollection](http://geojson.org/geojson-spec.html#feature-collection-objects).
