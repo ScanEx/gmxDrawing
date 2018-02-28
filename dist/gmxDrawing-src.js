@@ -251,6 +251,11 @@ L.GmxDrawing = L.Class.extend({
                 type: type,
                 eventName: type === 'Rectangle' ? (L.Browser.mobile ? 'touchstart' : 'mousedown') : 'click',
                 fn: function (ev) {
+					var originalEvent = ev && ev.originalEvent;
+					if (originalEvent) {
+						var clickOnTag = originalEvent.target.tagName;
+						if (clickOnTag === 'g' || clickOnTag === 'path') { return; }
+					}
                     my._createType = '';
                     var obj, key,
                         opt = {},
@@ -266,10 +271,10 @@ L.GmxDrawing = L.Class.extend({
                             markerOpt = {
                                 draggable: true
                             };
-                        if (ev && ev.originalEvent) {
-                            markerOpt.ctrlKey = ev.originalEvent.ctrlKey;
-                            markerOpt.shiftKey = ev.originalEvent.shiftKey;
-                            markerOpt.altKey = ev.originalEvent.altKey;
+                        if (originalEvent) {
+                            markerOpt.ctrlKey = originalEvent.ctrlKey;
+                            markerOpt.shiftKey = originalEvent.shiftKey;
+                            markerOpt.altKey = originalEvent.altKey;
                         }
                         if (markerStyle.iconStyle) {
                             markerOpt.icon = L.icon(markerStyle.iconStyle);
