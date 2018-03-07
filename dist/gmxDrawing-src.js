@@ -1618,7 +1618,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 	},
 
     _clearLineAddPoint: function () {
-        if (this._lineAddPointID) { cancelIdleCallback(this._lineAddPointID); }
+        if (this._lineAddPointID) { clearTimeout(this._lineAddPointID); }
         this._lineAddPointID = null;
     },
 
@@ -1654,13 +1654,13 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                     this._fireEvent('drawstop', downAttr);
                     this._removePoint(num);
                 } else if (this.lineType) {
-                    this._lineAddPointID = requestIdleCallback(function () {
-						this._clearLineAddPoint();
+					this._clearLineAddPoint();
+                    this._lineAddPointID = setTimeout(function () {
 						if (num === 0) { this._getLatLngsArr().reverse(); }
 						this.points.addLatLng(downAttr.latlng);
 						this.setAddMode();
 						this._fireEvent('drawstop', downAttr);
-					}.bind(this), {timeout: 250});
+					}.bind(this), 250);
                 }
             } else if (mode === 'add') { // this is add pont
                 this.addLatLng(ev.latlng);
@@ -1736,8 +1736,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     _editHandlers: function (flag) {
         //if (!this.points) { return; }
-        var stop = L.DomEvent.stopPropagation;
-        //var prevent = L.DomEvent.preventDefault;
+        var stop = L.DomEvent.stopPropagation,
+			prevent = L.DomEvent.preventDefault;
         if (this.touchstart) {
             L.DomEvent.off(this.points._container, 'touchstart', this.touchstart, this);
         }
@@ -1749,6 +1749,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         if (flag) {
             this.points
                 .on('dblclick click', stop, this)
+                .on('dblclick click', prevent, this)
                 .on('dblclick', this._pointDblClick, this)
                 .on('click', this._pointClick, this);
             if (L.Browser.mobile) {
@@ -1785,6 +1786,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             this._pointUp();
             this.points
                 .off('dblclick click', stop, this)
+                .off('dblclick click', prevent, this)
                 .off('dblclick', this._pointDblClick, this)
                 .off('click', this._pointClick, this);
             if (!L.Browser.mobile) {
