@@ -304,7 +304,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
         if (ev.originalEvent) {
             var originalEvent = ev.originalEvent;
-            if (originalEvent.shiftKey) {
+            if (originalEvent.altKey) {	// altKey, shiftKey
                 this._onDragStart(ev);
                 return;
             } else if (originalEvent.which !== 1 && originalEvent.button !== 1) {

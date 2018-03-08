@@ -54,10 +54,10 @@ L.GmxDrawing = L.Class.extend({
                 bg.setAttributeNS(null, 'y', y - 12);
             };
         }
-        var refreshMode = function (ev) {
-            this._drawMode = ev.mode;
-        };
-        this.on('drawstop drawstart', refreshMode);
+        this.on('drawstop drawstart', function (ev) {
+            this.drawMode = this._drawMode = ev.mode;
+			this._map.doubleClickZoom[this.drawMode === 'edit' ? 'disable' : 'enable']();
+        }, this);
     },
 
     bringToFront: function () {

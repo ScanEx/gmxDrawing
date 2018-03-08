@@ -54,10 +54,10 @@ L.GmxDrawing = L.Class.extend({
                 bg.setAttributeNS(null, 'y', y - 12);
             };
         }
-        var refreshMode = function (ev) {
-            this._drawMode = ev.mode;
-        };
-        this.on('drawstop drawstart', refreshMode);
+        this.on('drawstop drawstart', function (ev) {
+            this.drawMode = this._drawMode = ev.mode;
+			this._map.doubleClickZoom[this.drawMode === 'edit' ? 'disable' : 'enable']();
+        }, this);
     },
 
     bringToFront: function () {
@@ -1520,7 +1520,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
         if (ev.originalEvent) {
             var originalEvent = ev.originalEvent;
-            if (originalEvent.shiftKey) {
+            if (originalEvent.altKey) {	// altKey, shiftKey
                 this._onDragStart(ev);
                 return;
             } else if (originalEvent.which !== 1 && originalEvent.button !== 1) {
