@@ -274,6 +274,15 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         return coords;
     },
 
+    _geoJsonToLayer: function (geoJson) {
+		return L.geoJson(geoJson).getLayers()[0];
+    },
+
+    setGeoJSON: function (geoJson) {
+		this._initialize(this._parent, geoJson);
+        return this;
+    },
+
     toGeoJSON: function () {
         return this._toGeoJSON(true);
     },
@@ -504,9 +513,14 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 			if (L.GmxDrawing.utils.isOldVersion) {
 				arr = obj.getLayers ? L.GmxDrawing.utils._getLastObject(obj).getLayers() : [obj];
 			} else {
+				if (obj.type && obj.coordinates) {
+					obj = this._geoJsonToLayer(obj);
+				}
 				arr = obj.getLayers ? L.GmxDrawing.utils._getLastObject(obj) : [obj];
 				if (this.options.type === 'MultiPolygon') {
-					arr = (obj.getLayers ? obj.getLayers()[0] : obj).getLatLngs().map(function(it) { return {_latlngs: it.shift(), _holes: it}; });
+					arr = (obj.getLayers ? obj.getLayers()[0] : obj)
+						.getLatLngs()
+						.map(function(it) { return {_latlngs: it.shift(), _holes: it}; });
 				}
 			}
             for (var i = 0, len = arr.length; i < len; i++) {
