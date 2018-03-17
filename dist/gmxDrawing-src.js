@@ -528,8 +528,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 this._fireEvent('drawstop', this._obj.options);
             }.bind(this), {timeout: 0});
         } else {
-			var svgContainer = this._map._pathRoot || this._map._renderer._container;
-			if (svgContainer.getAttribute('pointer-events') !== 'visible') {
+			var svgContainer = this._map._pathRoot || (this._map._renderer && this._map._renderer._container);
+			if (svgContainer && svgContainer.getAttribute('pointer-events') !== 'visible') {
 				svgContainer.setAttribute('pointer-events', 'visible');
 			}
         }
@@ -1004,11 +1004,32 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 			if (L.GmxDrawing.utils.isOldVersion) {
 				arr = obj.getLayers ? L.GmxDrawing.utils._getLastObject(obj).getLayers() : [obj];
 			} else {
-				if (obj.type && obj.coordinates) {
-					obj = this._geoJsonToLayer(obj);
-				}
 				arr = obj.getLayers ? L.GmxDrawing.utils._getLastObject(obj) : [obj];
-				if (this.options.type === 'MultiPolygon') {
+				if (obj.type && obj.coordinates) {
+					var type = obj.type;
+					obj = this._geoJsonToLayer(obj);
+					if (type === 'Polygon') {
+						var it1 = obj.getLatLngs();
+						arr = [{_latlngs: it1.shift(), _holes: it1}];
+					} else if (type === 'MultiPolygon') {
+						arr = obj.getLatLngs().map(function(it) { return {_latlngs: it.shift(), _holes: it}; });
+					} else if (type === 'LineString') {
+						arr = [{_latlngs: obj.getLatLngs()}];
+					} else if (type === 'MultiLineString') {
+						arr = obj.getLatLngs().map(function(it) { return {_latlngs: it}; });
+					} else if (type === 'Point') {
+						this._obj = new L.Marker(obj.getLatLng(), {draggable: true});
+						this._setMarker(this._obj);
+						return;
+					} else if (type === 'MultiPoint') {
+						obj.getLayers()
+							.forEach(function(it) {
+								this._setMarker(new L.Marker(it.getLatLng(), {draggable: true}));
+							}.bind(this));
+						return;
+					}
+
+				} else if (this.options.type === 'MultiPolygon') {
 					arr = (obj.getLayers ? obj.getLayers()[0] : obj)
 						.getLatLngs()
 						.map(function(it) { return {_latlngs: it.shift(), _holes: it}; });
