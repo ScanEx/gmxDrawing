@@ -8,3 +8,4 @@ Enables drawing features like polylines, polygons, rectangles and markers.
 Demos
 ------
   * [Drawing objects](http://scanex.github.io/gmxDrawing/examples/gmxDrawing.html) - demonstrates work with drawing objects.
+  * [geoJsonTest objects](http://scanex.github.io/gmxDrawing/examples/geoJsonTest.html) - drawing geoJson objects.

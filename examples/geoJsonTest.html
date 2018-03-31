@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Leaflet test drawing geoJson</title>
+	<meta charset="utf-8" />
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="//www.kosmosnimki.ru/lib/geomixer_1.3/geomixer-src.js?key=E5FB6CCB5D23B5E119D2F1B26BCC57BD"></script>
+    <link href="//www.kosmosnimki.ru/lib/geomixer_1.3/geomixer.css" rel="stylesheet" />
+
+    <script src="../src/L.gmxDrawing.Feature.js"></script>
+    <style>
+        html, body, #map {
+            height: 100%;
+            width: 100%;
+            margin: 0px;
+        }
+    </style>
+</head>
+<body>
+	<div id="map"></div>
+	<script>
+		var arr = [
+		 {
+			 "type": "Point",
+			 "coordinates": [100.0, 0.0]
+		 },
+
+		 {
+			 "type": "MultiPoint",
+			 "coordinates": [
+				 [100.0, 0.0],
+				 [101.0, 1.0]
+			 ]
+		 },
+		 {
+			 "type": "LineString",
+			 "coordinates": [
+				 [100.0, 0.0],
+				 [101.0, 1.0]
+			 ]
+		 },
+
+		 {
+			 "type": "MultiLineString",
+			 "coordinates": [
+				 [
+					 [100.0, 0.0],
+					 [101.0, 1.0]
+				 ],
+				 [
+					 [102.0, 2.0],
+					 [103.0, 3.0]
+				 ]
+			 ]
+		 },
+		 {
+			type: "Polygon",
+			coordinates: [
+				[[136.90579, 56.301281],[137.83902, 56.150009],[137.53169, 55.639533],[136.60979, 55.788635]]
+			]
+		 },
+		 {
+			type: 'MultiPolygon',
+			coordinates: [
+				[
+					[[37.70122338120615,47.206343977765634],[37.59645260839524,47.191123009948875],[37.59605312758839,47.20628386519843],[37.70122338120615,47.206343977765634]]
+				],
+				[
+					[[37.59706103733718,47.16803047231103],[37.64263320052125,47.15858258486256],[37.67685038901948,47.193445372693404],[37.71232674605145,47.2076359237855],[37.71241765555821,47.20763696123541],[37.73495503856385,47.203129477088574],[37.74011990228989,47.19150857168657],[37.72397969191706,47.16439308156757],[37.71042195832301,47.15858258486256],[37.69621860553427,47.15858258486256],[37.68136963355083,47.14696164006479],[37.68120748764205,47.14663734023848],[37.59765024233203,47.14566668950419],[37.59706103733718,47.16803047231103]]
+					,
+					[[37.6,47.16],[37.54,47.15],[37.62,47.155],[37.6,47.16]]
+				]
+			]
+		 }
+		];
+		var map = new L.Map('map', {layers: [L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png')], center: new L.LatLng(50, 20), zoom: 3});
+		var current = 0;
+		setInterval(function() {
+			var it = arr[current++];
+			if (it) {
+				var litem = L.geoJson(it).getLayers()[0];
+				if (litem.getBounds) {
+					map.fitBounds(litem.getBounds());
+				}
+				map.addLayer(
+					new L.GmxDrawing.Feature(map.gmxDrawing, it, {editable: true, type: it.type, lineStyle: {color: 'red'}, pointStyle: {color: 'red'}})
+				);
+			}
+		}, 3000);
+	</script>
+</body>
+</html>
