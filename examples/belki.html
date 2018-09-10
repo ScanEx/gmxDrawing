@@ -27,6 +27,8 @@
         }
 	}
     </style>
+<link rel="stylesheet" href="styles/dark.css">
+<script src="highlight.pack.js"></script>
 
 	<title>Example map</title>
 
@@ -42,7 +44,7 @@
 	<div class="extSide">
 		<span>Прочесть о <a href="https://github.com/ScanEx/gmxDrawing/blob/master/documentation-rus.md#events" target="_blank">событиях рисования</a></span>
 		<hr />
-		<code class="code"></code>
+		<code class="code language-json"></code>
 	</div>
 
 	<script>
@@ -65,7 +67,7 @@
 			var object = ev.object;
 			if (object) {
 				cont.code.innerHTML = JSON.stringify(object.toGeoJSON(), null, 2);
-				
+				hljs.highlightBlock(cont.code);
 			}
         };
         map.gmxDrawing
