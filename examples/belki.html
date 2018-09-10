@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset='utf8'>
+	<meta name='viewport' content='width=device-width'>
+    <style>
+        html, body, .map {
+            height: 100%;
+            width: 100%;
+            margin: 0px;
+        }
+        .map, .extSide {
+            width: 50%;
+        }
+        .map {
+			float: left;
+        }
+        .extSide {
+			float: right;
+        }
+        .extSide span {
+			margin: 10px;
+        }
+        .code {
+			white-space: pre-wrap;
+			margin: 10px;
+        }
+	}
+    </style>
+
+	<title>Example map</title>
+
+	<link rel='stylesheet' href='global.css'>
+
+	<link rel="stylesheet" href="//www.kosmosnimki.ru/lib/geomixer_1.3/geomixer.css" crossorigin=""/>
+	<script src="//www.kosmosnimki.ru/lib/geomixer_1.3/geomixer-src.js?1508146119421" crossorigin=""></script>
+
+</head>
+
+<body>
+	<div class="map"></div>
+	<div class="extSide">
+		<span>Прочесть о <a href="https://github.com/ScanEx/gmxDrawing/blob/master/documentation-rus.md#events" target="_blank">событиях рисования</a></span>
+		<hr />
+		<code class="code"></code>
+	</div>
+
+	<script>
+		var cont = {
+			map: document.getElementsByClassName('map')[0],
+			code: document.getElementsByClassName('code')[0]
+		};
+		var osm = L.tileLayer('//tilessputnik.ru/{z}/{x}/{y}.png', {
+			maxZoom: 18
+        });
+
+		var map = new L.Map(cont.map, {layers: [osm], center: [66.002384, 39.001464], zoom: 7});
+
+		L.gmx.loadMap('VVS5L', { leafletMap: map});
+
+		map.gmxControlsManager.init();
+
+        var eventShow = function (ev) {
+            console.log(ev);
+			var object = ev.object;
+			if (object) {
+				cont.code.innerHTML = JSON.stringify(object.toGeoJSON(), null, 2);
+				
+			}
+        };
+        map.gmxDrawing
+            .on('drawstart', eventShow)
+            .on('drawstop', eventShow)
+            .on('add', eventShow)
+            .on('edit', eventShow)
+            .on('optionschange', eventShow)
+            .on('remove', eventShow)
+            .on('removefrommap', eventShow)
+            .on('addtomap', eventShow)
+            .on('dragstart', eventShow)
+            .on('drag', eventShow)
+            .on('dragend', eventShow);
+		
+	</script>
+</body>
+</html>
