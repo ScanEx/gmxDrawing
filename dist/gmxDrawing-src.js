@@ -1331,6 +1331,30 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this.lines = new L.Polyline(latlngs, lineStyle);
         this.addLayer(this.lines);
 
+		if (this._parent.options.rotate) {
+			L.DomUtil.TRANSFORM_ORIGIN = L.DomUtil.TRANSFORM_ORIGIN || L.DomUtil.testProp(
+					['transformOrigin', 'WebkitTransformOrigin', 'OTransformOrigin', 'MozTransformOrigin', 'msTransformOrigin']);
+
+			this.bbox = L.rectangle(this.lines._bounds, {
+				color: 'rgb(51, 136, 255)',
+				className: 'leaflet-drawing-bbox',
+				// opacity: 0,
+				dashArray: '6, 3',
+				smoothFactor: 0,
+				noClip: true,
+				fillOpacity: 0,
+				fill: true,
+				// size: 10,
+				weight: 1
+			});
+			this.addLayer(this.bbox);
+			this.bbox
+				.on('mousedown', function (ev) {
+					this.toggleTooltip(ev, true, _this.lineType ? 'Length' : 'Area');
+					this._onRotateStart(ev);
+				}, this);
+		}
+
         if (!this.lineType && mode === 'edit') {
 			// var latlng = L.GmxDrawing.utils.isOldVersion ? latlngs[0] : latlngs[0][0];
 			var latlng = latlngs[0][0] || latlngs[0];
@@ -1343,6 +1367,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this.points._parent = this;
 
         this.addLayer(this.points);
+
         this.points
             .on('mouseover', function (ev) {
 				this.toggleTooltip(ev, true, _this.lineType ? 'Length' : 'Area');
@@ -1525,7 +1550,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         L.DomUtil.setPosition(this.lines._container, p);
     },
 
-    setLatLngs: function (latlngs) {
+    setLatLngs: function (latlngs) {	// TODO: latlngs не учитывает дырки полигонов
 		if (this.points) {
             var points = this.points;
             this.fill.setLatLngs(latlngs);
@@ -1702,6 +1727,73 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             }
         }
     },
+
+    _onRotateStart: function (ev) {
+        this._rotateStartPoint = ev.latlng;
+        this._rotateCenter = this.bbox.getCenter();
+        this._map
+            .on('mouseup', this._onRotateEnd, this)
+            .on('mousemove', this._onRotate, this);
+		this._parent._disableDrag();
+        this._fireEvent('rotatestart');
+    },
+
+    _onRotateEnd: function () {	// TODO: не учитывает дырки полигонов
+        this._map
+            .off('mouseup', this._onRotateEnd, this)
+            .off('mousemove', this._onRotate, this);
+
+		if (this._center) {
+			var center = this._center,
+				shiftPoint = this._map.getPixelOrigin().add(center),
+				cos = Math.cos(-this._angle),
+				sin = Math.sin(-this._angle),
+				map = this._map,
+				_latlngs = this.points._parts[0].map(function (p) {
+					var ps = p.subtract(center);
+					return map.unproject(L.point(
+						ps.x * cos + ps.y * sin,
+						ps.y * cos - ps.x * sin
+					).add(shiftPoint));
+				});
+			this.setLatLngs(_latlngs);
+			this._rotateItem();
+			this.bbox.setBounds(this.lines._bounds);
+			// console.log('_onRotateEnd', this.mode, this.points._latlngs, _latlngs);
+		}
+		this._parent._enableDrag();
+        this._fireEvent('rotateend');
+    },
+
+    _onRotate: function (ev) {
+        var pos = ev.latlng,			// текущая точка
+			s = this._rotateStartPoint,	// точка начала вращения
+			c = this._rotateCenter;		// центр объекта
+
+        this._rotateItem(
+			Math.atan2(s.lat - c.lat, s.lng - c.lng) - Math.atan2(pos.lat - c.lat, pos.lng - c.lng),
+			this._map.project(c).subtract(this._map.getPixelOrigin())
+		);
+        this._fireEvent('rotate');
+    },
+
+    _rotateItem: function (angle, center) {
+        var originStr = '',
+			rotate = '';
+
+		if (center) {
+			originStr = center.x + 'px ' + center.y + 'px';
+			rotate = 'rotate(' + angle + 'rad)';
+		}
+
+		this._angle = angle;
+		this._center = center;
+
+        [this.bbox, this.lines, this.fill, this.points].forEach(function(it) {
+			it._path.style[L.DomUtil.TRANSFORM_ORIGIN] = originStr;
+			it._path.style.transform = rotate;
+		});
+   },
 
     _onDragEnd: function () {
         this._map
