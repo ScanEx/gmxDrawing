@@ -542,6 +542,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 					arr = (obj.getLayers ? obj.getLayers()[0] : obj)
 						.getLatLngs()
 						.map(function(it) { return {_latlngs: it.shift(), _holes: it}; });
+				} else if (this.options.type === 'Polygon') {
+					var _latlngs = (obj.getLayers ? obj.getLayers()[0] : obj).getLatLngs();
+					arr = [{_latlngs: _latlngs.shift(), _holes: _latlngs}];
 				}
 			}
             for (var i = 0, len = arr.length; i < len; i++) {
