@@ -6,11 +6,9 @@
 
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
-    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet-src.js"></script>
+    <script src="http://www.kosmosnimki.ru/lib/geomixer_1.3/geomixer-src.js?key=E5FB6CCB5D23B5E119D2F1B26BCC57BD"></script>
+    <link href="http://www.kosmosnimki.ru/lib/geomixer_1.3/geomixer.css" rel="stylesheet" />
 
-	<script src="http://scanex.github.io/Leaflet-GeoMixer/build/leaflet-geomixer-dev.js?key=U92596WMIH"></script>
-	<script src="http://scanex.github.io/gmxControls/build/gmxControls-dev.js"></script>
 
 	<script src="../build/gmxDrawing-dev.js"></script>
 
@@ -27,7 +25,7 @@
 			right: 0px;
 			top: 21px;
             text-align: center;
-			z-index: 1;
+			z-index: 1001;
         }
         
         #info {
@@ -95,7 +93,9 @@
                     [
                      [ [50.0, 20.0], [61.0, 20.0], [61.0, 33.0], [30.0, 33.0], [50.0, 20.0] ]
                    ]
-                 ));
+                 ),{
+					rotate: true,
+				 });
             } else if (type === 'polyline') {
                 myObject = map.gmxDrawing.add(L.polyline(
                     [
