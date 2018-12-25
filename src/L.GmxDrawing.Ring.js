@@ -112,6 +112,18 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 				contextmenuItems: []
 			});
 		}
+		if (this.lines.bindContextMenu) {
+			this.lines.bindContextMenu({
+				contextmenu: false,
+				contextmenuInheritItems: false,
+				contextmenuItems: []
+			});
+			this.lines.on('mouseover', function (ev) {
+				if (ev.type === 'mouseover') {
+					this._recheckContextItems('lines', this._map);
+				}
+			}, this);
+		}
         this._parent.on('rotate', function (ev) {
 			this.toggleTooltip(ev, true, 'angle');
 		}, this);
@@ -164,7 +176,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 				obj.callback(downAttr);
 			} else if (type === 'Remove point') {
 				ring._removePoint(downAttr.num);
-			} else if (type === 'Edit' || type === 'Move' || type === 'Rotate') {
+			} else if (type === 'Save' || type === 'Move' || type === 'Rotate') {
                 this._toggleRotate(type, downAttr);
 			} else if (type === 'Cancel' && this._editHistory.length) {
 				this.setLatLngs(this._editHistory.pop());
@@ -479,7 +491,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     _editHistory: [],
-    _dragType: 'Edit',
+    // _dragType: 'Save',
     _needRotate: false,
     _toggleRotate: function (type) {
 		this._needRotate = type === 'Rotate';
