@@ -14,7 +14,9 @@ L.GmxDrawing = L.Class.extend({
         this.items = [];
         this.current = null;
         this.contextmenu = new L.GmxDrawingContextMenu({
-			points: [], // [{text: 'Remove point'}, {text: 'Delete feature'}],
+			// points: [], // [{text: 'Remove point'}, {text: 'Delete feature'}],
+			points: [{text: 'Rotate'}, {text: 'Move'}],
+			bbox: [{text: 'Edit'}, {text: 'Cancel'}],
 			lines: []
 		});
 
@@ -1064,7 +1066,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 this._showTooltip = function (type, ev) {
                     var ring = ev.ring,
                         originalEvent = ev.originalEvent,
-                        down = originalEvent.buttons || originalEvent.button;
+                        down = type !== 'angle' && (originalEvent.buttons || originalEvent.button);
 
 					if (ring && (ring.downObject || !down)) {
                        var mapOpt = my._map ? my._map.options : {},
@@ -1074,7 +1076,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
                         if (type === 'Area') {
                             if (!L.gmxUtil.getArea) { return; }
-                            if (ev.originalEvent.ctrlKey) {
+                            if (originalEvent && originalEvent.ctrlKey) {
                                 str = _gtxt('Perimeter') + ': ' + L.gmxUtil.prettifyDistance(my.getLength(), distanceUnit);
                             } else {
                                 str = _gtxt(type) + ': ' + L.gmxUtil.prettifyArea(my.getArea(), squareUnit);
@@ -1086,6 +1088,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                                 titleName = (downAttr.mode === 'edit' || downAttr.num > 1 ? downAttr.type : '') + type,
                                 title = _gtxt(titleName);
                             str = (title === titleName ? _gtxt(type) : title) + ': ' + L.gmxUtil.prettifyDistance(length, distanceUnit);
+                            my._parent.showTooltip(ev.layerPoint, str);
+                        } else if (type === 'angle') {
+							str = _gtxt('Angle') + ': ' + Math.floor(180.0 * ring._angle / Math.PI) + '°';
                             my._parent.showTooltip(ev.layerPoint, str);
                         }
                         my._fireEvent('onMouseOver');
@@ -1333,33 +1338,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
         this.lines = new L.Polyline(latlngs, lineStyle);
         this.addLayer(this.lines);
-
-		if (this._parent.options.rotate) {
-			L.DomUtil.TRANSFORM_ORIGIN = L.DomUtil.TRANSFORM_ORIGIN || L.DomUtil.testProp(
-					['transformOrigin', 'WebkitTransformOrigin', 'OTransformOrigin', 'MozTransformOrigin', 'msTransformOrigin']);
-
-			this.bbox = L.rectangle(this.lines._bounds, {
-				color: 'rgb(51, 136, 255)',
-				className: 'leaflet-drawing-bbox',
-				// opacity: 0,
-				dashArray: '6, 3',
-				smoothFactor: 0,
-				noClip: true,
-				fillOpacity: 0,
-				fill: true,
-				// size: 10,
-				weight: 1
-			});
-			this.addLayer(this.bbox);
-			this.bbox
-				.on('mousedown', function (ev) {
-					this.toggleTooltip(ev, true, _this.lineType ? 'Length' : 'Area');
-					this._onRotateStart(ev);
-				}, this);
-		}
-
         if (!this.lineType && mode === 'edit') {
-			// var latlng = L.GmxDrawing.utils.isOldVersion ? latlngs[0] : latlngs[0][0];
 			var latlng = latlngs[0][0] || latlngs[0];
             this.lines.addLatLng(latlng);
             this.fill.addLatLng(latlng);
@@ -1384,10 +1363,6 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 				this.toggleTooltip(ev, true);
             }, this)
             .on('mouseout', this.toggleTooltip, this);
-        // this.lines
-            // .on('mouseover', function (ev) {// console.log('lines___', ev);
-				// this.toggleTooltip(ev, true);
-            // }, this);
 
 		if (this.points.bindContextMenu) {
 			this.points.bindContextMenu({
@@ -1396,6 +1371,10 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 				contextmenuItems: []
 			});
 		}
+        this._parent.on('rotate', function (ev) {
+			this.toggleTooltip(ev, true, 'angle');
+		}, this);
+
     },
     toggleTooltip: function (ev, flag, type) {
 		if ('hideTooltip' in this._parent) {
@@ -1411,29 +1390,43 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     _recheckContextItems: function (type, map) {
         var _this = this;
-		this[type].options.contextmenuItems = map.gmxDrawing.contextmenu.getItems()[type]
-			.concat(this._parent.contextmenu.getItems()[type])
-			.concat(this.contextmenu.getItems()[type])
+		this[type].options.contextmenuItems = (map.gmxDrawing.contextmenu.getItems()[type] || [])
+			.concat(this._parent.contextmenu.getItems()[type] || [])
+			.concat(this.contextmenu.getItems()[type] || [])
 			.map(function(obj) {
-				return {
+				var ph = {
 					id: obj.text,
 					text: L.GmxDrawing.utils.getLocale(obj.text),
-					callback: obj.callback || function (ev) { _this._eventsCmd(obj, ev); }
+					icon: obj.icon,
+					retinaIcon: obj.retinaIcon,
+					iconCls: obj.iconCls,
+					retinaIconCls: obj.retinaIconCls,
+					callback: function (ev) {
+						_this._eventsCmd(obj, ev);
+					},
+					context: obj.context || _this,
+					disabled: 'disabled' in obj ? obj.disabled : false,
+					separator: obj.separator,
+					hideOnSelect: 'hideOnSelect' in obj ? obj.hideOnSelect : true
 				};
+				return ph;
 			});
+		return this[type].options.contextmenuItems;
     },
 
     _eventsCmd: function (obj, ev) {
-		var ring = ev.relatedTarget._parent;
-		var downAttr = L.GmxDrawing.utils.getDownType.call(ring, ev, ring._map, ring._parent);
+		var ring = ev.relatedTarget && ev.relatedTarget._parent || this;
+		var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map, this._parent);
 		if (downAttr) {
 			var type = obj.text;
 			if (obj.callback) {
 				obj.callback(downAttr);
 			} else if (type === 'Remove point') {
 				ring._removePoint(downAttr.num);
-			} else if (type === 'Delete feature') {
-                ring._parent.remove(ring);
+			} else if (type === 'Edit' || type === 'Move' || type === 'Rotate') {
+                this._toggleRotate(type, downAttr);
+			} else if (type === 'Cancel' && this._editHistory.length) {
+				this.setLatLngs(this._editHistory.pop());
 			}
         }
     },
@@ -1445,6 +1438,15 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     onAdd: function (map) {
         L.LayerGroup.prototype.onAdd.call(this, map);
         this.setEditMode();
+		if (this.points.bindContextMenu) {
+			var contextmenuItems = this._recheckContextItems('points', map);
+			this.points.bindContextMenu({
+				contextmenu: true,
+				contextmenuInheritItems: false,
+				contextmenuItems: contextmenuItems
+			});
+		}
+
     },
 
     onRemove: function (map) {
@@ -1562,6 +1564,10 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 this.lines.addLatLng(latlngs[0]);
                 this.fill.addLatLng(latlngs[0]);
             }
+            if (this.bbox) {
+				this.bbox.setBounds(this.lines._bounds);
+            }
+
             points.setLatLngs(latlngs);
         } else if ('setLatLngs' in this._obj) {
             this._obj.setLatLngs(latlngs);
@@ -1731,20 +1737,84 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
     },
 
-    _onRotateStart: function (ev) {
-        this._rotateStartPoint = ev.latlng;
-        this._rotateCenter = this.bbox.getCenter();
-        this._map
-            .on('mouseup', this._onRotateEnd, this)
-            .on('mousemove', this._onRotate, this);
-		this._parent._disableDrag();
-        this._fireEvent('rotatestart');
+    _editHistory: [],
+    _dragType: 'Edit',
+    _needRotate: false,
+    _toggleRotate: function (type) {
+		this._needRotate = type === 'Rotate';
+
+		if (this.bbox) {
+			this.bbox
+				.off('contextmenu', this._onContextmenu, this)
+				.off('mousedown', this._onRotateStart, this);
+			this.removeLayer(this.bbox);
+			this.bbox = null;
+		} else {
+			L.DomUtil.TRANSFORM_ORIGIN = L.DomUtil.TRANSFORM_ORIGIN || L.DomUtil.testProp(
+				['transformOrigin', 'WebkitTransformOrigin', 'OTransformOrigin', 'MozTransformOrigin', 'msTransformOrigin']);
+
+			this.bbox = L.rectangle(this.lines.getBounds(), {
+				color: 'rgb(51, 136, 255)',
+				className: 'leaflet-drawing-bbox',
+				dashArray: '6, 3',
+				smoothFactor: 0,
+				noClip: true,
+				fillOpacity: 0,
+				fill: true,
+				weight: 1
+			});
+			this.addLayer(this.bbox);
+			this.bbox
+				.on('contextmenu', this._onContextmenu, this)
+				.on('mousedown', this._onRotateStart, this);
+
+			if (this.bbox.bindContextMenu) {
+				this.bbox.bindContextMenu({
+					contextmenu: false,
+					contextmenuInheritItems: false,
+					contextmenuItems: []
+				});
+			}
+
+            this._recheckContextItems('bbox', this._map);
+		}
     },
 
-    _onRotateEnd: function () {	// TODO: не учитывает дырки полигонов
+    _onContextmenu: function () {
+		this.bbox.options.contextmenuItems[1].disabled = this._editHistory.length < 1;
+    },
+
+    _isContextMenuEvent: function (ev) {
+		var e = ev.originalEvent;
+		return e.which !== 1 && e.button !== 1 && !e.touches;
+    },
+
+    _onRotateStart: function (ev) {
+		if (this._isContextMenuEvent(ev)) { return; }
+		this._editHistory.push(this._getLatLngsArr().map(function(it) { return it.clone(); }));
+		var flagRotate = this._needRotate;
+		if (ev.originalEvent.altKey) {
+			flagRotate = !flagRotate;
+		}
+		if (flagRotate) {
+			this._rotateStartPoint = ev.latlng;
+			this._rotateCenter = this.bbox.getCenter();
+			this._map
+				.on('mouseup', this._onRotateEnd, this)
+				.on('mousemove', this._onRotate, this);
+			this._parent._disableDrag();
+			this._fireEvent('rotatestart', ev);
+		} else {
+			this._onDragStart(ev);
+		}
+    },
+
+    _onRotateEnd: function (ev) {	// TODO: не учитывает дырки полигонов
         this._map
             .off('mouseup', this._onRotateEnd, this)
             .off('mousemove', this._onRotate, this);
+
+		this.toggleTooltip(ev);
 
 		if (this._center) {
 			var center = this._center,
@@ -1760,12 +1830,13 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 					).add(shiftPoint));
 				});
 			this.setLatLngs(_latlngs);
+
 			this._rotateItem();
 			this.bbox.setBounds(this.lines._bounds);
 			// console.log('_onRotateEnd', this.mode, this.points._latlngs, _latlngs);
 		}
 		this._parent._enableDrag();
-        this._fireEvent('rotateend');
+        this._fireEvent('rotateend', ev);
     },
 
     _onRotate: function (ev) {
@@ -1773,11 +1844,11 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 			s = this._rotateStartPoint,	// точка начала вращения
 			c = this._rotateCenter;		// центр объекта
 
-        this._rotateItem(
+		this._rotateItem(
 			Math.atan2(s.lat - c.lat, s.lng - c.lng) - Math.atan2(pos.lat - c.lat, pos.lng - c.lng),
 			this._map.project(c).subtract(this._map.getPixelOrigin())
 		);
-        this._fireEvent('rotate');
+		this._fireEvent('rotate', ev);
     },
 
     _rotateItem: function (angle, center) {

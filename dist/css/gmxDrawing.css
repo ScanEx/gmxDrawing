@@ -21,6 +21,9 @@
 .leaflet-drawing-points {
     pointer-events: visible;
 }
+.leaflet-drawing-bbox {
+	cursor: all-scroll;
+}
 
 /* static Tooltips */
 .leaflet-tooltip.staticTooltip  {
@@ -35,6 +38,14 @@
     right: -6px;
     top: -11px;
 	cursor: pointer;
+}
+
+.leaflet-contextmenu a.leaflet-contextmenu-item.over {
+    background-color: lightgray;
+	cursor: pointer;
+}
+.leaflet-contextmenu a.leaflet-contextmenu-item.over.leaflet-contextmenu-item-disabled {
+	cursor: default;
 }
 
 

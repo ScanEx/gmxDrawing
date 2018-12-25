@@ -573,7 +573,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                 this._showTooltip = function (type, ev) {
                     var ring = ev.ring,
                         originalEvent = ev.originalEvent,
-                        down = originalEvent.buttons || originalEvent.button;
+                        down = type !== 'angle' && (originalEvent.buttons || originalEvent.button);
 
 					if (ring && (ring.downObject || !down)) {
                        var mapOpt = my._map ? my._map.options : {},
@@ -583,7 +583,7 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
 
                         if (type === 'Area') {
                             if (!L.gmxUtil.getArea) { return; }
-                            if (ev.originalEvent.ctrlKey) {
+                            if (originalEvent && originalEvent.ctrlKey) {
                                 str = _gtxt('Perimeter') + ': ' + L.gmxUtil.prettifyDistance(my.getLength(), distanceUnit);
                             } else {
                                 str = _gtxt(type) + ': ' + L.gmxUtil.prettifyArea(my.getArea(), squareUnit);
@@ -595,6 +595,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                                 titleName = (downAttr.mode === 'edit' || downAttr.num > 1 ? downAttr.type : '') + type,
                                 title = _gtxt(titleName);
                             str = (title === titleName ? _gtxt(type) : title) + ': ' + L.gmxUtil.prettifyDistance(length, distanceUnit);
+                            my._parent.showTooltip(ev.layerPoint, str);
+                        } else if (type === 'angle') {
+							str = _gtxt('Angle') + ': ' + Math.floor(180.0 * ring._angle / Math.PI) + '°';
                             my._parent.showTooltip(ev.layerPoint, str);
                         }
                         my._fireEvent('onMouseOver');
