@@ -1386,8 +1386,18 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this._parent.on('rotate', function (ev) {
 			this.toggleTooltip(ev, true, 'angle');
 		}, this);
+		L.DomEvent.on(document, 'keydown keyup', this._toggleBboxClass, this);
+	},
 
-    },
+    _toggleBboxClass: function (ev) {
+		if (this.bbox) {
+			var flagRotate = this._needRotate;
+			if (!ev.altKey) { flagRotate = !flagRotate; }
+			if (ev.type === 'keyup' && !ev.altKey) { flagRotate = !this._needRotate; }
+			L.DomUtil[flagRotate ? 'removeClass' : 'addClass'](this.bbox._path, 'Rotate');
+		}
+	},
+
     toggleTooltip: function (ev, flag, type) {
 		if ('hideTooltip' in this._parent) {
 			ev.ring = this;
@@ -1766,8 +1776,9 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 				['transformOrigin', 'WebkitTransformOrigin', 'OTransformOrigin', 'MozTransformOrigin', 'msTransformOrigin']);
 
 			this.bbox = L.rectangle(this.lines.getBounds(), {
-				color: 'rgb(51, 136, 255)',
-				className: 'leaflet-drawing-bbox',
+				color: this.lines.options.color, //||'rgb(51, 136, 255)',
+				opacity: this.lines.options.opacity,
+				className: 'leaflet-drawing-bbox ' + type,
 				dashArray: '6, 3',
 				smoothFactor: 0,
 				noClip: true,
@@ -1808,6 +1819,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 		if (ev.originalEvent.altKey) {
 			flagRotate = !flagRotate;
 		}
+		if (this._map.contextmenu) { this._map.contextmenu.hide(); }
 		if (flagRotate) {
 			this._rotateStartPoint = ev.latlng;
 			this._rotateCenter = this.bbox.getCenter();
