@@ -1448,7 +1448,11 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 			} else if (type === 'Save' || type === 'Move' || type === 'Rotate') {
                 this._toggleRotate(type, downAttr);
 			} else if (type === 'Cancel' && this._editHistory.length) {
-				this.setLatLngs(this._editHistory.pop());
+				if (this._editHistory.length) {
+					this.setLatLngs(this._editHistory[0]);
+					this._editHistory = [];
+				}
+                this._toggleRotate('Save', downAttr);
 			}
         }
     },
@@ -1764,6 +1768,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     _needRotate: false,
     _toggleRotate: function (type) {
 		this._needRotate = type === 'Rotate';
+		this._editHistory = [];
 
 		if (this.bbox) {
 			this.bbox
