@@ -17,7 +17,7 @@ L.GmxDrawing = L.Class.extend({
 			// points: [], // [{text: 'Remove point'}, {text: 'Delete feature'}],
 			points: [{text: 'Rotate'}, {text: 'Move'}],
 			bbox: [{text: 'Save'}, {text: 'Cancel'}],
-			lines: [{text: 'Rotate'}, {text: 'Move'}]
+			fill: [{text: 'Rotate'}, {text: 'Move'}]
 		});
 
         if (L.gmxUtil && L.gmxUtil.prettifyDistance) {
@@ -1371,15 +1371,15 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 				contextmenuItems: []
 			});
 		}
-		if (this.lines.bindContextMenu) {
-			this.lines.bindContextMenu({
+		if (this.fill.bindContextMenu) {
+			this.fill.bindContextMenu({
 				contextmenu: false,
 				contextmenuInheritItems: false,
 				contextmenuItems: []
 			});
-			this.lines.on('mouseover', function (ev) {
+			this.fill.on('mouseover', function (ev) {
 				if (ev.type === 'mouseover') {
-					this._recheckContextItems('lines', this._map);
+					this._recheckContextItems('fill', this._map);
 				}
 			}, this);
 		}
@@ -2111,6 +2111,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     _mouseDown: function () {
         this._lastMouseDownTime = Date.now() + 200;
+		if (this._map.contextmenu) { this._map.contextmenu.hide(); }
     },
 
     _mouseUp: function (ev) {

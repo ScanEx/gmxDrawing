@@ -17,7 +17,7 @@ L.GmxDrawing = L.Class.extend({
 			// points: [], // [{text: 'Remove point'}, {text: 'Delete feature'}],
 			points: [{text: 'Rotate'}, {text: 'Move'}],
 			bbox: [{text: 'Save'}, {text: 'Cancel'}],
-			lines: [{text: 'Rotate'}, {text: 'Move'}]
+			fill: [{text: 'Rotate'}, {text: 'Move'}]
 		});
 
         if (L.gmxUtil && L.gmxUtil.prettifyDistance) {

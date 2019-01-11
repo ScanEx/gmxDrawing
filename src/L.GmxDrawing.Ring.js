@@ -112,15 +112,15 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 				contextmenuItems: []
 			});
 		}
-		if (this.lines.bindContextMenu) {
-			this.lines.bindContextMenu({
+		if (this.fill.bindContextMenu) {
+			this.fill.bindContextMenu({
 				contextmenu: false,
 				contextmenuInheritItems: false,
 				contextmenuItems: []
 			});
-			this.lines.on('mouseover', function (ev) {
+			this.fill.on('mouseover', function (ev) {
 				if (ev.type === 'mouseover') {
-					this._recheckContextItems('lines', this._map);
+					this._recheckContextItems('fill', this._map);
 				}
 			}, this);
 		}
@@ -852,6 +852,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     _mouseDown: function () {
         this._lastMouseDownTime = Date.now() + 200;
+		if (this._map.contextmenu) { this._map.contextmenu.hide(); }
     },
 
     _mouseUp: function (ev) {
