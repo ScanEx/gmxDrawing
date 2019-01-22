@@ -852,7 +852,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     _mouseDown: function () {
         this._lastMouseDownTime = Date.now() + 200;
-		if (this._map.contextmenu) { this._map.contextmenu.hide(); }
+		if (this._map && this._map.contextmenu) { this._map.contextmenu.hide(); }
 		if ('hideTooltip' in this._parent) { this._parent.hideTooltip(); }
     },
 
