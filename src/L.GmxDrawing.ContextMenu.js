@@ -1,6 +1,6 @@
 (function () {
 	function GmxDrawingContextMenu(options) {
-		this.options = options || {points: [], lines: []};
+		this.options = options || {points: [], lines: [], fill: []};
 	}
 
 	GmxDrawingContextMenu.prototype = {
