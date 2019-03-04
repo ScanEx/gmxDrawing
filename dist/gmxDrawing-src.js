@@ -1072,7 +1072,12 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                        var mapOpt = my._map ? my._map.options : {},
                             distanceUnit = mapOpt.distanceUnit,
                             squareUnit = mapOpt.squareUnit,
+                            azimutUnit = mapOpt.azimutUnit || false,
                             str = '';
+
+						if (type === 'Area' && ring.mode === 'add') {
+							type = 'Length';
+						}
 
                         if (type === 'Area') {
                             if (!L.gmxUtil.getArea) { return; }
@@ -1084,10 +1089,16 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                             my._parent.showTooltip(ev.layerPoint, str);
                         } else if (type === 'Length') {
                             var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map, my),
-                                length = ring.getLength(downAttr),
-                                titleName = (downAttr.mode === 'edit' || downAttr.num > 1 ? downAttr.type : '') + type,
-                                title = _gtxt(titleName);
-                            str = (title === titleName ? _gtxt(type) : title) + ': ' + L.gmxUtil.prettifyDistance(length, distanceUnit);
+                                angleLeg = azimutUnit ? ring.getAngleLength(downAttr) : null;
+
+							if (angleLeg && angleLeg.length && (my.options.type === 'Polyline' || ring.mode === 'add')) {
+								str = _gtxt('angleLength') + ': ' + angleLeg.angle + '(' + L.gmxUtil.prettifyDistance(angleLeg.length, distanceUnit) + ')';
+							} else {
+								var length = ring.getLength(downAttr),
+									titleName = (downAttr.mode === 'edit' || downAttr.num > 1 ? downAttr.type : '') + type,
+									title = _gtxt(titleName);
+								str = (title === titleName ? _gtxt(type) : title) + ': ' + L.gmxUtil.prettifyDistance(length, distanceUnit);
+							}
                             my._parent.showTooltip(ev.layerPoint, str);
                         } else if (type === 'angle') {
 							str = _gtxt('Angle') + ': ' + Math.floor(180.0 * ring._angle / Math.PI) + '°';
@@ -1488,6 +1499,21 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             map.removeLayer(this._obj);
         }
         this._fireEvent('removefrommap');
+    },
+
+    getAngleLength: function (downAttr) {
+        if (L.GeometryUtil && downAttr && downAttr.num) {
+            var num = downAttr.num,
+				latlngs = this.points._latlngs[0],
+                prev = latlngs[num - 1],
+                curr = latlngs[num] || downAttr.latlng,
+				_parts = this.points._parts[0];
+			return {
+				length: L.gmxUtil.distVincenty(prev.lng, prev.lat, curr.lng, curr.lat),
+				angle: L.gmxUtil.formatDegrees(90 + L.GeometryUtil.computeAngle(_parts[num - 1], _parts[num] || downAttr.layerPoint), 0)
+			};
+		}
+        return null;
     },
 
     getLength: function (downAttr) {

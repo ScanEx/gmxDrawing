@@ -231,6 +231,21 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this._fireEvent('removefrommap');
     },
 
+    getAngleLength: function (downAttr) {
+        if (L.GeometryUtil && downAttr && downAttr.num) {
+            var num = downAttr.num,
+				latlngs = this.points._latlngs[0],
+                prev = latlngs[num - 1],
+                curr = latlngs[num] || downAttr.latlng,
+				_parts = this.points._parts[0];
+			return {
+				length: L.gmxUtil.distVincenty(prev.lng, prev.lat, curr.lng, curr.lat),
+				angle: L.gmxUtil.formatDegrees(90 + L.GeometryUtil.computeAngle(_parts[num - 1], _parts[num] || downAttr.layerPoint), 0)
+			};
+		}
+        return null;
+    },
+
     getLength: function (downAttr) {
         var length = 0,
             latlngs = this._getLatLngsArr(),
