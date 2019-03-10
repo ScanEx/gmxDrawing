@@ -237,10 +237,14 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 				latlngs = this.points._latlngs[0],
                 prev = latlngs[num - 1],
                 curr = latlngs[num] || downAttr.latlng,
-				_parts = this.points._parts[0];
+				_parts = this.points._parts[0],
+				angle = L.GeometryUtil.computeAngle(_parts[num - 1], _parts[num] || downAttr.layerPoint);
+			angle += 90;
+			angle %= 360;
+			angle += angle < 0 ? 360 : 0;
 			return {
 				length: L.gmxUtil.distVincenty(prev.lng, prev.lat, curr.lng, curr.lat),
-				angle: L.gmxUtil.formatDegrees(90 + L.GeometryUtil.computeAngle(_parts[num - 1], _parts[num] || downAttr.layerPoint), 0)
+				angle: L.gmxUtil.formatDegrees(angle, 0)
 			};
 		}
         return null;
