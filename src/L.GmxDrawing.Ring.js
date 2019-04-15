@@ -130,6 +130,22 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 		L.DomEvent.on(document, 'keydown keyup', this._toggleBboxClass, this);
 	},
 
+    bringToFront: function () {
+		if (this.lines) { this.lines.bringToFront(); }
+		if (this.fill) { this.fill.bringToFront(); }
+		if (this.points) { this.points.bringToFront(); }
+
+		return this;
+    },
+
+    bringToBack: function () {
+		if (this.lines) { this.lines.bringToBack(); }
+		if (this.fill) { this.fill.bringToBack(); }
+		if (this.points) { this.points.bringToBack(); }
+
+		return this;
+    },
+
     _toggleBboxClass: function (ev) {
 		if (this.bbox) {
 			var flagRotate = this._needRotate;
@@ -186,7 +202,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 				obj.callback(downAttr);
 			} else if (type === 'Remove point') {
 				ring._removePoint(downAttr.num);
-			} else if (type === 'Save' || type === 'Move' || type === 'Rotate') {
+			} else if (type === 'Save' || type === 'Move' || type === 'Rotate' || type === 'Rotate around Point') {
                 this._toggleRotate(type, downAttr);
 			} else if (type === 'Cancel' && this._editHistory.length) {
 				if (this._editHistory.length) {
@@ -526,8 +542,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     _editHistory: [],
     // _dragType: 'Save',
     _needRotate: false,
-    _toggleRotate: function (type) {
-		this._needRotate = type === 'Rotate';
+    _toggleRotate: function (type, downAttr) {
+		this._needRotate = type === 'Rotate' || type === 'Rotate around Point';
 		this._editHistory = [];
 
 		if (this.bbox) {
@@ -565,6 +581,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 			}
 
             this._recheckContextItems('bbox', this._map);
+			this._rotateCenterPoint = type === 'Rotate' ? this.bbox.getCenter() : downAttr.latlng;
+
 		}
     },
 
@@ -587,7 +605,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 		if (this._map.contextmenu) { this._map.contextmenu.hide(); }
 		if (flagRotate) {
 			this._rotateStartPoint = ev.latlng;
-			this._rotateCenter = this.bbox.getCenter();
+			this._rotateCenter = this._rotateCenterPoint;
+
 			this._map
 				.on('mouseup', this._onRotateEnd, this)
 				.on('mousemove', this._onRotate, this);

@@ -21,11 +21,19 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     },
 
     bringToFront: function () {
-        return this.invoke('bringToFront');
+		this.rings.forEach(function(it) {
+			it.ring.bringToFront();
+		});
+		return this;
+		// return this.invoke('bringToFront');
     },
 
     bringToBack: function () {
-        return this.invoke('bringToBack');
+		this.rings.forEach(function(it) {
+			it.ring.bringToBack();
+		});
+		return this;
+        // return this.invoke('bringToBack');
     },
 
     onAdd: function (map) {

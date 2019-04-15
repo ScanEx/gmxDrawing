@@ -15,7 +15,7 @@ L.GmxDrawing = L.Class.extend({
         this.current = null;
         this.contextmenu = new L.GmxDrawingContextMenu({
 			// points: [], // [{text: 'Remove point'}, {text: 'Delete feature'}],
-			points: [{text: 'Rotate'}, {text: 'Move'}],
+			points: [{text: 'Move'}, {text: 'Rotate'}, {text: 'Rotate around Point'}],
 			bbox: [{text: 'Save'}, {text: 'Cancel'}],
 			fill: [{text: 'Rotate'}, {text: 'Move'}]
 		});
