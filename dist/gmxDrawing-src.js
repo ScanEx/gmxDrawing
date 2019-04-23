@@ -1477,7 +1477,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 		if (downAttr) {
 			var type = obj.text;
 			if (obj.callback) {
-				obj.callback(downAttr);
+				obj.callback(downAttr, this._parent);
 			} else if (type === 'Remove point') {
 				ring._removePoint(downAttr.num);
 			} else if (type === 'Save' || type === 'Move' || type === 'Rotate' || type === 'Rotate around Point') {
