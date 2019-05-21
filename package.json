@@ -12,6 +12,7 @@
 		"type": "git",
 		"url": "git://github.com/ScanEx/gmxDrawing.git"
 	},
+	"main": "dist/gmxDrawing-src.js",
 	"keywords": [
 		"gis",
 		"leaflet",
