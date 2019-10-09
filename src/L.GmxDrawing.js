@@ -188,9 +188,15 @@ L.GmxDrawing = L.Class.extend({
                 L.DomEvent.off(this._map._container, 'touchstart', this._createKey.fn, this);
             } else {
                 this._map.off(this._createKey.eventName, this._createKey.fn, this);
+                this._map.off('mousemove', this._onMouseMove, this);
             }
             this._enableDrag();
         }
+		if (this._firstPoint) {
+			this._map.removeLayer(this._firstPoint);
+			this._firstPoint = null;
+		}
+
         this._createKey = null;
     },
 
@@ -253,8 +259,12 @@ L.GmxDrawing = L.Class.extend({
                 type: type,
                 eventName: type === 'Rectangle' ? (L.Browser.mobile ? 'touchstart' : 'mousedown') : 'click',
                 fn: function (ev) {
-					var originalEvent = ev && ev.originalEvent;
+					var originalEvent = ev && ev.originalEvent,
+                        ctrlKey = false, shiftKey = false, altKey = false;
 					if (originalEvent) {
+                        ctrlKey = originalEvent.ctrlKey;
+                        shiftKey = originalEvent.shiftKey;
+                        altKey = originalEvent.altKey;
 						var clickOnTag = originalEvent.target.tagName;
 						if (clickOnTag === 'g' || clickOnTag === 'path') { return; }
 					}
@@ -268,15 +278,19 @@ L.GmxDrawing = L.Class.extend({
                             opt[key] = drawOptions[key];
                         }
                     }
+					if (ctrlKey && my._firstPoint && my._firstPoint._snaped) {
+						latlng = my._firstPoint._snaped;
+					}
+
                     if (type === 'Point') {
                         var markerStyle = drawOptions.markerStyle || {},
                             markerOpt = {
                                 draggable: true
                             };
                         if (originalEvent) {
-                            markerOpt.ctrlKey = originalEvent.ctrlKey;
-                            markerOpt.shiftKey = originalEvent.shiftKey;
-                            markerOpt.altKey = originalEvent.altKey;
+                            markerOpt.ctrlKey = ctrlKey;
+                            markerOpt.shiftKey = shiftKey;
+                            markerOpt.altKey = altKey;
                         }
                         if (markerStyle.iconStyle) {
                             markerOpt.icon = L.icon(markerStyle.iconStyle);
@@ -285,7 +299,7 @@ L.GmxDrawing = L.Class.extend({
                     } else {
                         if (drawOptions.pointStyle) { opt.pointStyle = drawOptions.pointStyle; }
                         if (drawOptions.lineStyle) { opt.lineStyle = drawOptions.lineStyle; }
-                        if (type === 'Rectangle') {
+						if (type === 'Rectangle') {
                             // if (L.Browser.mobile) {
                                 // var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map);
                                 // latlng = downAttr.latlng;
@@ -314,12 +328,24 @@ L.GmxDrawing = L.Class.extend({
                 L.DomEvent.on(map._container, 'touchstart', this._createKey.fn, this);
             } else {
                 map.on(this._createKey.eventName, this._createKey.fn, this);
+                map.on('mousemove', this._onMouseMove, this);
             }
             this._createType = type;
             L.DomUtil.addClass(map._mapPane, 'leaflet-clickable');
             this.fire('drawstart', {mode: type});
         }
         this.options.type = type;
+    },
+
+    _onMouseMove: function (ev) {
+		var latlngs = [ev.latlng];
+
+		if (!this._firstPoint) {
+			this._firstPoint = new L.GmxDrawing.PointMarkers(latlngs, {interactive: false});
+			this._map.addLayer(this._firstPoint);
+		} else {
+			this._firstPoint.setLatLngs(latlngs);
+		}
     },
 
     extendDefaultStyles: function (drawOptions) {

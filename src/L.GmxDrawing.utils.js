@@ -69,6 +69,19 @@ L.GmxDrawing.utils = {
         }
     },
 
+    getClosestOnGeometry: function(latlng, gmxGeoJson, map) {
+		if (L.GeometryUtil && map) {
+			return L.GeometryUtil.closestLayerSnap(
+					map,
+					[L.geoJson(L.gmxUtil.geometryToGeoJSON(gmxGeoJson, true, true))],
+					latlng,
+					Number(map.options.snaping || L.GmxDrawing.utils.snaping),
+					true
+				);
+		}
+		return null;
+    },
+
     snapPoint: function (latlng, obj, map) {
 		var res = latlng;
 		if (L.GeometryUtil) {

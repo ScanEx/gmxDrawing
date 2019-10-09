@@ -43,8 +43,8 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
     _getPathPartStr: function (points) {
         var round = L.Path.VML,
             size = this.options.size / 2,
-            dontsmooth = this._parent.options.type === 'Rectangle',
-            skipLastPoint = this._parent.mode === 'add' && !L.Browser.mobile ? 1 : 0,
+            dontsmooth = this._parent && this._parent.options.type === 'Rectangle',
+            skipLastPoint = this._parent && this._parent.mode === 'add' && !L.Browser.mobile ? 1 : 0,
             radius = (this.options.shape === 'circle' ? true : false),
             prev;
 
