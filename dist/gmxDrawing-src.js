@@ -1451,6 +1451,21 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     _toggleBboxClass: function (ev) {
+		if (ev.type === 'keydown' && this.mode === 'add') {
+			var key = ev.key,
+				points = this._getLatLngsArr();
+
+			if (key === 'Backspace') {
+				this._legLength = [];
+				points.splice(points.length - 1, 1);
+                this._setPoint(points[0], 0);
+			}
+            if (key === 'Escape' || points.length < 2) {
+                this._parent.remove(this);
+				this._parent._parent._clearCreate();
+				this._fireEvent('drawstop');
+			}
+		}
 		if (this.bbox) {
 			var flagRotate = this._needRotate;
 			if (!ev.altKey) { flagRotate = !flagRotate; }
