@@ -15,7 +15,7 @@ L.GmxDrawing = L.Class.extend({
         this.current = null;
         this.contextmenu = new L.GmxDrawingContextMenu({
 			// points: [], // [{text: 'Remove point'}, {text: 'Delete feature'}],
-			points: [{text: 'Move'}, {text: 'Rotate'}],	// , {text: 'Rotate around Point'}
+			points: [{text: 'Move'}, {text: 'Rotate'}, {text: 'Remove point'}, {text: 'Delete feature'}],	// , {text: 'Rotate around Point'}
 			bbox: [{text: 'Save'}, {text: 'Cancel'}],
 			fill: [{text: 'Rotate'}, {text: 'Move'}]
 		});
@@ -1460,7 +1460,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 				points.splice(points.length - 1, 1);
                 this._setPoint(points[0], 0);
 			}
-            if (key === 'Escape' || points.length < 2) {
+            if (key === 'Escape' || (key === 'Backspace' && points.length < 2)) {
                 this._parent.remove(this);
 				this._parent._parent._clearCreate();
 				this._fireEvent('drawstop');
@@ -1519,6 +1519,10 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 			var type = obj.text;
 			if (obj.callback) {
 				obj.callback(downAttr, this._parent);
+			} else if (type === 'Delete feature') {
+                this._parent.remove(this);
+				// this._parent._parent._clearCreate();
+				this._fireEvent('drawstop');
 			} else if (type === 'Remove point') {
 				ring._removePoint(downAttr.num);
 			} else if (type === 'Save' || type === 'Move' || type === 'Rotate' || type === 'Rotate around Point') {
