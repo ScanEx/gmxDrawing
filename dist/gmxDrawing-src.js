@@ -1525,6 +1525,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 				this._fireEvent('drawstop');
 			} else if (type === 'Remove point') {
 				ring._removePoint(downAttr.num);
+				this._fireEvent('editstop', ev);
 			} else if (type === 'Save' || type === 'Move' || type === 'Rotate' || type === 'Rotate around Point') {
                 this._toggleRotate(type, downAttr);
 			} else if (type === 'Cancel' && this._editHistory.length) {
