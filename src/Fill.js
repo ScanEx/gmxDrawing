@@ -1,3 +1,5 @@
+import L from 'leaflet';
+
 L.GmxDrawing._Fill = L.Polyline.extend({
     options: {
         className: 'leaflet-drawing-lines-fill',
@@ -31,3 +33,5 @@ L.GmxDrawing._Fill = L.Polyline.extend({
         L.Path.prototype._updatePath.call(this);
     }
 });
+
+export default L.GmxDrawing._Fill;

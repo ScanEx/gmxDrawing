@@ -1,22 +1,41 @@
 {
-	"name": "gmxDrawing",
-	"version": "0.0.1",
+	"name": "@scanex/gmx-drawing",
+	"version": "0.0.2",
 	"description": "GeoMixer Drawing for Leaflet",
-	"devDependencies": {
-		"uglify-js": "~>2.6.0",
-		"jake": "~0.5.16",
-		"eslint": "^0.13.0",
-		"ncp": "~1.0.1"
-	},
 	"repository": {
 		"type": "git",
 		"url": "git://github.com/ScanEx/gmxDrawing.git"
 	},
-	"main": "dist/gmxDrawing-src.js",
+	"main": "dist/gmx-drawing.js",
+	"module": "index.js",
+	"scripts": {
+		"build": "rollup -c",
+		"watch": "rollup -c -w",
+		"dev": "npm-run-all --parallel start watch",
+		"start": "serve public"
+	},
 	"keywords": [
 		"gis",
 		"leaflet",
 		"geomixer"
 	],
-	"license": "MIT"
+	"license": "",
+	"devDependencies": {
+		"@babel/cli": "^7.10.3",
+		"@babel/core": "^7.10.3",
+		"@babel/preset-env": "^7.10.3",
+		"@rollup/plugin-commonjs": "^13.0.0",
+		"@rollup/plugin-node-resolve": "^8.1.0",
+		"core-js": "^3.6.5",
+		"leaflet": "^1.6.0",
+		"npm-run-all": "^4.1.5",
+		"rollup": "^2.18.0",
+		"rollup-plugin-babel": "^4.4.0",
+		"rollup-plugin-cpy": "^2.0.1",
+		"rollup-plugin-css-porter": "^1.0.2",
+		"serve": "^11.3.2"
+	},
+	"dependencies": {
+		"leaflet-geomixer-rollup": "git+https://github.com/ScanEx/leaflet-geomixer-rollup.git"
+	}
 }

@@ -1,3 +1,6 @@
+import L from 'leaflet';
+import Utils from './Utils.js';
+
 L.GmxDrawing.PointMarkers = L.Polygon.extend({
     options: {
         className: 'leaflet-drawing-points',
@@ -73,7 +76,7 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
     },
 
 	_updatePath: function () {
-		if (L.GmxDrawing.utils.isOldVersion) {
+		if (Utils.isOldVersion) {
 			if (!this._map) { return; }
 			this._clipPoints();
 			this.projectLatlngs();
@@ -92,3 +95,5 @@ L.GmxDrawing.PointMarkers = L.Polygon.extend({
 		}
 	}
 });
+
+export default L.GmxDrawing.PointMarkers;

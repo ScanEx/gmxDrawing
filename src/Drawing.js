@@ -1,7 +1,10 @@
-(function () {
+import L from 'leaflet';
+import './Drawing.css';
+import 'leaflet-geomixer-rollup';
+import ContextMenu from './ContextMenu.js';
 
-var rectDelta = 0.0000001;
-var stateVersion = '1.0.0';
+const rectDelta = 0.0000001;
+const stateVersion = '1.0.0';
 
 L.GmxDrawing = L.Class.extend({
     options: {
@@ -13,7 +16,7 @@ L.GmxDrawing = L.Class.extend({
         this._map = map;
         this.items = [];
         this.current = null;
-        this.contextmenu = new L.GmxDrawingContextMenu({
+        this.contextmenu = new ContextMenu({
 			// points: [], // [{text: 'Remove point'}, {text: 'Delete feature'}],
 			points: [{text: 'Move'}, {text: 'Rotate'}, {text: 'Remove point'}, {text: 'Delete feature'}],	// , {text: 'Rotate around Point'}
 			bbox: [{text: 'Save'}, {text: 'Cancel'}],
@@ -514,4 +517,5 @@ L.GmxDrawing = L.Class.extend({
 L.Map.addInitHook(function () {
     this.gmxDrawing = new L.GmxDrawing(this);
 });
-})();
+
+export default L.GmxDrawing;

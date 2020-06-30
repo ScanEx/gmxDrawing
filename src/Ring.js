@@ -1,3 +1,7 @@
+import L from 'leaflet';
+import GmxDrawingContextMenu from './ContextMenu.js';
+import Utils from './Utils.js';
+
 L.GmxDrawing.Ring = L.LayerGroup.extend({
     options: {
         className: 'leaflet-drawing-ring',
@@ -18,7 +22,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     initialize: function (parent, coords, options) {
         options = options || {};
 
-        this.contextmenu = new L.GmxDrawingContextMenu();
+        this.contextmenu = new GmxDrawingContextMenu();
         options.mode = '';
         this._activeZIndex = options.activeZIndex || 7;
         this._notActiveZIndex = options.notActiveZIndex || 6;
@@ -58,8 +62,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             }
         }
         if (this.options.hole) {
-            lineStyle = L.extend({}, lineStyle, L.GmxDrawing.utils.defaultStyles.holeStyle);
-            pointStyle = L.extend({}, pointStyle, L.GmxDrawing.utils.defaultStyles.holeStyle);
+            lineStyle = L.extend({}, lineStyle, Utils.defaultStyles.holeStyle);
+            pointStyle = L.extend({}, pointStyle, Utils.defaultStyles.holeStyle);
         }
 
         var latlngs = coords,
@@ -190,7 +194,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 			.map(function(obj) {
 				var ph = {
 					id: obj.text,
-					text: L.GmxDrawing.utils.getLocale(obj.text),
+					text: Utils.getLocale(obj.text),
 					icon: obj.icon,
 					retinaIcon: obj.retinaIcon,
 					iconCls: obj.iconCls,
@@ -210,7 +214,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
     _eventsCmd: function (obj, ev) {
 		var ring = ev.relatedTarget && ev.relatedTarget._parent || this;
-		var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map, this._parent);
+		var downAttr = Utils.getDownType.call(this, ev, this._map, this._parent);
 		if (downAttr) {
 			var type = obj.text;
 			if (obj.callback) {
@@ -398,7 +402,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     _getLatLngsArr: function () {
-		return L.GmxDrawing.utils.isOldVersion ? this.points._latlngs : this.points._latlngs[0];
+		return Utils.isOldVersion ? this.points._latlngs : this.points._latlngs[0];
     },
 
     // edit mode
@@ -418,7 +422,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 return;
             }
         }
-        var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map, this._parent),
+        var downAttr = Utils.getDownType.call(this, ev, this._map, this._parent),
             type = downAttr.type,
             opt = this.options;
 
@@ -455,7 +459,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             this._clearLineAddPoint();
             this._moved = true;
 
-			var latlng = ev.originalEvent.ctrlKey ? L.GmxDrawing.utils.snapPoint(ev.latlng, this, this._map) : ev.latlng;
+			var latlng = ev.originalEvent.ctrlKey ? Utils.snapPoint(ev.latlng, this, this._map) : ev.latlng;
             this._setPoint(latlng, this.down.num, this.down.type);
 			if ('_showTooltip' in this._parent) {
 				ev.ring = this;
@@ -475,7 +479,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
             var target = ev && ev.originalEvent ? ev.originalEvent.target : null;
             if (target && target._leaflet_pos && /leaflet-marker-icon/.test(target.className)) {
-                var latlng = L.GmxDrawing.utils.getMarkerByPos(target._leaflet_pos, this._map.gmxDrawing.getFeatures());
+                var latlng = Utils.getMarkerByPos(target._leaflet_pos, this._map.gmxDrawing.getFeatures());
                 this._setPoint(latlng, this.down.num, this.down.type);
             }
             this._map._skipClick = true;    // for EventsManager
@@ -516,7 +520,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     _pointDblClick: function (ev) {
         this._clearLineAddPoint();
         if (!this.options.disableAddPoints && (!this._lastAddTime || Date.now() > this._lastAddTime)) {
-            var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map, this._parent);
+            var downAttr = Utils.getDownType.call(this, ev, this._map, this._parent);
             this._removePoint(downAttr.num);
         }
     },
@@ -529,7 +533,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         this._lastPointClickTime = clickTime + 300;
         if (this._moved || clickTime < prevClickTime) { this._moved = false; return; }
 
-        var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map, this._parent),
+        var downAttr = Utils.getDownType.call(this, ev, this._map, this._parent),
             mode = this.mode;
         if (downAttr.type === 'node') {
             var num = downAttr.num;
@@ -736,14 +740,14 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     },
 
     _startTouchMove: function (ev, drawstop) {
-        var downAttr = L.GmxDrawing.utils.getDownType.call(this, ev, this._map, this._parent);
+        var downAttr = Utils.getDownType.call(this, ev, this._map, this._parent);
         if (downAttr.type === 'node') {
             this._parent._disableDrag();
             this.down = downAttr;
             //var num = downAttr.num;
             var my = this;
             var _touchmove = function (ev) {
-                downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map, this._parent);
+                downAttr = Utils.getDownType.call(my, ev, my._map, this._parent);
                     if (ev.touches.length === 1) { // Only deal with one finger
                         my._pointMove(downAttr);
                   }
@@ -791,7 +795,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                 };
                 L.DomEvent.on(this.points._container, 'touchstart', this.touchstart, this);
                 this.touchstartFill = function (ev) {
-                    var downAttr = L.GmxDrawing.utils.getDownType.call(my, ev, my._map, this._parent);
+                    var downAttr = Utils.getDownType.call(my, ev, my._map, this._parent);
                     if (downAttr.type === 'edge' && my.options.type !== 'Rectangle') {
                         var points = my.points._latlngs;
                         points.splice(downAttr.num, 0, points[downAttr.num]);
@@ -900,7 +904,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         if (this.points) {
             var points = this._getLatLngsArr(),
 				latlng = ev.latlng;
-            if (ev.originalEvent.ctrlKey) { latlng = L.GmxDrawing.utils.snapPoint(latlng, this, this._map); }
+            if (ev.originalEvent.ctrlKey) { latlng = Utils.snapPoint(latlng, this, this._map); }
             if (points.length === 1) { this._setPoint(latlng, 1); }
 
             this._setPoint(latlng, points.length - 1);
@@ -939,3 +943,5 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
         }
     }
 });
+
+export default L.GmxDrawing.Ring;

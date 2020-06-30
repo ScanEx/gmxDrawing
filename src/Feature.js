@@ -1,3 +1,6 @@
+import L from 'leaflet';
+import 'leaflet-geomixer-rollup';
+
 L.GmxDrawing.Feature = L.LayerGroup.extend({
     options: {
         endTooltip: '',
@@ -781,3 +784,5 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
         }
     }
 });
+
+export default L.GmxDrawing.Feature;

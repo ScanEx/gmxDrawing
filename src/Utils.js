@@ -1,3 +1,6 @@
+import L from 'leaflet';
+import './Drawing.js';
+
 L.GmxDrawing.utils = {
 	snaping: 10,			// snap distance
 	isOldVersion: L.version.substr(0, 3) === '0.7',
@@ -204,3 +207,5 @@ L.GmxDrawing.utils = {
 		return res || key;
     }
 };
+
+export default L.GmxDrawing.utils;

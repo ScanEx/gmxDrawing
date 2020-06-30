@@ -1,0 +1,6 @@
+html, body {    
+    margin: 0px;
+}
+#map {
+    height: calc(100vh - 21px);
+}
