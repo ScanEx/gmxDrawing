@@ -12,6 +12,9 @@ export default [
         format: 'iife',
         name: 'Example',
         sourcemap: true,
+        globals: {
+          'leaflet': 'L'
+        },
     },
     plugins: [
         resolve(),
