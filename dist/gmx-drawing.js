@@ -2743,6 +2743,8 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
     return str;
   },
   _initialize: function _initialize(parent, obj) {
+    var _this2 = this;
+
     this.clearLayers();
     this.rings = [];
     this.mode = '';
@@ -2828,6 +2830,9 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
             ring = new L.GmxDrawing.Ring(this, it._latlngs, {
           ring: true,
           editable: this.options.editable
+        });
+        ring.on('click', function (e) {
+          _this2.fire('click', e);
         });
         this.addLayer(ring);
 
@@ -3655,6 +3660,8 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
     this._initialize(parent, coords);
   },
   _initialize: function _initialize(parent, coords) {
+    var _this2 = this;
+
     this.clearLayers();
     delete this.lines;
     delete this.fill;
@@ -3705,6 +3712,9 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
       fill: false,
       size: 10,
       weight: 10
+    });
+    this.fill.on('click', function (e) {
+      _this2._parent.fire('click', e);
     });
     this.addLayer(this.fill);
     this.lines = new L.Polyline(latlngs, lineStyle);

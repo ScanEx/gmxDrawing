@@ -32077,6 +32077,8 @@
 	    return str;
 	  },
 	  _initialize: function _initialize(parent, obj) {
+	    var _this2 = this;
+
 	    this.clearLayers();
 	    this.rings = [];
 	    this.mode = '';
@@ -32162,6 +32164,9 @@
 	            ring = new leafletSrc.GmxDrawing.Ring(this, it._latlngs, {
 	          ring: true,
 	          editable: this.options.editable
+	        });
+	        ring.on('click', function (e) {
+	          _this2.fire('click', e);
 	        });
 	        this.addLayer(ring);
 
@@ -32989,6 +32994,8 @@
 	    this._initialize(parent, coords);
 	  },
 	  _initialize: function _initialize(parent, coords) {
+	    var _this2 = this;
+
 	    this.clearLayers();
 	    delete this.lines;
 	    delete this.fill;
@@ -33039,6 +33046,9 @@
 	      fill: false,
 	      size: 10,
 	      weight: 10
+	    });
+	    this.fill.on('click', function (e) {
+	      _this2._parent.fire('click', e);
 	    });
 	    this.addLayer(this.fill);
 	    this.lines = new leafletSrc.Polyline(latlngs, lineStyle);

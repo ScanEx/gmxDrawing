@@ -79,6 +79,9 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
             size: 10,
             weight: 10
         });
+        this.fill.on('click', e => {
+            this._parent.fire('click', e);
+        });
         this.addLayer(this.fill);
 
         this.lines = new L.Polyline(latlngs, lineStyle);

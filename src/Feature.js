@@ -563,6 +563,10 @@ L.GmxDrawing.Feature = L.LayerGroup.extend({
                     holes = [],
                     ring = new L.GmxDrawing.Ring(this, it._latlngs, {ring: true, editable: this.options.editable});
 
+                ring.on('click', e => {
+                    this.fire('click', e);
+                });
+
                 this.addLayer(ring);
                 if (it._holes) {
                     for (var j = 0, len1 = it._holes.length; j < len1; j++) {
