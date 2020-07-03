@@ -33472,7 +33472,7 @@
 	    this._lastDownTime = Date.now() + 100;
 	    this.down = downAttr;
 
-	    if (type === 'edge' && opt.type !== 'Rectangle') {
+	    if (type === 'edge' && downAttr.ctrlKey && opt.type !== 'Rectangle') {
 	      if (opt.disableAddPoints) {
 	        return;
 	      }
@@ -33628,6 +33628,8 @@
 	          }
 
 	          this._fireEvent('drawstop', downAttr);
+
+	          this._fireEvent('editstop', downAttr);
 
 	          this._removePoint(num);
 	        } else if (this.lineType) {

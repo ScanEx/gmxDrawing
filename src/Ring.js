@@ -431,7 +431,7 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
 
         this._lastDownTime = Date.now() + 100;
         this.down = downAttr;
-        if (type === 'edge' && opt.type !== 'Rectangle') {
+        if (type === 'edge' && downAttr.ctrlKey && opt.type !== 'Rectangle') {
             if (opt.disableAddPoints) { return; }
             this._legLength = [];
             var num = downAttr.num,
@@ -548,8 +548,9 @@ L.GmxDrawing.Ring = L.LayerGroup.extend({
                         this._parent.options.type = this.options.type = 'Polygon';
                         this.lineType = false;
                         this._removePoint(this._getLatLngsArr().length - 1);
-                    }
+                    }                    
                     this._fireEvent('drawstop', downAttr);
+                    this._fireEvent('editstop', downAttr);
                     this._removePoint(num);
                 } else if (this.lineType) {
 					this._clearLineAddPoint();
